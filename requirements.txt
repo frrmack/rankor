@@ -1,0 +1,2 @@
+flask==2.1.2
+trueskill==0.4.5
