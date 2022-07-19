@@ -4,6 +4,41 @@ class ThingHasNoNameOrImageError(Exception):
     pass
 
 
+class User(object):
+    # collections
+    # ranked_lists
+    pass
+
+class Collection(object):
+    pass
+
+class RankedList(object):
+    # user: User
+    # collection : Collection
+    # fights : list
+    # thing_scores: dict
+    pass
+
+class TierList(object):
+    # ranked_list
+    pass
+
+class Fight(object):
+    # thing_red_corner
+    # thing_blue_corner
+    # result
+    pass
+
+class Thing(object):
+    # name: str
+    # image: url = None
+    # other_fields: dict = None
+    pass
+
+class Database(object):
+    
+
+
 class Thing(object):
 
     def __init__(self, name=None, image_url=None, **other_fields):
