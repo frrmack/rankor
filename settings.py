@@ -1,0 +1,4 @@
+
+# THESE ARE THE MANUAL SETTINGS FOR A SPECIFIC INSTANCE OF THIS SERVER APP
+SECRET_KEY = "Make_up_and_enter_your_secret_key_here"
+SQLALCHEMY_DATABASE_URI = 'sqlite:///db.sqlite'
