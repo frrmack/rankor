@@ -1,4 +1,5 @@
-# RANKOR
+![RANKOR](https://www.dropbox.com/s/1p2mec93jqrobbv/Rankor_logo_transparent.png?dl=0)
+
 A web app for ranking things by comparing pairs of them.
 
 It's fun to let them fight for your love; it's also a lot more accurate, efficient, and satisfying than trying to directly make a ranked list or a tier list.
