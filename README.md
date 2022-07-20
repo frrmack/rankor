@@ -31,27 +31,31 @@ With the virtual environment active, install rankor including all its dependenci
 
 ## Install mongodb and set up a database
 
-- Install mongo unless you already have it.
+Install mongo unless you already have it and start the server following the steps below.
 
-If you are using OS X, use brew:
+- If you are using OS X
 
-[If you don't already have command line tools, install them with `xcode-select --install`]
+    - If you don't already have command line tools, install them with `xcode-select --install`
 
-[If you don't already have brew, install it following [these instructions](https://brew.sh/#install)]
-```
-brew tap mongodb/brew
-brew update
-brew install mongodb-community
-```
+    - If you don't already have Homebrew, install it following [these instructions](https://brew.sh/#install)
 
-- Start the mongo server as a macOS service:
-`brew services start mongodb-community`
+    - Install Mongodb Community Edition using Homebrew
+    ```
+    brew tap mongodb/brew
+    brew update
+    brew install mongodb-community
+    ```
+
+    - Start the mongo server as a macOS service:
+    `brew services start mongodb-community`
 
 
-- Verify that the server is running by doing `brew services list`. You should see the service `mongodb-community` listed as `started`. 
+    - Verify that the server is running with `brew services list`. You should see the service `mongodb-community` listed as `started`. 
 
 
-If you are using linux instead of OS X, use the distribution's package manager following [mongodb's installation instructions](https://www.mongodb.com/docs/manual/administration/install-on-linux/) and start the server as a daemon as detailed in that article.
+- If you are using linux
+    
+    - Use the linux distribution's package manager following [mongodb's installation instructions](https://www.mongodb.com/docs/manual/administration/install-on-linux/) and start the server as a daemon as detailed in that article.
 
 
 
