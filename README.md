@@ -9,7 +9,7 @@ It's fun to let them fight for your love; it's also a lot more accurate, efficie
 
 ## Virtual environment setup
 
-Make a virtual environment. This source code was written using `pyenv` and `pyenv-virtualenvwrapper`. You can also use them, or use your own virtual environment tool. The python version installed with 'pyenv' here and used to develop this code is `3.10.4`. Below are instructions to do it the way I did it.
+Make a virtual environment. This source code was written using `pyenv` and `pyenv-virtualenvwrapper`. You can also use them, or use your own virtual environment tool. The python version I installed with `pyenv` and used to develop this code is `3.10.4`. Below are instructions to do it the way I did it.
 
 
 Setup instructions for `pyenv` and `pyenv-virtualenvwrapper` if you don't have them are [here](https://gist.github.com/eliangcs/43a51f5c95dd9b848ddc). 
@@ -31,23 +31,26 @@ With the virtual environment active, install rankor including all its dependenci
 
 ## Install mongodb and set up a database
 
-Install mongo unless you already have it
+- Install mongo unless you already have it.
 
-- If you are using OS X, use brew:
+If you are using OS X, use brew:
+[If you don't already have command line tools, install them with `xcode-select --install`]
+[If you don't already have brew, install it following [these instructions](https://brew.sh/#install)]
 ```
 brew tap mongodb/brew
 brew update
 brew install mongodb-community
 ```
 
-- If you are using linux, use the distribution's package manager following [mongodb's instructions](https://www.mongodb.com/docs/manual/administration/install-on-linux/)
-
-Start the mongo server as a macOS service
+- Start the mongo server as a macOS service:
 `brew services start mongodb-community`
 
-Verify that the server is running by doing `brew services list`. You should see the service `mongodb-community` listed as `started`.
 
-(or if you are using linux follow the instructions in the link to run it as a daemon)
+- Verify that the server is running by doing `brew services list`. You should see the service `mongodb-community` listed as `started`. 
+
+
+If you are using linux instead of OS X, use the distribution's package manager following [mongodb's installation instructions](https://www.mongodb.com/docs/manual/administration/install-on-linux/) and start the server as a daemon as detailed in that article.
+
 
 
 ## Run development server
