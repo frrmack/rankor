@@ -34,7 +34,9 @@ With the virtual environment active, install rankor including all its dependenci
 - Install mongo unless you already have it.
 
 If you are using OS X, use brew:
+
 [If you don't already have command line tools, install them with `xcode-select --install`]
+
 [If you don't already have brew, install it following [these instructions](https://brew.sh/#install)]
 ```
 brew tap mongodb/brew
