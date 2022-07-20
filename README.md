@@ -35,7 +35,7 @@ Install mongo unless you already have it and start the server following the step
 
 - If you are using OS X
 
-    - If you don't already have command line tools, install them with `xcode-select --install`
+    - If you don't already have Xcode command-line tools, install them with `xcode-select --install`
 
     - If you don't already have Homebrew, install it following [these instructions](https://brew.sh/#install)
 
