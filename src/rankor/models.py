@@ -30,12 +30,16 @@ class MongoModel(BaseModel):
     """
     Parent class for all Rankor models to inherit. It handles the bson object
     id stuff assigned by mongodb as an optional id field with an alias "_id".
-    First off, we are using the alias "_id" for this id field, because that's
-    what mongodb uses.
+    
+    Why are we using this _id alias thing? (because otherwise Pydantic will treat
+    an underscored field name to be a private field):
+    https://www.mongodb.com/community/forums/t/why-do-we-need-alias-id-in-pydantic-model-of-fastapi/170728
+
     Every mongodb object needs to have an _id field. If you store an object in
     a mongodb collection, mongo will automatically create a bson object id and
     assign it to this object during the write, and will save it under the "_id"
     field.
+    
     We are using Pydantic to have strict data validation, and what we do below
     (creating a custom field with an ObjectId type) method ensures that Pydantic 
     validates  this _id field correctly as a bson object id type. This field
@@ -47,8 +51,11 @@ class MongoModel(BaseModel):
     But if we read / rewrite / etc. a model object that had already been written to 
     mongo once (and therefore it already has an id with the alias "_id"), it will stay
     on, and will still be validated as the correct ObjectId type. 
-    The json and bson encoders are just ensuring correct serialization with these 
-    ideas in mind. They exclude fields that are None
+    
+    The json and bson encoders are just convenience functions to ensure correct 
+    serialization with these strict typing schemas. bson supports native ObjectId and 
+    datetime types, but the json encoder converts ObjectId to a string with its hex value,
+    and datetime into an ISO8601 string.
     """
     id: Optional[PyObjectId] = Field(None, alias="_id")
 
@@ -147,6 +154,7 @@ if __name__ == '__main__':
 
     terminator_thing = Thing(name = "The Terminator", 
                              slug = "the-terminator", 
+                             jess = "yay",
                              image_url = "https://m.media-amazon.com/images/I/61qCgQZyhOL._AC_SY879_.jpg",
                              extra_data = """{"director":"James Cameron", "year":1982}""",
                              _id = PyObjectId("12345678901234567890abcd")
