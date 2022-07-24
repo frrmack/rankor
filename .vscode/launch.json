@@ -5,10 +5,10 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Python: Current File",
+            "name": "Python: models",
             "type": "python",
             "request": "launch",
-            "program": "${file}",
+            "module": "src.rankor.models"
             "console": "integratedTerminal",
             "justMyCode": true
         }
