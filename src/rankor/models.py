@@ -9,7 +9,7 @@ from fastapi.encoders import jsonable_encoder
 # and necessary for a robust api. We import datetime to use as Python's 
 # native datetime type in this pydantic schema creation.
 from pydantic import BaseModel, Field, AnyUrl, Json, conlist
-from typing import List, Literal, Optional, Union
+from typing import List, Dict, Literal, Optional, Union
 from datetime import datetime
 
 
@@ -107,7 +107,7 @@ class Fight(MongoModel):
     """
     fighting_things: conlist(PyObjectId, min_items=2, max_items=2) 
     result: Literal['FIRST_THING_WINS', 'SECOND_THING_WINS', 'DRAW']
-    winner_id: Optional[PyObjectId]
+    winner: Optional[PyObjectId]
     date_fought: Optional[datetime]
 
 
@@ -128,15 +128,17 @@ class ThingCollection(MongoModel):
 
 
 
-class ThingScores(TypedDict):
-    """
-    This is not a model itself, but a type-restricted dictionary, to use as a
-    type that stores the scores in a RankedList model. It's a simple
-    mapping of {Thing: score} that enforces Thing to be represented by a valid
-    id, and score is represented as a float number.
-    """
-    thing_id: PyObjectId,
-    score: float
+# class ThingScore(TypedDict):
+#     """
+#     This is not a model itself, but a type-restricted dictionary, to use as a
+#     type that stores the scores in a RankedList model. It's a simple
+#     mapping of thing to score that enforces Thing to be represented by a valid
+#     id, and score is represented as a float number. For each thing,score pair,
+#     it takes the structure of 
+#     {thing_id: <the_id_of_the_thing>, score: <the_score_for_that_thing>}
+#     """
+#     thing_id: PyObjectId
+#     score: float
 
 
 class RankedList(MongoModel):
@@ -152,9 +154,9 @@ class RankedList(MongoModel):
     This model knows which ThingCollection the Things came from, the mapping of 
     Things to scores, and the associated Fights that gave rise to those scores.
     """
-    collection: PyObjectId          # The sourcing ThingCollection
-    scores: ThingScores,
-    fights: List[Fight]
+    collection: PyObjectId             # The sourcing ThingCollection
+    scores: Dict[PyObjectId, float]
+    fights: List[PyObjectId]
 
 
 
@@ -192,13 +194,29 @@ if __name__ == '__main__':
    
     print( terminator_thing.to_json() )
     print( aliens_thing.to_bson())
-
-    aliens_vs_terminator = Fight(red_corner_thing_id = "12345678901234567890abcd",
-                                 blue_corner_thing_id = "12345678901234567890ffff",
-                                 result = "RED")
+    #
+    aliens_vs_terminator = Fight(fighting_things = ["12345678901234567890abcd",
+                                                    "12345678901234567890ffff"
+                                                   ],
+                                 result = "FIRST_THING_WINS",
+                                 winner = "12345678901234567890abcd",
+                                 _id = "5647382910aaaa0192837465"
+                                )
     print(aliens_vs_terminator.to_json())
-
-
+    #
+    movies = ThingCollection(name = "Movies",
+                             things = ["12345678901234567890abcd", "12345678901234567890ffff"],
+                             _id = "dddd09876543210987654321"
+                            )
+    print( movies.to_json() )
+    #
+    best_to_worst_james_cameron_movies = RankedList(collection = "dddd09876543210987654321",
+                                                    scores  = {"12345678901234567890abcd" : 4.35,
+                                                               "12345678901234567890ffff": 5.10
+                                                              },
+                                                    fights = ["5647382910aaaa0192837465"]
+                                                    )
+    print( best_to_worst_james_cameron_movies.to_json() )
 
 
 
