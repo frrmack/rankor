@@ -8,7 +8,7 @@ from fastapi.encoders import jsonable_encoder
 # which is Python's own runtime support for type hints. This is good
 # and necessary for a robust api. We import datetime to use as Python's 
 # native datetime type in this pydantic schema creation.
-from pydantic import BaseModel, Field, AnyUrl, Json
+from pydantic import BaseModel, Field, AnyUrl, Json, conlist
 from typing import List, Literal, Optional, Union
 from datetime import datetime
 
@@ -82,62 +82,87 @@ class Thing(MongoModel):
     date_updated: Optional[datetime]
 
 
+
 class Fight(MongoModel):
     """
     Ranking is done by pairwise comparisons. A Fight is a pairwise comparison.
     Each Fight depicts a comparison of two Things. It keeps information about 
-    what the two compared Things were, and what the result was.
-    Available results are "RED" (red corner wins), "BLUE" (blue corner wins) or
-    "DRAW" (a tie).
-    There may be multiple Fights between two things (one usecase: a user keeps 
+    what the two compared Things were, and what the result was. If there is
+    a winner (not a draw), the winner's id is also saved as a convenience to
+    the application(s) on top of this api. The time of the fight is kept as well.
+    Available results are "FIRST_THING_WINS" (winner is the first element of
+    the fighting_things list which is a list with two items), "SECOND_THING_WINS" 
+    (winner is the last element of fighting_things) or "DRAW" (a tie).
+    There may be multiple Fights between two things. One such usecase: a user keeps 
     doing comparisons at different times, and the same couple comes up for comparison
     multiple times -- the result may be the same every time, or maybe different based 
-    on their mood and thinking at different times / another usecase: multiple users are
-    voting on Fights within the same collection of Things, and different users have
-    different opinions on which Thing is better)
+    on their mood and thinking at different times. Another usecase: multiple users are
+    voting on Fights within the same RankedList, and different users have
+    different opinions on which Thing is better, hence different results in multiple
+    Fights between the same pair of Things.
     Think of a Fight as a chess game between two players. The same players may play 
     multiple games and get different results, even if one is a stronger player. The 
     stronger player will likely win more of the Fights, but not necessarily all, and 
     they may even lose the majority just by random chance -- even if that's less likely.
     """
-    red_corner_thing_id: PyObjectId
-    blue_corner_thing_id: PyObjectId
-    result: Literal['RED', 'BLUE', 'DRAW']
+    fighting_things: conlist(PyObjectId, min_items=2, max_items=2) 
+    result: Literal['FIRST_THING_WINS', 'SECOND_THING_WINS', 'DRAW']
+    winner_id: Optional[PyObjectId]
+    date_fought: Optional[datetime]
 
 
-# class RankedList(MongoModel):
-#     pass
+
+class ThingCollection(MongoModel):
+    """
+    A ThingCollection is a set of things. The data of each instance is basically
+    a list of Thing ids. This allows us to form different collections to
+    make ranked lists about. For example, the database might have a ton of
+    movies saved as Things, but you may want to create a subset of them,
+    let's say Action movies made after 2010s for example, you would make a 
+    ThingCollection that encapsulates only the Things that meet this criterion,
+    and you can make a lot of pairwise comparisons (Fights) just among them to 
+    get a ranked list like 'My favorite action movies of the last decade'.
+    """
+    name: str
+    things: List[PyObjectId]
+
+
+
+class ThingScores(TypedDict):
+    """
+    This is not a model itself, but a type-restricted dictionary, to use as a
+    type that stores the scores in a RankedList model. It's a simple
+    mapping of {Thing: score} that enforces Thing to be represented by a valid
+    id, and score is represented as a float number.
+    """
+    thing_id: PyObjectId,
+    score: float
+
+
+class RankedList(MongoModel):
+    """
+    A RankedList is a set of Things, each associated with a score. (It's called 
+    a ranked list because we can use those scores to rank them.) When we start 
+    a RankedList, we pick a ThingCollection. We assign a default starting score
+    to each Thing in this ThingCollection, and we now have a set of things with 
+    scores. Of course, at this point all the scores are the same, which does not 
+    give us a meaningful ranking. We then start having some Fights among these
+    Things, which update the scores of the Things that have fought, and this way
+    the scores start differentiating, we start getting a more meaningful ranking.
+    This model knows which ThingCollection the Things came from, the mapping of 
+    Things to scores, and the associated Fights that gave rise to those scores.
+    """
+    collection: PyObjectId          # The sourcing ThingCollection
+    scores: ThingScores,
+    fights: List[Fight]
+
 
 
 # class User(object):
 #     # collections
 #     # ranked_lists
-#     pass
-
-# class Collection(object):
-#     pass
-
-# class RankedList(object):
-#     # user: User
-#     # collection : Collection
-#     # fights : list
-#     # thing_scores: dict
-#     pass
-
-# class TierList(object):
-#     # ranked_list
-#     pass
-
-# class Fight(object):
-#     # thing_red_corner
-#     # thing_blue_corner
-#     # result
-#     pass
-
-# class Thing(object):
-#     # name: str
-#     # image: url = None
-#     # other_fields: dict = None
+#     # fights
+#     # things
 #     pass
 
 

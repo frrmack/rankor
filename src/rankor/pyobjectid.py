@@ -4,7 +4,9 @@
 
 
 from bson import ObjectId as BsonObjectId
+from pydantic import ValidationError
 from pydantic.json import ENCODERS_BY_TYPE
+
 
 
 class PyObjectId(BsonObjectId):
@@ -16,7 +18,7 @@ class PyObjectId(BsonObjectId):
     @classmethod
     def validate(cls, v):
         if not BsonObjectId.is_valid(v):
-            raise ValueError("Not a valid bson object id")
+            raise ValidationError("Not a valid bson object id")
         return PyObjectId(v)
 
     @classmethod
