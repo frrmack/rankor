@@ -128,19 +128,6 @@ class ThingCollection(MongoModel):
 
 
 
-# class ThingScore(TypedDict):
-#     """
-#     This is not a model itself, but a type-restricted dictionary, to use as a
-#     type that stores the scores in a RankedList model. It's a simple
-#     mapping of thing to score that enforces Thing to be represented by a valid
-#     id, and score is represented as a float number. For each thing,score pair,
-#     it takes the structure of 
-#     {thing_id: <the_id_of_the_thing>, score: <the_score_for_that_thing>}
-#     """
-#     thing_id: PyObjectId
-#     score: float
-
-
 class RankedList(MongoModel):
     """
     A RankedList is a set of Things, each associated with a score. (It's called 
@@ -155,7 +142,7 @@ class RankedList(MongoModel):
     Things to scores, and the associated Fights that gave rise to those scores.
     """
     collection: PyObjectId             # The sourcing ThingCollection
-    scores: Dict[PyObjectId, float]
+    thing_scores: Dict[PyObjectId, float]
     fights: List[PyObjectId]
 
 
@@ -211,9 +198,9 @@ if __name__ == '__main__':
     print( movies.to_json() )
     #
     best_to_worst_james_cameron_movies = RankedList(collection = "dddd09876543210987654321",
-                                                    scores  = {"12345678901234567890abcd" : 4.35,
-                                                               "12345678901234567890ffff": 5.10
-                                                              },
+                                                    thing_scores  = {"12345678901234567890abcd" : 4.35,
+                                                                     "12345678901234567890ffff": 5.10
+                                                                    },
                                                     fights = ["5647382910aaaa0192837465"]
                                                     )
     print( best_to_worst_james_cameron_movies.to_json() )
