@@ -73,7 +73,6 @@ class Thing(MongoModel):
     based on these scores. A Thing is the main element of Rankor, it's
     the thing we want to understand the ranking of among others of its kind.
     """
-    slug: str
     name: str
     image_url: Optional[AnyUrl]
     category: Optional[str]     # Future idea: Turn categories into a class? Also add a tag class?
@@ -141,7 +140,7 @@ class RankedList(MongoModel):
     This model knows which ThingCollection the Things came from, the mapping of 
     Things to scores, and the associated Fights that gave rise to those scores.
     """
-    collection: PyObjectId             # The sourcing ThingCollection
+    collection: PyObjectId                   # The sourcing ThingCollection
     thing_scores: Dict[PyObjectId, float]
     fights: List[PyObjectId]
 
@@ -167,14 +166,12 @@ if __name__ == '__main__':
     # the database, just to get _ids assigned.
 
     terminator_thing = Thing(name = "The Terminator", 
-                             slug = "the-terminator", 
                              jess = "yay",
                              image_url = "https://m.media-amazon.com/images/I/61qCgQZyhOL._AC_SY879_.jpg",
                              extra_data = """{"director":"James Cameron", "year":1982}""",
                              _id = PyObjectId("12345678901234567890abcd")
                             )
     aliens_thing = Thing(name = "Aliens",
-                         slug = "aliens",
                          image_url = "https://m.media-amazon.com/images/I/91kkGWtyqTL._AC_SL1500_.jpg",
                          _id = PyObjectId("12345678901234567890ffff")
                         )
