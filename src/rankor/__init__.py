@@ -2,8 +2,11 @@
 from datetime import datetime
 import os
 
+# Serialization imports (fastapi's nice json encoder)
+from fastapi.encoders import jsonable_encoder
+
 # Database interface imports
-from pymongo import MongoClient
+from pymongo.collection import ReturnDocument
 from pymongo.errors import DuplicateKeyError
 from flask_pymongo import PyMongo
 
@@ -22,13 +25,13 @@ import settings
 app = Flask(__name__)
 app.config["MONGO_URI"] = settings.MONGO_DATABASE_URI
 pymongo = PyMongo(app)
-
+db = pymongo.db
 
 # Error handlers to return errors as JSON (instead of Flask's default HTML)
 @app.errorhandler(404)
 def resource_not_found(e):
     """
-    404
+    HTTP 404 Resource not found error
     """
     return jsonify(error=str(e)), 404
 
@@ -36,33 +39,42 @@ def resource_not_found(e):
 @app.errorhandler(DuplicateKeyError)
 def resource_not_found(e):
     """
-    MongoDB duplicate key errors
+    HTTP 400 MongoDB duplicate key errors
     """
     return jsonify(error=f"Duplicate key error"), 400
 
 
 
-# Thing endpoints: List (GET), Add New (POST), Update (PUT), Delete (DELETE)
-@app.route("/things/", methods=["GET"])
+# Thing endpoints: 
+# List all (GET), Show one (GET), 
+# Add a new one (POST), Update one (PUT), Delete one (DELETE)
+@app.route("/rankor/things/", methods=["GET"])
 def list_all_things():
     """
     GET request to list all Things in the database.
+
     Since this list can get long, the results are paginated.
-    You can ask for a specific page, like for example:
-    curl -i -xGET 'http://localhost:5000/things/?page=3'
-    The response will also include the following links:
+    Each page will list a set number of Things, this page size is determined
+    in the api settings (in the root directory).
+
+    You can ask for a specific page, for example:
+    curl -i -X GET 'http://localhost:5000/rankor/things/?page=3'
+
+    If you don't give a page parameter, it will return page 1.
+    The response will also include the page number and the following links:
     self: the link to get this very page
     last: the link to get the last page
     prev: the link to get the previous page
     next: the link to get the next page
-    These links are there to help iterate over all results
+    These links are there to help iterate over all results.
     """
-
     # Define the parameters / counts to help paginate
     # Note: if no page parameter is given, we will default to page 1
     page = int(request.args.get("page", 1))
     page_size = settings.NUMBER_OF_ITEMS_IN_EACH_RESPONSE_PAGE 
-    number_of_all_things = recipes.count_documents({})
+    num_skip = number_of_things_to_skip_to_reach_this_page = page_size * (page-1)
+    number_of_all_things = db.things.count_documents({})
+    last_page = (number_of_all_things // page_size) + 1
 
     # We will sort all things alphabetically, then divide this list into pages
     # that only include page_size items. Page size is a constant setting defined
@@ -74,36 +86,138 @@ def list_all_things():
     # were in the previous 5 pages), then use mongo's limit functionality to list 
     # the 10 things that start from there (the 51st through 60th things). 
     # This is page 6. We will also provide links to page 5, page 7, and the last page.
-    page_items_query = recipes.find().sort("name").skip(page_size*(page-1)).limit(page_size)
-
+    page_items_query = db.things.find().sort("name").skip(num_skip).limit(page_size)
     things_in_this_page = [Thing(**item).to_json() for item in page_items_query]
 
-    # Add links to this very page and the last page you can get
+    # Links to this very page and the last page you can get
     links = {
         "self": {"href": url_for(".list_all_things", page=page, _external=True)},
-        "last": {"href": url_for(".list_all_things", 
-                                 page=(number_of_all_things // page_size) + 1,
-                                 _external=True
-                                )
-                },
+        "last": {"href": url_for(".list_all_things", page=last_page, _external = True)},
     }
     # Add a 'prev' link if it's not on the first page:
     if page > 1:
-        links["prev"] = {"href": url_for(".list_all_things", 
-                                          page=page - 1, 
-                                          _external=True
-                                        )
-                        }
+        links["prev"] = {"href": url_for(".list_all_things", page=page-1, _external=True)}
     # Add a 'next' link if it's not on the last page:
     if page - 1 < number_of_all_things // page_size:
-        links["next"] = {"href": url_for(".list_all_things", 
-                                          page=page + 1,
-                                          _external=True
-                                        )
-                        }
+        links["next"] = {"href": url_for(".list_all_things", page=page+1, _external=True)}
 
     # Return the full response
-    return {"things in this page": things_in_this_page, 
+    return {"things": things_in_this_page, 
             "_page": page,
             "_links": links,
            }
+
+
+@app.route("/rankor/things/", methods=["POST"])
+def add_new_thing():
+    """
+    POST request to directly add a new Thing to the database.
+
+    Attach the contents of the new Thing as data in JSON format.
+    For example:
+    curl -d '{'name': 'The Terminator', 
+              'image_url': https://m.media-amazon.com/images/I/61qCgQZyhOL._AC_SY879_.jpg', 
+              'extra_data': {'director': 'James Cameron', 'year': 1982}
+             }' 
+         -H "Content-Type: application/json" 
+         -X POST http://localhost:5000/rankor/things/
+    """
+    # Retrieve the data from the request and record the timestamp
+    new_thing_data = request.get_json()
+    new_thing_data["date_added"] = datetime.utcnow()
+
+    # Create the Thing instance, which also validates its data using pydantic,
+    # insert it into the database, and retrieve the _id that mongodb automatically 
+    # assigned it (for purposes of returning the full thing, including its id, 
+    # in the response)
+    thing = Thing(**new_thing_data)
+    insert_result = db.things.insert_one(thing.to_bson())
+    thing.id = PyObjectId(str(insert_result.inserted_id))
+    
+    # log the added thing and return it (in json) as the success response
+    print(thing)
+    return thing.to_json()
+
+
+@app.route("/rankor/things/<thing_id>", methods=["GET"])
+def get_one_thing(thing_id): 
+    """
+    GET request to retrieve the data for a single Thing using its id
+
+    For example:
+    curl -i -X GET 'http://localhost:5000/rankor/things/12345678901234567890abcd'
+    """
+    # Retrieve the data from the database and respond with it.
+    # find_one_or_404 will respond nicely with an HTTP 404 if the database
+    # cannot find it.
+    # Why are we not just returning thing_data directly instead of creating
+    # a Thing instance with it, which we then re-serialize to JSON? Because
+    # creating this instance runs all the pydantic typing validation code,
+    # ensuring much more robust, well defined, reliable api behavior. We want
+    # to create Thing instances whenever data goes into or out of the database.
+    thing_data = db.things.find_one_or_404({"_id": thing_id})
+    return Thing(**thing_data).to_json()
+
+
+@app.route("/rankor/things/<thing_id>", methods=["PUT"])
+def update_thing_data(thing_id):
+    """
+    PUT request to update the data of a Thing that already exists in the database.
+    
+    To keep things simple and robust, this endpoint always expects the name of the 
+    Thing to be included in the request data as well. The name field is the only
+    user defined field that a Thing must have. This requirement to include it
+    here not only makes the data validation more straightforward, but also prevents
+    some unexpected update inconsistencies on the users part, since the thing to be updated
+    is named by the user-readable and intuitive name field besides the more inscrutable
+    bson hex id value assigned by the system. 
+
+    You can make partial updates like adding an optional field (like category in this
+    example below) or change the value of a single field, etc. Just make sure to include
+    the name of the Thing.
+    For example:
+    curl -d '{'name': 'The Terminator', 
+              'category: 'Action Movies',
+             }' 
+         -H "Content-Type: application/json" 
+         -X PUT http://localhost:5000/rankor/things/12345678901234567890abcd       
+
+    If you would like to use the safest approach to avoid any unforeseen inconsistencies
+    due to user error when using this endpoint, the most robust way is always to retrieve
+    the Thing first with a GET request to /rankor/things/<thing_id>, update its data and 
+    send this updated version with a PUT request to store these updates in the database.
+    """
+    # Retrieve the request data, validate it by creating an instance, add a timestamp for
+    # when the update is happening.
+    thing_update_data = request.get_json()
+    thing_update = Thing(thing_update_data)
+    thing_update.date_updated = datetime.utcnow()
+    # Find the thing in the db by its id
+    updated_item = db.things.find_one_and_update({"id": slug},
+                                                 {"$set": thing_update.to_bson()},
+                                                 return_document=ReturnDocument.AFTER,
+                                                )
+    # If successful, respond with the new, updated Thing
+    # If unsuccessful, abort and send an HTTP 404 error
+    if updated_item:
+        return Thing(**updated_item).to_json()
+    else:
+        flask.abort(404, f"Thing with id {thing_id} not found")
+
+
+@app.route("/cocktails/<thing_id>", methods=["DELETE"])
+def delete_thing(thing_id):
+    """
+    DELETE request to remove a thing from the database
+
+    For example:
+     curl -i -X DELETE 'http://localhost:5000/rankor/things/12345678901234567890abcd'   
+    """
+    # Kill the thing with this id in the database
+    deleted_cocktail = db.things.find_one_and_delete({"_id": thing_id})
+    # If successful, respond with the deleted Thing that's no longer in the database
+    # If unsuccessful, abort and send an HTTP 404 error
+    if deleted_cocktail:
+        return Cocktail(**deleted_cocktail).to_json()
+    else:
+        flask.abort(404, "Cocktail not found")

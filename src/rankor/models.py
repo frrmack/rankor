@@ -166,7 +166,6 @@ if __name__ == '__main__':
     # the database, just to get _ids assigned.
 
     terminator_thing = Thing(name = "The Terminator", 
-                             jess = "yay",
                              image_url = "https://m.media-amazon.com/images/I/61qCgQZyhOL._AC_SY879_.jpg",
                              extra_data = """{"director":"James Cameron", "year":1982}""",
                              _id = PyObjectId("12345678901234567890abcd")
@@ -201,6 +200,8 @@ if __name__ == '__main__':
                                                     fights = ["5647382910aaaa0192837465"]
                                                     )
     print( best_to_worst_james_cameron_movies.to_json() )
+
+
 
 
 
