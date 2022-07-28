@@ -140,7 +140,8 @@ class RankedList(MongoModel):
     This model knows which ThingCollection the Things came from, the mapping of 
     Things to scores, and the associated Fights that gave rise to those scores.
     """
-    collection: PyObjectId                   # The sourcing ThingCollection
+    name: str
+    collection: PyObjectId                     # The sourcing ThingCollection
     thing_scores: Dict[PyObjectId, float]
     fights: List[PyObjectId]
 
