@@ -46,11 +46,12 @@ def resource_not_found(e):
 
 
 # Thing endpoints: /rankor/things/
-# Add a new Thing (POST)
-# Delete a Thing (DELETE)
-# List all Things(GET)
-# Show one Thing (GET) 
-# Edit/Update a Thing (PUT)
+#
+# Add a new Thing       |   POST    /rankor/things/
+# Delete a Thing        |   DELETE  /rankor/things/<thing_id>
+# Edit/Update a Thing   |   PUT     /rankor/things/<thing_id>
+# List all Things       |   GET     /rankor/things/     
+# Show one Thing        |   GET     /rankor/things/<thing_id>
 
 @app.route("/rankor/things/", methods=["POST"])
 def add_new_thing():
@@ -99,6 +100,52 @@ def delete_thing(thing_id):
         return Cocktail(**deleted_cocktail).to_json()
     else:
         flask.abort(404, "Cocktail not found")
+
+
+@app.route("/rankor/things/<thing_id>", methods=["PUT"])
+def update_thing_data(thing_id):
+    """
+    PUT request to update the data of a Thing that already exists in the database.
+    
+    To keep things simple and robust, this endpoint always expects the name of the 
+    Thing to be included in the request data as well. The name field is the only
+    user defined field that a Thing must have. This requirement to include it
+    here not only makes the data validation more straightforward, but also prevents
+    some unexpected update inconsistencies on the users part, since the thing to be updated
+    is named by the user-readable and intuitive name field besides the more inscrutable
+    bson hex id value assigned by the system. 
+
+    You can make partial updates like adding an optional field (like category in this
+    example below) or change the value of a single field, etc. Just make sure to include
+    the name of the Thing.
+    For example:
+    curl -d '{'name': 'The Terminator', 
+              'category: 'Action Movies',
+             }' 
+         -H "Content-Type: application/json" 
+         -X PUT http://localhost:5000/rankor/things/12345678901234567890abcd       
+
+    If you would like to use the safest approach to avoid any unforeseen inconsistencies
+    due to user error when using this endpoint, the most robust way is always to retrieve
+    the Thing first with a GET request to /rankor/things/<thing_id>, update its data and 
+    send this updated version with a PUT request to store these updates in the database.
+    """
+    # Retrieve the request data, validate it by creating an instance, add a timestamp for
+    # when the update is happening.
+    thing_update_data = request.get_json()
+    thing_update = Thing(thing_update_data)
+    thing_update.date_updated = datetime.utcnow()
+    # Find the thing in the db by its id
+    updated_item = db.things.find_one_and_update({"id": slug},
+                                                 {"$set": thing_update.to_bson()},
+                                                 return_document=ReturnDocument.AFTER,
+                                                )
+    # If successful, respond with the new, updated Thing
+    # If unsuccessful, abort and send an HTTP 404 error
+    if updated_item:
+        return Thing(**updated_item).to_json()
+    else:
+        flask.abort(404, f"Thing with id {thing_id} not found")
 
 
 @app.route("/rankor/things/", methods=["GET"])
@@ -181,64 +228,35 @@ def get_one_thing(thing_id):
     return Thing(**thing_data).to_json()
 
 
-@app.route("/rankor/things/<thing_id>", methods=["PUT"])
-def update_thing_data(thing_id):
-    """
-    PUT request to update the data of a Thing that already exists in the database.
-    
-    To keep things simple and robust, this endpoint always expects the name of the 
-    Thing to be included in the request data as well. The name field is the only
-    user defined field that a Thing must have. This requirement to include it
-    here not only makes the data validation more straightforward, but also prevents
-    some unexpected update inconsistencies on the users part, since the thing to be updated
-    is named by the user-readable and intuitive name field besides the more inscrutable
-    bson hex id value assigned by the system. 
-
-    You can make partial updates like adding an optional field (like category in this
-    example below) or change the value of a single field, etc. Just make sure to include
-    the name of the Thing.
-    For example:
-    curl -d '{'name': 'The Terminator', 
-              'category: 'Action Movies',
-             }' 
-         -H "Content-Type: application/json" 
-         -X PUT http://localhost:5000/rankor/things/12345678901234567890abcd       
-
-    If you would like to use the safest approach to avoid any unforeseen inconsistencies
-    due to user error when using this endpoint, the most robust way is always to retrieve
-    the Thing first with a GET request to /rankor/things/<thing_id>, update its data and 
-    send this updated version with a PUT request to store these updates in the database.
-    """
-    # Retrieve the request data, validate it by creating an instance, add a timestamp for
-    # when the update is happening.
-    thing_update_data = request.get_json()
-    thing_update = Thing(thing_update_data)
-    thing_update.date_updated = datetime.utcnow()
-    # Find the thing in the db by its id
-    updated_item = db.things.find_one_and_update({"id": slug},
-                                                 {"$set": thing_update.to_bson()},
-                                                 return_document=ReturnDocument.AFTER,
-                                                )
-    # If successful, respond with the new, updated Thing
-    # If unsuccessful, abort and send an HTTP 404 error
-    if updated_item:
-        return Thing(**updated_item).to_json()
-    else:
-        flask.abort(404, f"Thing with id {thing_id} not found")
-
-
 
 
 # RankedList endpoints: /rankor/rankedlists/
-# Create a new RankedList (POST)
-# Delete a RankedList (DELETE)
-# List all RankedLists (GET)
-# Show a RankedList with its ranked Things and their scores (GET)
-# Show all recorded Fights in a RankedList (GET)
-# Delete a Fight in a RankedList (DELETE)
-# Edit/Update a RankedList (PUT)
-# Get a new Fight between two Things in a RankedList(GET) 
-# Save the result of a Fight (POST)
-# Retrieve a Thing's all Fights in a RankedList (GET)
+#
+# Create a new RankedList               
+#                       |   POST    /rankor/rankedlists/
+# Delete a RankedList                   
+#                       |   DELETE  /rankor/rankedlists/<ranked_list_id>
+# Edit/Update a RankedList              
+#                       |   PUT     /rankor/rankedlists/<ranked_list_id>
+# List all RankedLists                  
+#                       |   GET     /rankor/rankedlists/
+# Show a RankedList with its ranked Things and their scores  
+#                       |   GET     /rankor/rankedlists/<ranked_list_id>
+
+
+
+
+# Fight endpoints for a given RankedList: /rankor/rankedlists/<ranked_list_id>/fights/
+#
+# Get a new Fight between two Things in a RankedList  
+#                       |   GET     /rankor/rankedlists/<ranked_list_id>/fights/new/
+# Save the result of a Fight            
+#                       |   POST    /rankor/rankedlists/<ranked_list_id>/fights/
+# Delete a Fight in a RankedList        
+#                       |   DELETE  /rankor/rankedlists/<ranked_list_id>/fights/<fight_id>
+# Show all recorded Fights in a RankedList  
+#                       |   GET     /rankor/rankedlists/<ranked_list_id>/fights/
+# Retrieve all Fights of a Thing in a RankedList 
+#                       |   GET     /rankor/rankedlists/<ranked_list_id>/fights/things/<thing_id>
 
 
