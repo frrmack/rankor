@@ -45,11 +45,13 @@ def resource_not_found(e):
 
 
 
-# Thing endpoints: 
-# /rankor/things
-# Add a new one (POST),
-# List all (GET), Show one (GET), 
-# Update one (PUT), Delete one (DELETE)
+# Thing endpoints: /rankor/things/
+# Add a new Thing (POST)
+# Delete a Thing (DELETE)
+# List all Things(GET)
+# Show one Thing (GET) 
+# Edit/Update a Thing (PUT)
+
 @app.route("/rankor/things/", methods=["POST"])
 def add_new_thing():
     """
@@ -79,6 +81,24 @@ def add_new_thing():
     # log the added thing and return it (in json) as the success response
     print(thing)
     return thing.to_json()
+
+
+@app.route("/cocktails/<thing_id>", methods=["DELETE"])
+def delete_thing(thing_id):
+    """
+    DELETE request to remove a thing from the database
+
+    For example:
+     curl -i -X DELETE 'http://localhost:5000/rankor/things/12345678901234567890abcd'   
+    """
+    # Kill the thing with this id in the database
+    deleted_cocktail = db.things.find_one_and_delete({"_id": thing_id})
+    # If successful, respond with the deleted Thing that's no longer in the database
+    # If unsuccessful, abort and send an HTTP 404 error
+    if deleted_cocktail:
+        return Cocktail(**deleted_cocktail).to_json()
+    else:
+        flask.abort(404, "Cocktail not found")
 
 
 @app.route("/rankor/things/", methods=["GET"])
@@ -207,32 +227,18 @@ def update_thing_data(thing_id):
         flask.abort(404, f"Thing with id {thing_id} not found")
 
 
-@app.route("/cocktails/<thing_id>", methods=["DELETE"])
-def delete_thing(thing_id):
-    """
-    DELETE request to remove a thing from the database
-
-    For example:
-     curl -i -X DELETE 'http://localhost:5000/rankor/things/12345678901234567890abcd'   
-    """
-    # Kill the thing with this id in the database
-    deleted_cocktail = db.things.find_one_and_delete({"_id": thing_id})
-    # If successful, respond with the deleted Thing that's no longer in the database
-    # If unsuccessful, abort and send an HTTP 404 error
-    if deleted_cocktail:
-        return Cocktail(**deleted_cocktail).to_json()
-    else:
-        flask.abort(404, "Cocktail not found")
 
 
-# RankedList (and the relevant Fights) endpoints: 
-# /rankor/rankedlists/
-# Create a new one (POST), Delete one (DELETE)
-# List all RankedLists (GET), 
-# Show scores and ranks in one (GET), 
-# Update one (PUT), 
-# Get a new fight between two things (GET), 
+# RankedList endpoints: /rankor/rankedlists/
+# Create a new RankedList (POST)
+# Delete a RankedList (DELETE)
+# List all RankedLists (GET)
+# Show a RankedList with its ranked Things and their scores (GET)
+# Show all recorded Fights in a RankedList (GET)
+# Delete a Fight in a RankedList (DELETE)
+# Edit/Update a RankedList (PUT)
+# Get a new Fight between two Things in a RankedList(GET) 
 # Save the result of a Fight (POST)
-# Retrieve an existing Fight
-# Delete a fight (DELETE)
+# Retrieve a Thing's all Fights in a RankedList (GET)
+
 
