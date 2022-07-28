@@ -46,8 +46,41 @@ def resource_not_found(e):
 
 
 # Thing endpoints: 
+# /rankor/things
+# Add a new one (POST),
 # List all (GET), Show one (GET), 
-# Add a new one (POST), Update one (PUT), Delete one (DELETE)
+# Update one (PUT), Delete one (DELETE)
+@app.route("/rankor/things/", methods=["POST"])
+def add_new_thing():
+    """
+    POST request to directly add a new Thing to the database.
+
+    Attach the contents of the new Thing as data in JSON format.
+    For example:
+    curl -d '{'name': 'The Terminator', 
+              'image_url': https://m.media-amazon.com/images/I/61qCgQZyhOL._AC_SY879_.jpg', 
+              'extra_data': {'director': 'James Cameron', 'year': 1982}
+             }' 
+         -H "Content-Type: application/json" 
+         -X POST http://localhost:5000/rankor/things/
+    """
+    # Retrieve the data from the request and record the timestamp
+    new_thing_data = request.get_json()
+    new_thing_data["date_added"] = datetime.utcnow()
+
+    # Create the Thing instance, which also validates its data using pydantic,
+    # insert it into the database, and retrieve the _id that mongodb automatically 
+    # assigned it (for purposes of returning the full thing, including its id, 
+    # in the response)
+    thing = Thing(**new_thing_data)
+    insert_result = db.things.insert_one(thing.to_bson())
+    thing.id = PyObjectId(str(insert_result.inserted_id))
+    
+    # log the added thing and return it (in json) as the success response
+    print(thing)
+    return thing.to_json()
+
+
 @app.route("/rankor/things/", methods=["GET"])
 def list_all_things():
     """
@@ -106,37 +139,6 @@ def list_all_things():
             "_page": page,
             "_links": links,
            }
-
-
-@app.route("/rankor/things/", methods=["POST"])
-def add_new_thing():
-    """
-    POST request to directly add a new Thing to the database.
-
-    Attach the contents of the new Thing as data in JSON format.
-    For example:
-    curl -d '{'name': 'The Terminator', 
-              'image_url': https://m.media-amazon.com/images/I/61qCgQZyhOL._AC_SY879_.jpg', 
-              'extra_data': {'director': 'James Cameron', 'year': 1982}
-             }' 
-         -H "Content-Type: application/json" 
-         -X POST http://localhost:5000/rankor/things/
-    """
-    # Retrieve the data from the request and record the timestamp
-    new_thing_data = request.get_json()
-    new_thing_data["date_added"] = datetime.utcnow()
-
-    # Create the Thing instance, which also validates its data using pydantic,
-    # insert it into the database, and retrieve the _id that mongodb automatically 
-    # assigned it (for purposes of returning the full thing, including its id, 
-    # in the response)
-    thing = Thing(**new_thing_data)
-    insert_result = db.things.insert_one(thing.to_bson())
-    thing.id = PyObjectId(str(insert_result.inserted_id))
-    
-    # log the added thing and return it (in json) as the success response
-    print(thing)
-    return thing.to_json()
 
 
 @app.route("/rankor/things/<thing_id>", methods=["GET"])
@@ -221,3 +223,16 @@ def delete_thing(thing_id):
         return Cocktail(**deleted_cocktail).to_json()
     else:
         flask.abort(404, "Cocktail not found")
+
+
+# RankedList (and the relevant Fights) endpoints: 
+# /rankor/rankedlists/
+# Create a new one (POST), Delete one (DELETE)
+# List all RankedLists (GET), 
+# Show scores and ranks in one (GET), 
+# Update one (PUT), 
+# Get a new fight between two things (GET), 
+# Save the result of a Fight (POST)
+# Retrieve an existing Fight
+# Delete a fight (DELETE)
+
