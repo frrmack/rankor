@@ -15,7 +15,7 @@ import flask
 from flask import Flask, request, url_for, jsonify
 
 # Rankor imports
-from src.rankor.models import Thing
+from src.rankor.models import Thing, RankedList, Fight, Score
 from src.rankor.pyobjectid import PyObjectId
 
 # Settings for this specific server instance
@@ -75,7 +75,7 @@ def add_new_thing():
     """
     # Retrieve the data from the request and record the timestamp of creation
     new_thing_data = request.get_json()
-    new_thing_data["date_added"] = datetime.utcnow()
+    new_thing_data["date_created"] = datetime.utcnow()
 
     # Create the new Thing instance, which also validates its data using pydantic,
     # insert it into the database, and retrieve the _id that mongodb automatically 
@@ -258,7 +258,6 @@ def get_one_thing(thing_id):
 
 
 
-
 # RankedList endpoints: /rankor/rankedlists/
 #
 # Create a new RankedList               
@@ -282,30 +281,43 @@ def create_a_new_ranked_list():
     """
     POST request to directly create a new RankedList
 
+    The only field you can define for a new RankedList is:
+    name: str
+
     Attach the contents of the new RankedList as data in JSON format.
     For example:
-    curl -d '{'name': 'The Terminator', 
-              'image_url': https://m.media-amazon.com/images/I/61qCgQZyhOL._AC_SY879_.jpg', 
-              'extra_data': {'director': 'James Cameron', 'year': 1982}
-             }' 
+    curl -d '{'name': 'Favorite Movies'}' 
          -H "Content-Type: application/json" 
-         -X POST http://localhost:5000/rankor/things/
+         -X POST http://localhost:5000/rankor/rankedlists/
     """
     # Retrieve the data from the request and record the timestamp
-    new_thing_data = request.get_json()
-    new_thing_data["date_added"] = datetime.utcnow()
+    new_ranked_list_data = request.get_json()
+    new_ranked_list_data["date_created"] = datetime.utcnow()
 
-    # Create the Thing instance, which also validates its data using pydantic,
+    # A RankedList has a dictionary that maps each thing to its score
+    # in this RankedList, we are going to initialize the scores for all of them
+    # with the default initialization scores defined in the api settings.
+    # It also has a list of fights, which will be empty now, at the time
+    # of creation. 
+    things_in_ranked_list = [Thing(**doc) for doc in db.things.find()]
+    new_ranked_list_data["thing_scores"] = {thing.id: Score() for thing in things_in_ranked_list}
+    new_ranked_list_data["fights"] = []  
+
+    # Create the RankedList instance, which also validates its data using pydantic,
     # insert it into the database, and retrieve the _id that mongodb automatically 
-    # assigned it (for purposes of returning the full thing, including its id, 
-    # in the response)
-    thing = Thing(**new_thing_data)
-    insert_result = db.things.insert_one(thing.to_bson())
-    thing.id = PyObjectId(str(insert_result.inserted_id))
+    # assigned it (for purposes of returning its id in the response)
+    ranked_list = RankedList(**new_ranked_list_data)
+    insert_result = db.ranked_lists.insert_one(ranked_list.to_bson())
     
-    # log the added thing and return it encoded as json as the success response
-    print(thing)
-    return thing.to_json()
+    # When logging and returning it as a success reponse, put the newly assigned id
+    # in, but leave the thing_scores dict out to avoid too long of a response here, 
+    # as that dictionary includes all the Things participating in the RankedList
+    ranked_list.id = PyObjectId(str(insert_result.inserted_id))
+    ranked_list.thing_scores = {}
+
+    # log and respond
+    print(ranked_list)
+    return ranked_list.to_json()
 
 
 
