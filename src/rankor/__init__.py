@@ -86,8 +86,8 @@ def add_new_thing():
     new_thing.id = PyObjectId(str(insert_result.inserted_id))
     
     # log the added thing and return it (in json) as the success response
-    print(thing)
-    return thing.to_json()
+    print(new_thing)
+    return new_thing.to_json()
 
 
 @app.route("/rankor/things/<thing_id>/", methods=["DELETE"])
@@ -96,10 +96,10 @@ def delete_thing(thing_id):
     DELETE request to remove a thing from the database
 
     Example:
-    curl -i -X DELETE 'http://localhost:5000/rankor/things/12345678901234567890abcd'   
+    curl -i -X DELETE 'http://localhost:5000/rankor/things/12345678901234567890abcd/'   
     """
     # Kill the Thing document with this id in the database
-    deleted_thing_doc = db.things.find_one_and_delete({"_id": thing_id})
+    deleted_thing_doc = db.things.find_one_and_delete({"_id": PyObjectId(thing_id)})
     # If successful, respond with the deleted Thing document that's 
     # no longer in the database
     # If unsuccessful, abort and send an HTTP 404 error
@@ -141,21 +141,24 @@ def update_thing_data(thing_id):
     # before we validate the update data with Thing(**thing_update_data),
     # we need to retrieve the name of this thing from the database.
     if 'name' not in update_data:
-        thing_doc_we_are_updating = db.things.find_one({"_id": thing_id})
+        thing_doc_we_are_updating = db.things.find_one({"_id": PyObjectId(thing_id)})
+        print(thing_doc_we_are_updating)
         if not thing_doc_we_are_updating:
             flask.abort(404, f"Thing with id {thing_id} not found")
-        thing_update_data['name'] = thing_doc_we_are_updating['name']
+        thing_doc_we_are_updating['name'] = thing_doc_we_are_updating['name']
     # Now we know for sure that our thing_update_data has a name.
     # Validate through instantiating it as a Thing and add a timestamp
     # to store when this update happened.
     validated_update = Thing(**update_data)
     validated_update.date_updated = datetime.utcnow()
+    print(f'validated update: {validated_update.to_json()}')
     # Get our target thing with this id and apply these updates to the 
     # given fields in the database.
-    updated_doc = db.things.find_one_and_update({"_id": thing_id},
+    updated_doc = db.things.find_one_and_update({"_id": PyObjectId(thing_id)},
                                                  {"$set": validated_update.to_bson()},
                                                  return_document=ReturnDocument.AFTER,
                                                 )
+    print(updated_doc)
     # If successful, respond with the new, updated Thing
     # If unsuccessful, abort and send an HTTP 404 error
     if updated_doc:
@@ -225,13 +228,13 @@ def list_all_things():
            }
 
 
-@app.route("/rankor/things/<thing_id>", methods=["GET"])
+@app.route("/rankor/things/<thing_id>/", methods=["GET"])
 def get_one_thing(thing_id): 
     """
     GET request to retrieve the data for a single Thing using its id
 
     For example:
-    curl -i -X GET 'http://localhost:5000/rankor/things/12345678901234567890abcd'
+    curl -i -X GET 'http://localhost:5000/rankor/things/12345678901234567890abcd/'
     """
     # Retrieve the Thing document with this id from the database and respond
     # with it. If the database can't find such a document in there, find_one_or_404
@@ -253,7 +256,7 @@ def get_one_thing(thing_id):
     # with the data formats anywhere, the system will fail at these validation
     # checkpoints rather than somewhere random in the middle of the code when
     # the data is actually used.
-    thing_doc = db.things.find_one_or_404({"_id": thing_id})
+    thing_doc = db.things.find_one_or_404({"_id": PyObjectId(thing_id)})
     return Thing(**thing_doc).to_json()
 
 
