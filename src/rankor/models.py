@@ -79,7 +79,7 @@ class Thing(MongoModel):
     name: str
     image_url: Optional[AnyUrl]
     category: Optional[str]     # Future idea: Turn categories into a class? Also add a tag class?
-    extra_data: Optional[Json]
+    extra_data: Optional[Dict]
     date_created: Optional[datetime]
     date_updated: Optional[datetime]
 
