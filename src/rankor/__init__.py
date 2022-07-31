@@ -7,12 +7,15 @@ from fastapi.encoders import jsonable_encoder
 
 # Database interface imports
 from pymongo.collection import ReturnDocument
-from pymongo.errors import DuplicateKeyError
 from flask_pymongo import PyMongo
 
 # Flask imports
 import flask
 from flask import Flask, request, url_for, jsonify
+
+# Error imports
+from werkzeug.exceptions import HTTPException
+from pymongo.errors import DuplicateKeyError
 
 # Rankor imports
 from src.rankor.models import Thing, RankedList, Fight, Score
@@ -27,21 +30,23 @@ app.config["MONGO_URI"] = settings.MONGO_DATABASE_URI
 pymongo = PyMongo(app)
 db = pymongo.db
 
-# Error handlers to return errors as JSON (instead of Flask's default HTML)
-@app.errorhandler(404)
-def resource_not_found(e):
-    """
-    HTTP 404 Resource not found error
-    """
-    return jsonify(error=str(e)), 404
 
+# Custom Errors and error handler to return error responses as JSON 
+# (instead of Flask's default HTML)
+class ResourceNotFoundInDatabaseError(HTTPException):
+    code = 404
+    description = ("The requested resource was not found in the database. "
+                   "Please check the requested id carefully and try again.")
 
-@app.errorhandler(DuplicateKeyError)
-def resource_not_found(e):
-    """
-    HTTP 400 MongoDB duplicate key errors
-    """
-    return jsonify(error=f"Duplicate key error"), 400
+@app.errorhandler(Exception)
+def handle_error(error):
+    code = 500
+    if isinstance(error, HTTPException):
+        code = error.code
+    elif isinstance(error, DuplicateKeyError):
+        code = 400
+    return jsonify({"error": error.description}), code
+
 
 
 
@@ -66,9 +71,9 @@ def add_new_thing():
 
     Attach the contents of the new Thing as data in JSON format.
     Example:
-    curl -d '{'name': 'Terminator', 
-              'image_url': https://m.media-amazon.com/images/I/61qCgQZyhOL._AC_SY879_.jpg', 
-              'extra_data': {'director': 'James Cameron', 'year': 1982}
+    curl -d '{"name": "Terminator", 
+              "image_url": "https://m.media-amazon.com/images/I/61qCgQZyhOL._AC_SY879_.jpg", 
+              "extra_data": {"director": "James Cameron", "year": 1982}
              }' 
          -H "Content-Type: application/json" 
          -X POST http://localhost:5000/rankor/things/
@@ -100,13 +105,13 @@ def delete_thing(thing_id):
     """
     # Kill the Thing document with this id in the database
     deleted_thing_doc = db.things.find_one_and_delete({"_id": PyObjectId(thing_id)})
+    # If unsuccessful, abort and send an HTTP 404 error
+    if deleted_thing_doc is None:
+        raise ResourceNotFoundInDatabaseError(f"Thing with id {thing_id} not found "
+                                               "in the database.")
     # If successful, respond with the deleted Thing document that's 
     # no longer in the database
-    # If unsuccessful, abort and send an HTTP 404 error
-    if deleted_thing_doc:
-        return Thing(**deleted_thing_doc).to_json()
-    else:
-        flask.abort(404, f"Thing with id {thing_id} not found")
+    return Thing(**deleted_thing_doc).to_json()
 
 
 @app.route("/rankor/things/<thing_id>", methods=["PUT"])
@@ -119,8 +124,8 @@ def update_thing_data(thing_id):
     fields, etc. You can of course fully replace the entire data of the Thing.
 
     Example (change the name from 'Terminator' to 'The Terminator' and add a category field):
-    curl -d '{'name': 'The Terminator', 
-              'category: 'Action Movies',
+    curl -d '{"name": "The Terminator", 
+              "category": "Action Movies",
              }' 
          -H "Content-Type: application/json" 
          -X PUT http://localhost:5000/rankor/things/12345678901234567890abcd       
@@ -159,12 +164,13 @@ def update_thing_data(thing_id):
                                                  return_document=ReturnDocument.AFTER,
                                                 )
     print(updated_doc)
-    # If successful, respond with the new, updated Thing
     # If unsuccessful, abort and send an HTTP 404 error
-    if updated_doc:
-        return Thing(**updated_doc).to_json()
-    else:
-        flask.abort(404, f"Thing with id {thing_id} not found")
+    if updated_doc is None:
+        raise ResourceNotFoundInDatabaseError(f"Thing with id {thing_id} not found "
+                                               "in the database.")
+    # If successful, respond with the new, updated Thing
+    return Thing(**updated_doc).to_json()
+
 
 
 @app.route("/rankor/things/", methods=["GET"])
@@ -228,7 +234,7 @@ def list_all_things():
            }
 
 
-@app.route("/rankor/things/<thing_id>/", methods=["GET"])
+@app.route("/rankor/things/<ObjectId:thing_id>/", methods=["GET"])
 def get_one_thing(thing_id): 
     """
     GET request to retrieve the data for a single Thing using its id
@@ -256,7 +262,12 @@ def get_one_thing(thing_id):
     # with the data formats anywhere, the system will fail at these validation
     # checkpoints rather than somewhere random in the middle of the code when
     # the data is actually used.
-    thing_doc = db.things.find_one_or_404({"_id": PyObjectId(thing_id)})
+    thing_doc = db.things.find_one({"_id": thing_id}, )
+    # If failure: 404 Not Found Error
+    if thing_doc is None:
+        raise ResourceNotFoundInDatabaseError(f"Thing with id {thing_id} not found "
+                                               "in the database.")
+    # If success: respond with the thing | 
     return Thing(**thing_doc).to_json()
 
 
@@ -289,7 +300,7 @@ def create_a_new_ranked_list():
 
     Attach the contents of the new RankedList as data in JSON format.
     For example:
-    curl -d '{'name': 'Favorite Movies'}' 
+    curl -d '{"name": "Favorite Movies"}' 
          -H "Content-Type: application/json" 
          -X POST http://localhost:5000/rankor/rankedlists/
     """
