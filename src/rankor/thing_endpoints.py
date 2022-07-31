@@ -1,6 +1,6 @@
 # Thing endpoints: /rankor/things/
 #
-# Add a new Thing       |   POST    /rankor/things/
+# Create a new Thing       |   POST    /rankor/things/
 # Delete a Thing        |   DELETE  /rankor/things/<thing_id>
 # Edit/Update a Thing   |   PUT     /rankor/things/<thing_id>
 # List all Things       |   GET     /rankor/things/     
@@ -35,7 +35,7 @@ thing_endpoints = Blueprint('thing_endpoints', __name__)
 
 
 @thing_endpoints.route("/rankor/things/", methods=["POST"])
-def add_new_thing():
+def create_new_thing():
     """
     POST request to directly add a new Thing to the database.
 
@@ -65,9 +65,10 @@ def add_new_thing():
     new_thing = Thing(**new_thing_data)
     insert_result = db.things.insert_one(new_thing.to_bson())
     new_thing.id = insert_result.inserted_id
-    
-    # log the added thing and return it (in json) as the success response
+    # log
     print(new_thing)
+
+    # Success: respond in json with the added thing
     return new_thing.to_json()
 
 
@@ -85,13 +86,13 @@ def delete_thing(thing_id):
     if deleted_thing_doc is None:
         raise ResourceNotFoundInDatabaseError(f"Thing with id {thing_id} not found "
                                                "in the database.")
-    # If successful, respond with the deleted Thing document that's 
+    # Success: Respond with the deleted Thing document that's 
     # no longer in the database
     return Thing(**deleted_thing_doc).to_json()
 
 
 @thing_endpoints.route("/rankor/things/<ObjectId:thing_id>", methods=["PUT"])
-def update_thing_data(thing_id):
+def update_thing(thing_id):
     """
     PUT request to update the data of a Thing that already exists in the database.
 
@@ -145,7 +146,7 @@ def update_thing_data(thing_id):
     if updated_doc is None:
         raise ResourceNotFoundInDatabaseError(f"Thing with id {thing_id} not found "
                                                "in the database.")
-    # If successful, respond with the new, updated Thing
+    # Success: respond with the new, updated Thing
     return Thing(**updated_doc).to_json()
 
 
@@ -244,5 +245,5 @@ def get_one_thing(thing_id):
     if thing_doc is None:
         raise ResourceNotFoundInDatabaseError(f"Thing with id {thing_id} not found "
                                                "in the database.")
-    # If success: respond with the thing | 
+    # Success: respond with the thing 
     return Thing(**thing_doc).to_json()
