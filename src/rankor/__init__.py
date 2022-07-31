@@ -4,9 +4,9 @@ from datetime import datetime
 # Database interface imports
 from flask_pymongo import PyMongo
 
-# Flask imports
+# Flask and Werkzeug imports
 from flask import Flask, request, url_for, jsonify
-
+from werkzeug.routing import RequestPath, Rule as WerkzeugDefaultRoutingRule
 
 # Rankor imports
 from src.rankor.models import Thing, RankedList, Fight, Score
@@ -25,8 +25,12 @@ db = pymongo.db
 
 
 # Import and register error handlers
-from rankor.errors import json_error_response
+from rankor.errors import json_error_response, SlashInsistingRoutingRule
 app.register_error_handler(Exception, json_error_response)
+
+
+app.url_rule_class = SlashInsistingRoutingRule
+
 
 
 # Import and register all endpoints
