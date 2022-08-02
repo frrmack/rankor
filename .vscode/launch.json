@@ -8,7 +8,7 @@
             "name": "Python: models",
             "type": "python",
             "request": "launch",
-            "module": "src.rankor.models"
+            "module": "src.rankor.models",
             "console": "integratedTerminal",
             "justMyCode": true
         }
