@@ -8,7 +8,7 @@ from pymongo.collection import ReturnDocument
 from datetime import datetime
 
 # Rankor model imports
-from src.rankor.models import Thing, RankedList
+from src.rankor.models import Thing, RankedList, Score
 
 # Exception imports
 from src.rankor.errors import ResourceNotFoundInDatabaseError
@@ -52,7 +52,7 @@ def create_a_new_ranked_list():
     # of creation. 
     things_in_ranked_list = [Thing(**doc) for doc in db.things.find()]
     new_ranked_list_data["thing_scores"] = {thing.id: Score() for thing in things_in_ranked_list}
-    new_ranked_list_data["fights"] = []  
+    new_ranked_list_data["fights"] = []
 
     # Create the RankedList instance, which also validates its data using pydantic,
     # insert it into the database, and retrieve the _id that mongodb automatically 
@@ -63,7 +63,7 @@ def create_a_new_ranked_list():
     # When logging and returning it as a success reponse, put the newly assigned id
     # in, but leave the thing_scores dict out to avoid too long of a response here, 
     # as that dictionary includes all the Things participating in the RankedList
-    ranked_list.id = PyObjectId(str(insert_result.inserted_id))
+    ranked_list.id = insert_result.inserted_id
     ranked_list.thing_scores = {}
 
     # log and respond
