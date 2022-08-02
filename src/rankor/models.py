@@ -66,7 +66,10 @@ class MongoModel(BaseModel):
         return jsonable_encoder(self, exclude_none=True)
 
     def to_bson(self):
-        return self.dict(by_alias=True, exclude_none=True)
+        return self.dict(by_alias=True, 
+                         exclude_none=True,
+                         exclude={'__properties__'})
+
 
 
 class Thing(MongoModel):
@@ -118,19 +121,19 @@ class Fight(MongoModel):
 
 
 
-class ThingCollection(MongoModel):
-    """
-    A ThingCollection is a set of things. The data of each instance is basically
-    a list of Thing ids. This allows us to form different collections to
-    make ranked lists about. For example, the database might have a ton of
-    movies saved as Things, but you may want to create a subset of them,
-    let's say Action movies made after 2010s for example, you would make a 
-    ThingCollection that encapsulates only the Things that meet this criterion,
-    and you can make a lot of pairwise comparisons (Fights) just among them to 
-    get a ranked list like 'My favorite action movies of the last decade'.
-    """
-    name: str
-    things: List[PyObjectId]
+# class ThingCollection(MongoModel):
+#     """
+#     A ThingCollection is a set of things. The data of each instance is basically
+#     a list of Thing ids. This allows us to form different collections to
+#     make ranked lists about. For example, the database might have a ton of
+#     movies saved as Things, but you may want to create a subset of them,
+#     let's say Action movies made after 2010s for example, you would make a 
+#     ThingCollection that encapsulates only the Things that meet this criterion,
+#     and you can make a lot of pairwise comparisons (Fights) just among them to 
+#     get a ranked list like 'My favorite action movies of the last decade'.
+#     """
+#     name: str
+#     things: List[PyObjectId]
 
 
 class Score(BaseModel):
@@ -208,6 +211,8 @@ class Score(BaseModel):
     to directly rank Things by mu (our best guess for their underlying 'true' score). rankor_score
     is only what this rankor api suggests as a good ranking score design.
     """
+    thing_id: PyObjectId
+
     mu    = settings.DEFAULT_INITIAL_SCORE_MU_VALUE
     sigma = settings.DEFAULT_INITIAL_SCORE_SIGMA_VALUE
 
@@ -219,24 +224,35 @@ class Score(BaseModel):
     def rankor_score(self) -> float:
         return self.mu - self.sigma
 
+    def dict(self, *args, **kwargs):
+        if 'exclude' in kwargs and \
+            kwargs['exclude'] is not None \
+                and '__properties__' in kwargs['exclude']:
+            return dict(vars(self))
+        else:
+            return dict(vars(self),
+                        min_possible_score=self.min_possible_score,
+                        rankor_score=self.rankor_score)
+
+
 
 
 class RankedList(MongoModel):
     """
     A RankedList is a set of Things, each associated with a score. (It's called 
     a ranked list because we can use those scores to rank them.) When we start 
-    a RankedList, we pick a ThingCollection. We assign a default starting score
-    to each Thing in this ThingCollection, and we now have a set of things with 
-    scores. Of course, at this point all the scores are the same, which does not 
-    give us a meaningful ranking. We then start having some Fights among these
-    Things, which update the scores of the Things that have fought, and this way
-    the scores start differentiating, we start getting a more meaningful ranking.
-    This model knows which ThingCollection the Things came from, the mapping of 
-    Things to scores, and the associated Fights that gave rise to those scores.
+    a RankedList, we assign a default starting score to each Thing and we now 
+    have a set of things with scores. Of course, at this point all the scores 
+    are the same, which does not give us a meaningful ranking. We then start 
+    having some Fights among these Things, which update the scores of the Things 
+    that have fought, and this way the scores start differentiating. As a result, 
+    we start getting a more meaningful ranking. This model knows the list of scores 
+    (which is a mapping of Things to scores, since each score is associated with a 
+    unique Thing in this RankedList) and the associated Fights that gave rise to 
+    these scores.
     """
     name: str
-    # collection: PyObjectId                     # The sourcing ThingCollection
-    thing_scores: Dict[PyObjectId, float]
+    thing_scores: List[Score]
     fights: List[PyObjectId]
     date_created: Optional[datetime]
     date_updated: Optional[datetime]
@@ -264,7 +280,7 @@ if __name__ == '__main__':
 
     terminator_thing = Thing(name = "The Terminator", 
                              image_url = "https://m.media-amazon.com/images/I/61qCgQZyhOL._AC_SY879_.jpg",
-                             extra_data = """{"director":"James Cameron", "year":1982}""",
+                             extra_data = {"director":"James Cameron", "year":1982},
                              _id = PyObjectId("12345678901234567890abcd")
                             )
     aliens_thing = Thing(name = "Aliens",
@@ -280,23 +296,31 @@ if __name__ == '__main__':
                                                    ],
                                  result = "FIRST_THING_WINS",
                                  winner = "12345678901234567890abcd",
+                                 ranked_list= "aaaaabbbbbcccccdddddefef",
                                  _id = "5647382910aaaa0192837465"
                                 )
     print(aliens_vs_terminator.to_json())
     #
-    movies = ThingCollection(name = "Movies",
-                             things = ["12345678901234567890abcd", "12345678901234567890ffff"],
-                             _id = "dddd09876543210987654321"
-                            )
-    print( movies.to_json() )
+    # movies = ThingCollection(name = "Movies",
+    #                          things = ["12345678901234567890abcd", "12345678901234567890ffff"],
+    #                          _id = "dddd09876543210987654321"
+    #                         )
+    # print( movies.to_json() )
     #
-    best_to_worst_james_cameron_movies = RankedList(collection = "dddd09876543210987654321",
-                                                    thing_scores  = {"12345678901234567890abcd" : 4.35,
-                                                                     "12345678901234567890ffff": 5.10
-                                                                    },
-                                                    fights = ["5647382910aaaa0192837465"]
+    best_to_worst_james_cameron_movies = RankedList(name = "Favorite Cameron Movies",
+                                                    thing_scores  = [Score(thing_id="12345678901234567890abcd"),
+                                                                     Score(thing_id="12345678901234567890ffff")
+                                                                    ],
+                                                    fights = ["5647382910aaaa0192837465"],
+                                                    _id = "aaaaabbbbbcccccdddddefef"
                                                     )
     print( best_to_worst_james_cameron_movies.to_json() )
+    print( best_to_worst_james_cameron_movies.to_bson() )
+    #
+    s = Score(thing_id="12345678901234567890abcd")
+    print( s.dict() )
+    print( s.dict(exclude={'__properties__'}))
+
 
 
 
