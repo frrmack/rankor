@@ -63,6 +63,27 @@ def database_error_response(pymongo_error):
     return response, http_status_code
 
 
+def bson_format_error_response(bson_error):
+    """
+    Bson exceptions raised by bson or Pymongo:
+    bson.errors.BSONError
+
+    Errors in the bson format mongodb uses to store the data documents. 
+    For example, an InvalidBSON, an InvalidDocument, or an InvalidStringData.
+
+    A more specific example: You may have defined a model to have a dictionary,
+    where the keys are BSON ObjectIds and the values are another type. Perhaps
+    you wanted to map Things to their Scores with a pydantic field in RankedList,
+    defined as Dict[PyObjectId, Score]. A model instance with this format will pass
+    the pydantic checks, but will cause an InvalidDocument exception when you
+    try to write it to mongodb, because the BSON format does not acccept the 
+    ObjectId type in keys, it only accepts it in values.
+    """
+    http_status_code = 400      # Bad Request
+    response = jsonable_encoder({"error_type": type(bson_error).__name__,  
+                                 "error": bson_error.message,
+                                 "http_status_code": http_status_code})
+    return response, http_status_code
 
 
 

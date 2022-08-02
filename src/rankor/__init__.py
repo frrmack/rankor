@@ -20,7 +20,8 @@ db = pymongo.db
 # Import and register error handlers
 from src.rankor.error_handlers import (http_error_response,
                                        data_validation_error_response,
-                                       database_error_response)
+                                       database_error_response,
+                                       bson_format_error_response)
 
 from werkzeug.exceptions import HTTPException
 app.register_error_handler(HTTPException, http_error_response)
@@ -31,6 +32,8 @@ app.register_error_handler(ValidationError, data_validation_error_response)
 from pymongo.errors import PyMongoError
 app.register_error_handler(PyMongoError, database_error_response)
 
+from bson.errors import BSONError
+app.register_error_handler(BSONError, bson_format_error_response)
 
 
 # Import and register routing rules
@@ -45,7 +48,6 @@ app.register_blueprint(thing_endpoints)
 
 from src.rankor.ranked_list_endpoints import ranked_list_endpoints
 app.register_blueprint(ranked_list_endpoints)
-
 
 
 # # Thing endpoints: /rankor/things/
