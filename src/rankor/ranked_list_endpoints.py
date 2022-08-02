@@ -1,5 +1,5 @@
 # Flask imports
-from flask import Blueprint, request, url_for
+from flask import Blueprint, request
 
 # Pymongo query imports
 from pymongo.collection import ReturnDocument
