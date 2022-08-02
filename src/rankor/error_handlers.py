@@ -81,7 +81,7 @@ def bson_format_error_response(bson_error):
     """
     http_status_code = 400      # Bad Request
     response = jsonable_encoder({"error_type": type(bson_error).__name__,  
-                                 "error": bson_error.message,
+                                 "error": bson_error.args[0],
                                  "http_status_code": http_status_code})
     return response, http_status_code
 
