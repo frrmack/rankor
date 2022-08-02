@@ -1,16 +1,8 @@
-# Standard Python library imports
-from datetime import datetime
+# Flask
+from flask import Flask
 
-# Database interface imports
+# Database interface
 from flask_pymongo import PyMongo
-
-# Flask and Werkzeug imports
-from flask import Flask, request, url_for, jsonify
-from werkzeug.routing import RequestPath, Rule as WerkzeugDefaultRoutingRule
-
-# Rankor imports
-from src.rankor.models import Thing, RankedList, Fight, Score
-from src.rankor.pyobjectid import PyObjectId
 
 # Settings for this specific server instance
 import settings
@@ -24,16 +16,37 @@ pymongo = PyMongo(app)
 db = pymongo.db
 
 
+
 # Import and register error handlers
-from rankor.errors import json_error_response, SlashInsistingRoutingRule
-app.register_error_handler(Exception, json_error_response)
+from src.rankor.error_handlers import (http_error_response,
+                                       data_validation_error_response,
+                                       database_error_response)
+
+from werkzeug.exceptions import HTTPException
+app.register_error_handler(HTTPException, http_error_response)
+
+from pydantic.error_wrappers import ValidationError
+app.register_error_handler(ValidationError, data_validation_error_response)
+
+from pymongo.errors import PyMongoError
+app.register_error_handler(PyMongoError, database_error_response)
 
 
+
+# Import and register routing rules
+from src.rankor.routing_rules import SlashInsistingRoutingRule
 app.url_rule_class = SlashInsistingRoutingRule
 
 
 
 # Import and register all endpoints
+from src.rankor.thing_endpoints import thing_endpoints
+app.register_blueprint(thing_endpoints)
+
+from src.rankor.ranked_list_endpoints import ranked_list_endpoints
+app.register_blueprint(ranked_list_endpoints)
+
+
 
 # # Thing endpoints: /rankor/things/
 # #
@@ -42,8 +55,6 @@ app.url_rule_class = SlashInsistingRoutingRule
 # # Edit/Update a Thing   |   PUT     /rankor/things/<thing_id>
 # # List all Things       |   GET     /rankor/things/     
 # # Show one Thing        |   GET     /rankor/things/<thing_id>
-from src.rankor.thing_endpoints import thing_endpoints
-app.register_blueprint(thing_endpoints)
 
 
 # RankedList endpoints: /rankor/rankedlists/
@@ -53,9 +64,6 @@ app.register_blueprint(thing_endpoints)
 # Edit/Update a RankedList  |   PUT     /rankor/rankedlists/<ranked_list_id>
 # List all RankedLists      |   GET     /rankor/rankedlists/
 # Get a RankedList          |   GET     /rankor/rankedlists/<ranked_list_id>
-from src.rankor.ranked_list_endpoints import ranked_list_endpoints
-app.register_blueprint(ranked_list_endpoints)
-
 
 
 # Fight endpoints for a given RankedList: /rankor/rankedlists/<ranked_list_id>/fights/
@@ -74,5 +82,3 @@ app.register_blueprint(ranked_list_endpoints)
 #
 # Retrieve all Fights of a Thing in a RankedList 
 # GET     /rankor/rankedlists/<ranked_list_id>/fights/things/<thing_id>
-
-
