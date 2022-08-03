@@ -66,9 +66,8 @@ class MongoModel(BaseModel):
         return jsonable_encoder(self, exclude_none=True)
 
     def to_bson(self):
-        return self.dict(by_alias=True, 
-                         exclude_none=True,
-                         exclude={'__properties__'})
+        return self.dict(by_alias=True, exclude_none=True)
+
 
 
 
@@ -225,14 +224,18 @@ class Score(BaseModel):
         return self.mu - self.sigma
 
     def dict(self, *args, **kwargs):
-        if 'exclude' in kwargs and \
-            kwargs['exclude'] is not None \
-                and '__properties__' in kwargs['exclude']:
-            return dict(vars(self))
-        else:
-            return dict(vars(self),
-                        min_possible_score=self.min_possible_score,
-                        rankor_score=self.rankor_score)
+        """
+        Overwrites BaseModel's dict to include calculated score properties
+        in the dict representation of the model instance. This method is
+        used both for dict representations (for bson encoding through pymongo) 
+        and for json representations (through fastapi's jsonable encoder)
+        """
+        obj_dict = super(Score, self).dict(*args, **kwargs)
+        properties_dict = dict(min_possible_score=self.min_possible_score,
+                               rankor_score=self.rankor_score)
+        obj_dict.update(properties_dict)
+        return obj_dict
+                   
 
 
 
@@ -257,14 +260,6 @@ class RankedList(MongoModel):
     date_created: Optional[datetime]
     date_updated: Optional[datetime]
 
-
-
-# class User(object):
-#     # collections
-#     # ranked_lists
-#     # fights
-#     # things
-#     pass
 
 
 
@@ -316,11 +311,13 @@ if __name__ == '__main__':
                                                     )
     print( best_to_worst_james_cameron_movies.to_json() )
     print( best_to_worst_james_cameron_movies.to_bson() )
-    #
-    s = Score(thing_id="12345678901234567890abcd")
-    print( s.dict() )
-    print( s.dict(exclude={'__properties__'}))
+    
+    # test_score = Score(thing_id="12345678901234567890abcd", mu=5, sigma=1)
+    # print( test_score.to_json_with_properties() )
+    # print( jsonable_encoder(test_score, 
+    #                         custom_encoder={Score:Score.to_json_with_properties}) )
 
+    
 
 
 
