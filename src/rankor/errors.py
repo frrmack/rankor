@@ -7,7 +7,6 @@
 from werkzeug.exceptions import HTTPException
 
 
-
 class ResourceNotFoundInDatabaseError(HTTPException):
     code = 404
     description = ("The requested resource was not found in the database. "
