@@ -51,22 +51,18 @@ def create_a_new_ranked_list():
     # It also has a list of fights, which will be empty now, at the time
     # of creation. 
     things_in_ranked_list = [Thing(**doc) for doc in db.things.find()]
-    new_ranked_list_data["thing_scores"] = {thing.id: Score() for thing in things_in_ranked_list}
+    initial_scores = [Score(thing_id=thing.id) for thing in things_in_ranked_list]
+    new_ranked_list_data["thing_scores"] = initial_scores
     new_ranked_list_data["fights"] = []
 
     # Create the RankedList instance, which also validates its data using pydantic,
     # insert it into the database, and retrieve the _id that mongodb automatically 
-    # assigned it (for purposes of returning its id in the response)
-    ranked_list = RankedList(**new_ranked_list_data)
-    insert_result = db.ranked_lists.insert_one(ranked_list.to_bson())
-    
-    # When logging and returning it as a success reponse, put the newly assigned id
-    # in, but leave the thing_scores dict out to avoid too long of a response here, 
-    # as that dictionary includes all the Things participating in the RankedList
-    ranked_list.id = insert_result.inserted_id
-    ranked_list.thing_scores = {}
+    # assigned it. When returning it as a success reponse, put the newly assigned id 
+    # in as well.
+    new_ranked_list = RankedList(**new_ranked_list_data)
+    insert_result = db.ranked_lists.insert_one(new_ranked_list.to_bson())
+    new_ranked_list.id = insert_result.inserted_id
 
-    # log and respond
-    print(ranked_list)
-    return ranked_list.to_json()
+    # Success: respond with the new ranked list
+    return new_ranked_list.to_json()
 

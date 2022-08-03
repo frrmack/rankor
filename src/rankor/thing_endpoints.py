@@ -60,13 +60,11 @@ def create_new_thing():
 
     # Create the new Thing instance, which also validates its data using pydantic,
     # insert it into the database, and retrieve the _id that mongodb automatically 
-    # assigned it (for purposes of returning the full thing, including its id, 
-    # in the response)
+    # assigned it. When returning it as a success reponse, put the newly assigned id 
+    # in as well.
     new_thing = Thing(**new_thing_data)
     insert_result = db.things.insert_one(new_thing.to_bson())
     new_thing.id = insert_result.inserted_id
-    # log
-    print(new_thing)
 
     # Success: respond in json with the added thing
     return new_thing.to_json()
