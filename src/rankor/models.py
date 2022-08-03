@@ -135,17 +135,18 @@ class Fight(MongoModel):
 #     things: List[PyObjectId]
 
 
-class Score(BaseModel):
+class ThingScore(BaseModel):
     """
-    A Score instance represents the score of a Thing in a specific RankedList.
+    A ThingScore instance represents the score of a Thing in a specific RankedList.
     As Things are compared in Fights within the context of a given RankedList,
-    their scores are updated based on the Fight results. Every RankedList
-    has a dictionary mapping it things to their scores. These scores allow them
-    to be ranked. A thing has only one score per each RankedList it participates in, 
-    and each RankedList has only one score for each thing participating in it. 
+    their ThingScores are updated based on the Fight results. Every RankedList
+    has a list of ThingScores, one for each Thing in it. These report the scores,
+    which allow the Things to be ranked. A Thing has only one ThingScore per each 
+    RankedList it participates in, and each RankedList has only one ThingScore for 
+    each Thing participating in it. 
 
     Rankor uses the TrueSkill Bayesian inference algorithm to calculate ranking
-    scores for Things based on Fight results. A Score has the mu and sigma values 
+    scores for Things based on Fight results. A ThingScore has the mu and sigma values 
     of the TrueSkill Rating. TrueSkill uses a Gaussian posterior for estimating 
     the strength of a Thing (for ranking purposes). mu is the mean of this posterior,
     it's our current best guess for a Thing's strength. sigma is its standard
@@ -230,7 +231,7 @@ class Score(BaseModel):
         used both for dict representations (for bson encoding through pymongo) 
         and for json representations (through fastapi's jsonable encoder)
         """
-        obj_dict = super(Score, self).dict(*args, **kwargs)
+        obj_dict = super(ThingScore, self).dict(*args, **kwargs)
         properties_dict = dict(min_possible_score=self.min_possible_score,
                                rankor_score=self.rankor_score)
         obj_dict.update(properties_dict)
@@ -255,7 +256,7 @@ class RankedList(MongoModel):
     these scores.
     """
     name: str
-    thing_scores: List[Score]
+    thing_scores: List[ThingScore]
     fights: List[PyObjectId]
     date_created: Optional[datetime]
     date_updated: Optional[datetime]
@@ -303,8 +304,8 @@ if __name__ == '__main__':
     # print( movies.to_json() )
     #
     best_to_worst_james_cameron_movies = RankedList(name = "Favorite Cameron Movies",
-                                                    thing_scores  = [Score(thing_id="12345678901234567890abcd"),
-                                                                     Score(thing_id="12345678901234567890ffff")
+                                                    thing_scores  = [ThingScore(thing_id="12345678901234567890abcd"),
+                                                                     ThingScore(thing_id="12345678901234567890ffff")
                                                                     ],
                                                     fights = ["5647382910aaaa0192837465"],
                                                     _id = "aaaaabbbbbcccccdddddefef"
@@ -312,10 +313,10 @@ if __name__ == '__main__':
     print( best_to_worst_james_cameron_movies.to_json() )
     print( best_to_worst_james_cameron_movies.to_bson() )
     
-    # test_score = Score(thing_id="12345678901234567890abcd", mu=5, sigma=1)
+    # test_score = ThingScore(thing_id="12345678901234567890abcd", mu=5, sigma=1)
     # print( test_score.to_json_with_properties() )
     # print( jsonable_encoder(test_score, 
-    #                         custom_encoder={Score:Score.to_json_with_properties}) )
+    #                         custom_encoder={ThingScore:ThingScore.to_json_with_properties}) )
 
     
 

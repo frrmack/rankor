@@ -17,7 +17,7 @@ from pymongo.collection import ReturnDocument
 from datetime import datetime
 
 # Rankor model imports
-from src.rankor.models import Thing, RankedList, Score
+from src.rankor.models import Thing, RankedList, ThingScore
 
 # Exception imports
 from src.rankor.errors import (ResourceNotFoundInDatabaseError,
@@ -67,7 +67,7 @@ def create_a_new_ranked_list():
     # It also has a list of fights, which will be empty now, at the time
     # of creation. 
     things_in_ranked_list = [Thing(**doc) for doc in db.things.find()]
-    initial_scores = [Score(thing_id=thing.id) for thing in things_in_ranked_list]
+    initial_scores = [ThingScore(thing_id=thing.id) for thing in things_in_ranked_list]
     new_ranked_list_data["thing_scores"] = initial_scores
     new_ranked_list_data["fights"] = []
 
