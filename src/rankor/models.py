@@ -317,9 +317,6 @@ if __name__ == '__main__':
     # print( jsonable_encoder(test_score, 
     #                         custom_encoder={Score:Score.to_json_with_properties}) )
 
-    aliens_thing = Thing(name = "KABOOM",
-                         _id = "12345678901234567890ffffX"
-                        )
     
 
 
