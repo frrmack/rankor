@@ -103,7 +103,7 @@ def delete_ranked_list(ranked_list_id):
                        methods=["GET"])
 def get_one_ranked_list(ranked_list_id): 
     """
-    GET request to retrieve the data for a single Thing using its id
+    GET request to retrieve the data for a single RankedList using its id
 
     For example:
     curl -i -X GET 'http://localhost:5000/rankor/rankedlists/a4325678901234567890bcd5/'
