@@ -26,7 +26,7 @@ from src.rankor.error_handlers import (http_error_response,
 from werkzeug.exceptions import HTTPException
 app.register_error_handler(HTTPException, http_error_response)
 
-from pydantic.error_wrappers import ValidationError
+from pydantic import ValidationError
 app.register_error_handler(ValidationError, data_validation_error_response)
 
 from pymongo.errors import PyMongoError
