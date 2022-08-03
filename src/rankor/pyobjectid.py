@@ -26,4 +26,5 @@ class PyObjectId(BsonObjectId):
         field_schema.update(type="string")
 
 
+ENCODERS_BY_TYPE[BsonObjectId] = str
 ENCODERS_BY_TYPE[PyObjectId] = str
