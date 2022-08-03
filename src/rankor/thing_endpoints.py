@@ -1,6 +1,6 @@
 # Thing endpoints: /rankor/things/
 #
-# Create a new Thing       |   POST    /rankor/things/
+# Create a new Thing    |   POST    /rankor/things/
 # Delete a Thing        |   DELETE  /rankor/things/<thing_id>
 # Edit/Update a Thing   |   PUT     /rankor/things/<thing_id>
 # List all Things       |   GET     /rankor/things/     
@@ -20,7 +20,8 @@ from datetime import datetime
 from src.rankor.models import Thing
 
 # Exception imports
-from src.rankor.errors import ResourceNotFoundInDatabaseError
+from src.rankor.errors import (ResourceNotFoundInDatabaseError,
+                               SameNameResourceAlreadyExistsError)
 
 # Api settings import
 import settings
@@ -58,6 +59,12 @@ def create_new_thing():
     # Retrieve the data from the request and record the timestamp of creation
     new_thing_data = request.get_json()
     new_thing_data["date_created"] = datetime.utcnow()
+
+    # Check the database to ensure that there isn't another Thing with the exact 
+    # same name, raise an error if it does
+    same_name_thing = db.things.find_one({"name": new_thing_data["name"]})
+    if same_name_thing:
+        raise SameNameResourceAlreadyExistsError(same_name_thing)
 
     # Create the new Thing instance, which also validates its data using pydantic,
     # insert it into the database, and retrieve the _id that mongodb automatically 
@@ -123,7 +130,6 @@ def update_thing(thing_id):
     # we need to retrieve the name of this thing from the database.
     if 'name' not in update_data:
         thing_doc_we_are_updating = db.things.find_one({"_id": thing_id})
-        print(thing_doc_we_are_updating)
         if thing_doc_we_are_updating is None:
             raise ResourceNotFoundInDatabaseError(f"Thing with the id {thing_id} not found "
                                                    "in the database.")

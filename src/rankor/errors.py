@@ -12,6 +12,14 @@ class ResourceNotFoundInDatabaseError(HTTPException):
     description = ("The requested resource was not found in the database. "
                    "Please check the requested data carefully and try again.")
 
+class SameNameResourceAlreadyExistsError(HTTPException):
+    code = 400
+    description = ("A resource with the same name already exists in the database. "
+                   "Either update that resource instead, or delete that before "
+                   "creating this, or give this new resource a different name")
+    def __init__(self, same_name_resource=None, description=None, response=None):
+        super().__init__(description, response)
+        self.same_name_resource = same_name_resource
 
 class NoTrailingSlashError(HTTPException):
     code = 400

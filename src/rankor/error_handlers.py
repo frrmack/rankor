@@ -3,6 +3,9 @@
 # responses; they also try to provide enough information for maximum context.
 
 
+# specific errors to handle differently
+from src.rankor.errors import SameNameResourceAlreadyExistsError
+
 # robust JSON encoding from fastapi
 from fastapi.encoders import jsonable_encoder
 
@@ -18,10 +21,12 @@ def http_error_response(http_exception):
     504 Gateway Timeout, etc.
     """
     http_status_code = http_exception.code
-    response = jsonable_encoder({"error_type": type(http_exception).__name__,  
-                                 "error": http_exception.description,
-                                 "http_status_code": http_status_code})
-    return response, http_status_code
+    response_dict = {"error_type": type(http_exception).__name__,  
+                     "error": http_exception.description,
+                     "http_status_code": http_status_code}
+    if isinstance(http_exception, SameNameResourceAlreadyExistsError):
+        response_dict.update({"existing_resource":http_exception.same_name_resource})
+    return jsonable_encoder(response_dict), http_status_code
 
 
 def data_validation_error_response(validation_error):
@@ -39,7 +44,6 @@ def data_validation_error_response(validation_error):
     num_validation_issues = len(validation_error.errors())
     details = {"number_of_validation_errors": num_validation_issues,
                "validation_error_list": validation_error.errors()}
-    print(details)
     response = jsonable_encoder({"error_type": type(validation_error).__name__, 
                                  "error": err_msg,
                                  "error_details": details,

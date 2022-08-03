@@ -20,7 +20,8 @@ from datetime import datetime
 from src.rankor.models import Thing, RankedList, Score
 
 # Exception imports
-from src.rankor.errors import ResourceNotFoundInDatabaseError
+from src.rankor.errors import (ResourceNotFoundInDatabaseError,
+                               SameNameResourceAlreadyExistsError)
 
 # Api settings import
 import settings
@@ -51,6 +52,14 @@ def create_a_new_ranked_list():
     # Retrieve the data from the request and record the timestamp
     new_ranked_list_data = request.get_json()
     new_ranked_list_data["date_created"] = datetime.utcnow()
+
+    # Check the database to ensure that there isn't another one with the exact 
+    # same name, raise an error if it does
+    same_name_ranked_list = db.ranked_lists.find_one({
+                                            "name": new_ranked_list_data["name"]
+                                            })
+    if same_name_ranked_list:
+        raise SameNameResourceAlreadyExistsError(same_name_ranked_list)
 
     # A RankedList has a dictionary that maps each thing to its score
     # in this RankedList, we are going to initialize the scores for all of them
