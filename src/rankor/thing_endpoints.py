@@ -6,6 +6,7 @@
 # List all Things       |   GET     /rankor/things/     
 # Show one Thing        |   GET     /rankor/things/<thing_id>
 
+
 # Flask imports
 from flask import Blueprint, request, url_for
 
@@ -73,7 +74,7 @@ def create_new_thing():
 @thing_endpoints.route("/rankor/things/<ObjectId:thing_id>/", methods=["DELETE"])
 def delete_thing(thing_id):
     """
-    DELETE request to remove a thing from the database
+    DELETE request to remove a Thing from the database
 
     Example:
     curl -i -X DELETE 'http://localhost:5000/rankor/things/12345678901234567890abcd/'   
@@ -82,7 +83,7 @@ def delete_thing(thing_id):
     deleted_thing_doc = db.things.find_one_and_delete({"_id": thing_id})
     # If unsuccessful, abort and send an HTTP 404 error
     if deleted_thing_doc is None:
-        raise ResourceNotFoundInDatabaseError(f"Thing with id {thing_id} not found "
+        raise ResourceNotFoundInDatabaseError(f"Thing with the id {thing_id} not found "
                                                "in the database.")
     # Success: Respond with the deleted Thing document that's 
     # no longer in the database
@@ -124,7 +125,7 @@ def update_thing(thing_id):
         thing_doc_we_are_updating = db.things.find_one({"_id": thing_id})
         print(thing_doc_we_are_updating)
         if thing_doc_we_are_updating is None:
-            raise ResourceNotFoundInDatabaseError(f"Thing with id {thing_id} not found "
+            raise ResourceNotFoundInDatabaseError(f"Thing with the id {thing_id} not found "
                                                    "in the database.")
         thing_doc_we_are_updating['name'] = thing_doc_we_are_updating['name']
     # Now we know for sure that our thing_update_data has a name.
@@ -142,7 +143,7 @@ def update_thing(thing_id):
     print(updated_doc)
     # If unsuccessful, abort and send an HTTP 404 error
     if updated_doc is None:
-        raise ResourceNotFoundInDatabaseError(f"Thing with id {thing_id} not found "
+        raise ResourceNotFoundInDatabaseError(f"Thing with the id {thing_id} not found "
                                                "in the database.")
     # Success: respond with the new, updated Thing
     return Thing(**updated_doc).to_json()
@@ -219,8 +220,8 @@ def get_one_thing(thing_id):
     curl -i -X GET 'http://localhost:5000/rankor/things/12345678901234567890abcd/'
     """
     # Retrieve the Thing document with this id from the database and respond
-    # with it. If the database can't find such a document in there, find_one_or_404
-    # will respond nicely with an HTTP 404.
+    # with it. If the database can't find such a document in there, respond
+    # with an informative HTTP 404
     #
     # Why are we not just returning thing_doc directly instead of creating
     # a Thing instance with it, which we then re-serialize to JSON? Because
@@ -241,7 +242,7 @@ def get_one_thing(thing_id):
     thing_doc = db.things.find_one({"_id": thing_id}, )
     # If failure: 404 Not Found Error
     if thing_doc is None:
-        raise ResourceNotFoundInDatabaseError(f"Thing with id {thing_id} not found "
+        raise ResourceNotFoundInDatabaseError(f"Thing with the id {thing_id} not found "
                                                "in the database.")
     # Success: respond with the thing 
     return Thing(**thing_doc).to_json()
