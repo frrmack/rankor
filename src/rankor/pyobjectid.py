@@ -4,7 +4,6 @@
 
 
 from bson import ObjectId as BsonObjectId
-from pydantic import ValidationError
 from pydantic.json import ENCODERS_BY_TYPE
 
 
@@ -16,10 +15,10 @@ class PyObjectId(BsonObjectId):
         yield cls.validate
 
     @classmethod
-    def validate(cls, v):
-        if not BsonObjectId.is_valid(v):
-            raise ValidationError("Not a valid bson object id")
-        return PyObjectId(v)
+    def validate(cls, value):
+        if not cls.is_valid(value):
+            raise ValueError("Not a valid bson object id")
+        return cls(value)
 
     @classmethod
     def __modify_schema__(cls, field_schema):
