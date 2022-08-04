@@ -141,7 +141,7 @@ def edit_a_ranked_list(ranked_list_id):
                               "directly here gets allowed, but it is not recommended.")
 
     # Retrieve the update target document from the database to fill the remaining
-    # essential information for full validation
+    # essential fields for full validation
     doc_to_update = db.ranked_lists.find_one({"_id": ranked_list_id})
     if doc_to_update is None:
         raise ResourceNotFoundInDatabaseError(resource_type="ranked list",
@@ -156,9 +156,11 @@ def edit_a_ranked_list(ranked_list_id):
     validated_update.date_updated = datetime.utcnow()
 
     # Apply these updates to the given fields in the database.
-    updated_doc = db.things.find_one_and_update({"_id": ranked_list_id},
-                                                {"$set": validated_update.to_bson()},
-                                                return_document=ReturnDocument.AFTER)
+    updated_doc = db.ranked_lists.find_one_and_update(
+                                             {"_id": ranked_list_id},
+                                             {"$set": validated_update.to_bson()},
+                                             return_document=ReturnDocument.AFTER
+                                             )
 
     # If unsuccessful, abort with a 404 Not Found error
     if updated_doc is None:
