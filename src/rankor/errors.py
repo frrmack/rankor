@@ -4,10 +4,10 @@
 
 
 # Exception imports from other packages
-from werkzeug.exceptions import HTTPException
+from werkzeug.exceptions import NotFound, Conflict
 
 
-class ResourceNotFoundInDatabaseError(HTTPException):
+class ResourceNotFoundInDatabaseError(NotFound):
     code = 404
     description = ("The requested <resource> was not found in the database. "
                    "Please check the requested data carefully and try again.")
@@ -26,8 +26,8 @@ class ResourceNotFoundInDatabaseError(HTTPException):
         super(ResourceNotFoundInDatabaseError,self).__init__(description, response)
 
 
-class SameNameResourceAlreadyExistsError(HTTPException):
-    code = 400
+class SameNameResourceAlreadyExistsError(Conflict):
+    code = 409
     description = ("A <resource> with the same name already exists in the database. "
                    "Either update that <resource> instead, or delete that before "
                    "creating this, or give this new <resource> a different name")
@@ -45,9 +45,9 @@ class SameNameResourceAlreadyExistsError(HTTPException):
         super(SameNameResourceAlreadyExistsError, self).__init__(description, response)
 
 
-class NoTrailingSlashError(HTTPException):
-    code = 400
-    description = ("The url you sent the request to does not have a trailing "
-                   "slash. All endpoint urls of this api end with a / at the end, "
+class NoTrailingSlashError(NotFound):
+    code = 404
+    description = ("The URL you sent the request to does not have a trailing "
+                   "slash. All endpoint URLs of this api end with a / at the end, "
                    "and they won't work without this trailing slash even if "
-                   "the rest of the url is correct.")
+                   "the rest of the URL is correct.")
