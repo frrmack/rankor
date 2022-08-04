@@ -60,7 +60,8 @@ def create_a_new_ranked_list():
                                             "name": new_ranked_list_data["name"]
                                             })
     if same_name_ranked_list:
-        raise SameNameResourceAlreadyExistsError(same_name_resource=same_name_ranked_list)
+        raise SameNameResourceAlreadyExistsError(resource_type="ranked list",
+                                       same_name_resource=same_name_ranked_list)
 
     # A RankedList has a dictionary that maps each thing to its score
     # in this RankedList, we are going to initialize the scores for all of them
@@ -68,7 +69,7 @@ def create_a_new_ranked_list():
     # It also has a list of fights, which will be empty now, at the time
     # of creation. 
     things_in_ranked_list = [Thing(**doc) for doc in db.things.find()]
-    initial_scores = [ThingScore(thing_id=thing.id) for thing in things_in_ranked_list]
+    initial_scores = [ThingScore(thing.id) for thing in things_in_ranked_list]
     new_ranked_list_data["thing_scores"] = initial_scores
     new_ranked_list_data["fights"] = []
 
