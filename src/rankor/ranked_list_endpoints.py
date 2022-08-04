@@ -101,7 +101,7 @@ def delete_a_ranked_list(ranked_list_id):
     return RankedList(**deleted_doc).to_json()
 
 
-@ranked_list_endpoints.route("/rankor/rankedlists/<ObjectId:ranked_list_id>", 
+@ranked_list_endpoints.route("/rankor/rankedlists/<ObjectId:ranked_list_id>/", 
                              methods=["PUT"])
 def edit_a_ranked_list(ranked_list_id):
     """
@@ -132,9 +132,10 @@ def edit_a_ranked_list(ranked_list_id):
     if not settings.ALLOW_MANUAL_EDITING_OF_RANKEDLIST_FIGHTS_OR_SCORES:
          if "fights" in update_data or "thing_scores" in update_data:
               raise Forbidden("Directly editing the thing_scores or the fights "
-                              "of a RankedList using this endpoint is not allowed. "
+                              "of a ranked list using this endpoint is not allowed. "
                               "You can affect these indirectly through saving new "
-                              "fights or deleting existing fights. If the "
+                              "fights or deleting existing fights using the .../fights/"
+                              " endpoints of a ranked list. If the "
                               "ALLOW_MANUAL_EDITING_OF_RANKEDLIST_FIGHTS_OR_SCORES "
                               "setting of the api is set to True, editing them "
                               "directly here gets allowed, but it is not recommended.")
