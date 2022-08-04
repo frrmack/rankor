@@ -283,7 +283,6 @@ if __name__ == '__main__':
                          image_url = "https://m.media-amazon.com/images/I/91kkGWtyqTL._AC_SL1500_.jpg",
                          _id = PyObjectId("12345678901234567890ffff")
                         )
-   
     print( terminator_thing.to_json() )
     print( aliens_thing.to_bson())
     #
