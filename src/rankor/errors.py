@@ -17,11 +17,11 @@ class ResourceNotFoundInDatabaseError(HTTPException):
                  resource_type=None, 
                  resource_id=None) -> None:
         resource_repr = "resource"
-        if resource_type is not None:
-            resource_repr = resource_type
-        if resource_id is not None:
-            resource_repr = f"{resource_repr} with the id {resource_id}"
         if description is None:
+            if resource_type is not None:
+                resource_repr = resource_type
+            if resource_id is not None:
+                resource_repr = f"{resource_repr} with the id {resource_id}"
             description = self.description.replace("<resource>", resource_repr)
         super(ResourceNotFoundInDatabaseError,self).__init__(description, response)
 
@@ -37,10 +37,10 @@ class SameNameResourceAlreadyExistsError(HTTPException):
                  same_name_resource=None,
                  resource_type=None):
         self.same_name_resource = same_name_resource
-        resource_repr = "resource"
-        if resource_type is not None:
-            resource_repr = resource_type
         if description is None:
+            resource_repr = "resource"
+            if resource_type is not None:
+                resource_repr = resource_type
             description = self.description.replace("<resource>", resource_repr)        
         super(SameNameResourceAlreadyExistsError, self).__init__(description, response)
 
