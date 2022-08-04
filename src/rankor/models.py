@@ -266,8 +266,8 @@ class RankedList(MongoModel):
 
 if __name__ == '__main__':
     
-    # Note: normally, we would not create these instances by assigning them _id
-    # values ourselves. Instead of creating them with written _id fields, we'd let _ids be
+    # Note: normally, we would not create these instances by assigning them _id values 
+    # ourselves. Instead of creating them with written _id fields, we'd let _ids be
     # automatically assigned by mongo when pymongo writes them to the db. We are only
     # explicitly defining _id fields ourselves here, so that we know the _id values already
     # to test other models that reference these stuff. It's just so we can run some basic
@@ -297,12 +297,6 @@ if __name__ == '__main__':
                                 )
     print(aliens_vs_terminator.to_json())
     #
-    # movies = ThingCollection(name = "Movies",
-    #                          things = ["12345678901234567890abcd", "12345678901234567890ffff"],
-    #                          _id = "dddd09876543210987654321"
-    #                         )
-    # print( movies.to_json() )
-    #
     best_to_worst_james_cameron_movies = RankedList(name = "Favorite Cameron Movies",
                                                     thing_scores  = [ThingScore(thing_id="12345678901234567890abcd"),
                                                                      ThingScore(thing_id="12345678901234567890ffff")
@@ -312,13 +306,7 @@ if __name__ == '__main__':
                                                     )
     print( best_to_worst_james_cameron_movies.to_json() )
     print( best_to_worst_james_cameron_movies.to_bson() )
-    
-    # test_score = ThingScore(thing_id="12345678901234567890abcd", mu=5, sigma=1)
-    # print( test_score.to_json_with_properties() )
-    # print( jsonable_encoder(test_score, 
-    #                         custom_encoder={ThingScore:ThingScore.to_json_with_properties}) )
 
-    
 
 
 
