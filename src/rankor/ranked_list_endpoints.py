@@ -2,9 +2,9 @@
 #
 # Create a new RankedList   |   POST    /rankor/rankedlists/
 # Delete a RankedList       |   DELETE  /rankor/rankedlists/<ranked_list_id>
-# Edit/Update a RankedList  |   PUT     /rankor/rankedlists/<ranked_list_id>
+# Edit a RankedList         |   PUT     /rankor/rankedlists/<ranked_list_id>
 # List all RankedLists      |   GET     /rankor/rankedlists/
-# Get a RankedList          |   GET     /rankor/rankedlists/<ranked_list_id>
+# Get one RankedList        |   GET     /rankor/rankedlists/<ranked_list_id>
 
 
 # Flask imports
@@ -20,6 +20,7 @@ from datetime import datetime
 from src.rankor.models import Thing, RankedList, ThingScore
 
 # Exception imports
+from werkzeug.exceptions import Forbidden
 from src.rankor.errors import (ResourceNotFoundInDatabaseError,
                                SameNameResourceAlreadyExistsError)
 
@@ -45,11 +46,11 @@ def create_a_new_ranked_list():
 
     Attach the contents of the new RankedList as data in JSON format.
     For example:
-    curl -d '{"name": "Favorite Movies"}' 
+    curl -d '{"name": "My Favorite Movies"}' 
          -H "Content-Type: application/json" 
          -X POST http://localhost:5000/rankor/rankedlists/
     """
-    # Retrieve the data from the request and record the timestamp
+    # Retrieve the data from the request and record the timestamp of creation
     new_ranked_list_data = request.get_json()
     new_ranked_list_data["date_created"] = datetime.utcnow()
 
@@ -98,6 +99,71 @@ def delete_ranked_list(ranked_list_id):
     # Success: Respond with the deleted document that's no longer in the database
     return RankedList(**deleted_doc).to_json()
 
+
+@ranked_list_endpoints.route("/rankor/rankedlists/<ObjectId:ranked_list_id>", 
+                             methods=["PUT"])
+def edit_ranked_list(ranked_list_id):
+    """
+    PUT request to update the data of a RankedList that already exists in the database.
+
+    By default, you can only edit the metadata of a RankedList, which is just its name.
+    This means that you can only change their name using the edit endpoint. Fights can 
+    be saved to or deleted from RankedLists via other endpoints (fight_endpoints.py),
+    and this is normally the only way to influence the fights list and as a result 
+    the thing_scores list in a RankedList. 
+    If settings.ALLOW_MANUAL_EDITING_OF_RANKEDLIST_FIGHTS_OR_SCORES is set to True 
+    instead of the default False, this endpoint will allow you to directly update these 
+    lists.    
+    Doing this is NOT recommended, as it's not a good way of handling the data, it's 
+    prone to introducing silent errors that will come back to bite you later, and it's 
+    easy to mess up unless you know exactly what you're doing.
+
+    Example (name change from 'My Favorite Movies' to 'Action Movie Ranked List with Max'):
+    curl -d '{"name": "Action Movie Ranked List with Max"}'
+         -H "Content-Type: application/json" 
+         -X PUT http://localhost:5000/rankor/things/12345678901234567890ffff/       
+    """
+    # Retrieve the request data. 
+    update_data = request.get_json()
+    
+    # Raise a 403 Forbidden Error if they are trying to edit the untouchables
+    # (unless they are explicitly allowed in the settings)
+    if not settings.ALLOW_MANUAL_EDITING_OF_RANKEDLIST_FIGHTS_OR_SCORES:
+         if "fights" in update_data or "thing_scores" in update_data:
+              raise Forbidden("Directly editing the thing_scores or the fights "
+                              "of a RankedList using this endpoint is not allowed. "
+                              "You can affect these indirectly through saving new "
+                              "fights or deleting existing fights. If the "
+                              "ALLOW_MANUAL_EDITING_OF_RANKEDLIST_FIGHTS_OR_SCORES "
+                              "setting of the api is set to True, editing them "
+                              "directly here gets allowed, but it is not recommended.")
+
+    # Retrieve the update target document from the database to fill the remaining
+    # essential information for full validation
+    doc_to_update = db.ranked_lists.find_one({"_id": ranked_list_id})
+    if doc_to_update is None:
+        raise ResourceNotFoundInDatabaseError(f"RankedList with the id {ranked_list_id}"
+                                               " not found in the database.")
+    for field in ("name", "thing_scores", "fights"):
+         if field not in update_data:
+              update_data[field] = doc_to_update[field]
+
+    # Validate through instantiating it as a RankedList and add a timestamp
+    # to record when this update happened.
+    validated_update = RankedList(**update_data)
+    validated_update.date_updated = datetime.utcnow()
+
+    # Apply these updates to the given fields in the database.
+    updated_doc = db.things.find_one_and_update({"_id": ranked_list_id},
+                                                {"$set": validated_update.to_bson()},
+                                                return_document=ReturnDocument.AFTER)
+
+    # If unsuccessful, abort with a 404 Not Found error
+    if updated_doc is None:
+        raise ResourceNotFoundInDatabaseError(f"RankedList with the id {ranked_list_id}"
+                                               " not found in the database.")
+    # Success: respond with the new, updated RankedList
+    return RankedList(**updated_doc).to_json()
 
 
 
