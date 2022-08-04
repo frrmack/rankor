@@ -13,7 +13,6 @@ setup(
         "fastapi == 0.79.0",
         "Flask == 2.1.2",
         "Flask-PyMongo==2.3.0",
-        "Flask-Login == 0.6.1"
         "pymongo[srv] == 4.1.1",
         "pydantic == 1.9.1",
         "trueskill == 0.4.5"
