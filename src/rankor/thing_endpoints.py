@@ -121,7 +121,7 @@ def edit_thing(thing_id):
     """
     # Retrieve the request data. 
     update_data = request.get_json()
-    # We want to validate it this creating a Thing instance with
+    # We want to validate this by creating a Thing instance with
     # it (which runs the pydantic schema checks). A Thing instance
     # always needs a name field, so we need to define the name field
     # when creating a new Thing instance. Unless they are also updating
@@ -133,7 +133,7 @@ def edit_thing(thing_id):
         if thing_doc_we_are_updating is None:
             raise ResourceNotFoundInDatabaseError(f"Thing with the id {thing_id} not found "
                                                    "in the database.")
-        thing_doc_we_are_updating['name'] = thing_doc_we_are_updating['name']
+        update_data['name'] = thing_doc_we_are_updating['name']
     # Now we know for sure that our thing_update_data has a name.
     # Validate through instantiating it as a Thing and add a timestamp
     # to store when this update happened.
