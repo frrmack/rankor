@@ -37,7 +37,7 @@ thing_endpoints = Blueprint('thing_endpoints', __name__)
 
 
 @thing_endpoints.route("/rankor/things/", methods=["POST"])
-def create_new_thing():
+def create_a_new_thing():
     """
     POST request to directly add a new Thing to the database.
 
@@ -80,7 +80,7 @@ def create_new_thing():
 
 
 @thing_endpoints.route("/rankor/things/<ObjectId:thing_id>/", methods=["DELETE"])
-def delete_thing(thing_id):
+def delete_a_thing(thing_id):
     """
     DELETE request to remove a Thing from the database
 
@@ -100,7 +100,7 @@ def delete_thing(thing_id):
 
 
 @thing_endpoints.route("/rankor/things/<ObjectId:thing_id>", methods=["PUT"])
-def edit_thing(thing_id):
+def edit_a_thing(thing_id):
     """
     PUT request to update the data of a Thing that already exists in the database.
 

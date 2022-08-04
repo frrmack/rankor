@@ -86,7 +86,7 @@ def create_a_new_ranked_list():
 
 @ranked_list_endpoints.route("/rankor/rankedlists/<ObjectId:ranked_list_id>/", 
                              methods=["DELETE"])
-def delete_ranked_list(ranked_list_id):
+def delete_a_ranked_list(ranked_list_id):
     """
     DELETE request to remove a RankedList from the database
 
@@ -103,7 +103,7 @@ def delete_ranked_list(ranked_list_id):
 
 @ranked_list_endpoints.route("/rankor/rankedlists/<ObjectId:ranked_list_id>", 
                              methods=["PUT"])
-def edit_ranked_list(ranked_list_id):
+def edit_a_ranked_list(ranked_list_id):
     """
     PUT request to update the data of a RankedList that already exists in the database.
 
