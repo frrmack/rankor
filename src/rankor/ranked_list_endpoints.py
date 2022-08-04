@@ -60,7 +60,7 @@ def create_a_new_ranked_list():
                                             "name": new_ranked_list_data["name"]
                                             })
     if same_name_ranked_list:
-        raise SameNameResourceAlreadyExistsError(same_name_ranked_list)
+        raise SameNameResourceAlreadyExistsError(same_name_resource=same_name_ranked_list)
 
     # A RankedList has a dictionary that maps each thing to its score
     # in this RankedList, we are going to initialize the scores for all of them
@@ -94,8 +94,8 @@ def delete_ranked_list(ranked_list_id):
     """
     deleted_doc = db.ranked_lists.find_one_and_delete({"_id": ranked_list_id})
     if deleted_doc is None:
-        raise ResourceNotFoundInDatabaseError(f"Ranked list with the id {ranked_list_id} "
-                                               "not found in the database.")
+        raise ResourceNotFoundInDatabaseError(resource_cls_name="RankedList",
+                                              resource_id=ranked_list_id)
     # Success: Respond with the deleted document that's no longer in the database
     return RankedList(**deleted_doc).to_json()
 
@@ -142,8 +142,8 @@ def edit_ranked_list(ranked_list_id):
     # essential information for full validation
     doc_to_update = db.ranked_lists.find_one({"_id": ranked_list_id})
     if doc_to_update is None:
-        raise ResourceNotFoundInDatabaseError(f"RankedList with the id {ranked_list_id}"
-                                               " not found in the database.")
+        raise ResourceNotFoundInDatabaseError(resource_cls_name="RankedList",
+                                              resource_id=ranked_list_id)
     for field in ("name", "thing_scores", "fights"):
          if field not in update_data:
               update_data[field] = doc_to_update[field]
@@ -160,8 +160,8 @@ def edit_ranked_list(ranked_list_id):
 
     # If unsuccessful, abort with a 404 Not Found error
     if updated_doc is None:
-        raise ResourceNotFoundInDatabaseError(f"RankedList with the id {ranked_list_id}"
-                                               " not found in the database.")
+        raise ResourceNotFoundInDatabaseError(resource_cls_name="RankedList",
+                                              resource_id=ranked_list_id)
     # Success: respond with the new, updated RankedList
     return RankedList(**updated_doc).to_json()
 
@@ -187,8 +187,8 @@ def get_one_ranked_list(ranked_list_id):
     # with it, or raise an HTTP 404 if you can't find it
     doc = db.ranked_lists.find_one({"_id": ranked_list_id}, )
     if doc is None:
-        raise ResourceNotFoundInDatabaseError(f"Ranked list with the id {ranked_list_id} "
-                                               "not found in the database.")
+        raise ResourceNotFoundInDatabaseError(resource_cls_name="RankedList",
+                                              resource_id=ranked_list_id)
     # Success: respond with the ranked list 
     return RankedList(**doc).to_json()
 

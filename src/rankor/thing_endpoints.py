@@ -64,7 +64,7 @@ def create_new_thing():
     # same name, raise an error if it does
     same_name_thing = db.things.find_one({"name": new_thing_data["name"]})
     if same_name_thing:
-        raise SameNameResourceAlreadyExistsError(same_name_thing)
+        raise SameNameResourceAlreadyExistsError(same_name_resource=same_name_thing)
 
     # Create the new Thing instance, which also validates its data using pydantic,
     # insert it into the database, and retrieve the _id that mongodb automatically 
@@ -90,8 +90,9 @@ def delete_thing(thing_id):
     deleted_thing_doc = db.things.find_one_and_delete({"_id": thing_id})
     # If unsuccessful, abort and send an HTTP 404 error
     if deleted_thing_doc is None:
-        raise ResourceNotFoundInDatabaseError(f"Thing with the id {thing_id} not found "
-                                               "in the database.")
+        raise ResourceNotFoundInDatabaseError(resource_cls_name="Thing",
+                                              resource_id=thing_id)
+
     # Success: Respond with the deleted Thing document that's 
     # no longer in the database
     return Thing(**deleted_thing_doc).to_json()
@@ -131,8 +132,8 @@ def edit_thing(thing_id):
     if 'name' not in update_data:
         thing_doc_we_are_updating = db.things.find_one({"_id": thing_id})
         if thing_doc_we_are_updating is None:
-            raise ResourceNotFoundInDatabaseError(f"Thing with the id {thing_id} not found "
-                                                   "in the database.")
+            raise ResourceNotFoundInDatabaseError(resource_cls_name="Thing",
+                                                  resource_id=thing_id)
         update_data['name'] = thing_doc_we_are_updating['name']
     # Now we know for sure that our thing_update_data has a name.
     # Validate through instantiating it as a Thing and add a timestamp
@@ -248,7 +249,7 @@ def get_one_thing(thing_id):
     thing_doc = db.things.find_one({"_id": thing_id}, )
     # If failure: 404 Not Found Error
     if thing_doc is None:
-        raise ResourceNotFoundInDatabaseError(f"Thing with the id {thing_id} not found "
-                                               "in the database.")
+        raise ResourceNotFoundInDatabaseError(resource_cls_name="Thing",
+                                              resource_id=thing_id)
     # Success: respond with the thing 
     return Thing(**thing_doc).to_json()

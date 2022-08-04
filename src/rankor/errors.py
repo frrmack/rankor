@@ -9,17 +9,41 @@ from werkzeug.exceptions import HTTPException
 
 class ResourceNotFoundInDatabaseError(HTTPException):
     code = 404
-    description = ("The requested resource was not found in the database. "
+    description = ("The requested <resource> was not found in the database. "
                    "Please check the requested data carefully and try again.")
+    def __init__(self, 
+                 description=None, 
+                 response=None, 
+                 resource_cls_name=None, 
+                 resource_id=None) -> None:
+        resource_repr = "resource"
+        if resource_cls_name is not None:
+            resource_repr = resource_cls_name
+        if resource_id is not None:
+            resource_repr = f"{resource_repr} with the id {resource_id}"
+        if description is None:
+            description = self.description.replace("<resource>", resource_repr)
+        super().__init__(description, response)
+
 
 class SameNameResourceAlreadyExistsError(HTTPException):
     code = 400
-    description = ("A resource with the same name already exists in the database. "
-                   "Either update that resource instead, or delete that before "
-                   "creating this, or give this new resource a different name")
-    def __init__(self, same_name_resource=None, description=None, response=None):
-        super().__init__(description, response)
+    description = ("A <resource> with the same name already exists in the database. "
+                   "Either update that <resource> instead, or delete that before "
+                   "creating this, or give this new <resource> a different name")
+    def __init__(self, 
+                 description=None, 
+                 response=None, 
+                 same_name_resource=None,
+                 resource_cls_name=None):
         self.same_name_resource = same_name_resource
+        resource_repr = "resource"
+        if resource_cls_name is not None:
+            resource_repr = resource_cls_name
+        if description is None:
+            description = self.description.replace("<resource>", resource_repr)        
+        super().__init__(description, response)
+
 
 class NoTrailingSlashError(HTTPException):
     code = 400
