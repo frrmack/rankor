@@ -2,7 +2,7 @@
 #
 # Create a new Thing    |   POST    /rankor/things/
 # Delete a Thing        |   DELETE  /rankor/things/<thing_id>
-# Edit/Update a Thing   |   PUT     /rankor/things/<thing_id>
+# Edit a Thing          |   PUT     /rankor/things/<thing_id>
 # List all Things       |   GET     /rankor/things/     
 # Show one Thing        |   GET     /rankor/things/<thing_id>
 
@@ -98,13 +98,13 @@ def delete_thing(thing_id):
 
 
 @thing_endpoints.route("/rankor/things/<ObjectId:thing_id>", methods=["PUT"])
-def update_thing(thing_id):
+def edit_thing(thing_id):
     """
     PUT request to update the data of a Thing that already exists in the database.
 
     You can make partial updates like adding an optional field (like category in this
     example below) or change the value of a single field, change the values of multiple
-    fields, etc. You can of course fully replace the entire data of the Thing.
+    fields, etc. You can also fully replace the entire data of the Thing.
 
     Example (change the name from 'Terminator' to 'The Terminator' and add a category field):
     curl -d '{"name": "The Terminator", 
