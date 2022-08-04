@@ -16,8 +16,6 @@ setup(
         "Flask-Login == 0.6.1"
         "pymongo[srv] == 4.1.1",
         "pydantic == 1.9.1",
-        "MarkupSafe == 2.1.1"
-        "trueskill == 0.4.5",
-        "simplejson == 3.17.6"
+        "trueskill == 0.4.5"
     ]
 )
