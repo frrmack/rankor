@@ -135,6 +135,7 @@ class Fight(MongoModel):
 #     things: List[PyObjectId]
 
 
+
 class ThingScore(BaseModel):
     """
     A ThingScore instance represents the score of a Thing in a specific RankedList.
@@ -239,8 +240,6 @@ class ThingScore(BaseModel):
                    
 
 
-
-
 class RankedList(MongoModel):
     """
     A RankedList is a set of Things, each associated with a score. (It's called 
@@ -260,12 +259,38 @@ class RankedList(MongoModel):
     fights: List[PyObjectId]
     date_created: Optional[datetime]
     date_updated: Optional[datetime]
+    score_used_to_rank: Literal["rankor_score", 
+                                "min_possible_score", 
+                                "mu"] = "rankor_score"
 
+    @property
+    def top_5_things(self):
+        pass
 
+    @property
+    def last_5_fights(self):
+        pass
+    
+    # actually get this from a mixin class: ScoreCalculator
+    def calculate_scores_from_scratch(self):
+        pass
+
+    # actually get this from a mixin class: ScoreCalculator
+    def update_scores(self, fight):
+        pass
+
+    # actually get this from a mixin class: Matchmaker
+    def arrange_new_fight(self):
+        pass
+
+    def summary_dict(self):
+        pass
 
 
 if __name__ == '__main__':
     
+    # Test and log model instantiation ensure correct behavior
+
     # Note: normally, we would not create these instances by assigning them _id values 
     # ourselves. Instead of creating them with written _id fields, we'd let _ids be
     # automatically assigned by mongo when pymongo writes them to the db. We are only
