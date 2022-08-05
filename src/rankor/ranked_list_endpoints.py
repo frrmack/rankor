@@ -72,7 +72,7 @@ def create_a_new_ranked_list():
     # It also has a list of fights, which will be empty now, at the time
     # of creation. 
     things_in_ranked_list = [Thing(**doc) for doc in db.things.find()]
-    initial_scores = [ThingScore(thing.id) for thing in things_in_ranked_list]
+    initial_scores = [ThingScore(thing=thing.id) for thing in things_in_ranked_list]
     new_ranked_list_data["thing_scores"] = initial_scores
     new_ranked_list_data["fights"] = []
 
@@ -172,11 +172,6 @@ def edit_a_ranked_list(ranked_list_id):
                                               resource_id=ranked_list_id)
     # Success: respond with the new, updated RankedList
     return RankedList(**updated_doc).to_json()
-
-
-
-
-
 
 
 
