@@ -279,6 +279,10 @@ class RankedList(MongoModel):
         return self.ranked_things[:5]
 
     @property
+    def number_of_fights(self):
+        return len(self.fights)
+
+    @property
     def last_5_fights(self):
         time_of_fight = lambda fight: getattr(fight, 
                                               "date_fought", 
@@ -300,7 +304,14 @@ class RankedList(MongoModel):
         pass
 
     def summary_dict(self):
-        pass
+        sum_dict = self.dict(exclude_none=False)
+        sum_dict.pop("thing_scores")
+        sum_dict.pop("fights")
+        sum_dict.update(dict(top_5_things=self.top_5_things,
+                             number_of_fights=self.number_of_fights,
+                             last_5_fights=self.last_5_fights)
+                       )
+        return sum_dict
 
 
 if __name__ == '__main__':
@@ -347,10 +358,5 @@ if __name__ == '__main__':
     print( best_to_worst_james_cameron_movies.to_json() )
     print( best_to_worst_james_cameron_movies.top_5_things )
     print( best_to_worst_james_cameron_movies.last_5_fights )
-    
-
-
-
-
-
+    print( best_to_worst_james_cameron_movies.summary_dict())
     
