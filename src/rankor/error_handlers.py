@@ -39,8 +39,9 @@ def data_validation_error_response(validation_error):
     string value is provided for a field that's supposed to be a float.
     """
     http_status_code = 400      # Bad Request
-    err_msg = ("The data you provided does not fully match the type requirements. "
-               "Please provide valid data types as input.")    
+    err_msg = ("The data of this resource does not fully match the validation "
+               "requirements. Please ensure existence of all required fields, "
+               "valid field names, and valid data types for those fields' values.")    
     num_validation_issues = len(validation_error.errors())
     details = {"number_of_validation_errors": num_validation_issues,
                "validation_error_list": validation_error.errors()}
