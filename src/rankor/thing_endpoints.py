@@ -16,6 +16,9 @@ from pymongo.collection import ReturnDocument
 # Python datetime import for timestamps
 from datetime import datetime
 
+# Encoder imports
+from fastapi.encoders import jsonable_encoder
+
 # Rankor model imports
 from src.rankor.models import Thing
 
@@ -95,8 +98,9 @@ def delete_a_thing(thing_id):
                                               resource_id=thing_id)
 
     # Success: Respond with the deleted Thing document that's 
-    # no longer in the database
-    return Thing(**deleted_thing_doc).to_json()
+    # no longer in the database (no need for validation through
+    # model instantiation since this is a deleted document anyway)
+    return jsonable_encoder(deleted_thing_doc)
 
 
 @thing_endpoints.route("/rankor/things/<ObjectId:thing_id>", methods=["PUT"])

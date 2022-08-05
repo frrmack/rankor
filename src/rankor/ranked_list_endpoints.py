@@ -16,6 +16,9 @@ from pymongo.collection import ReturnDocument
 # Python datetime import for timestamps
 from datetime import datetime
 
+# Encoder imports
+from fastapi.encoders import jsonable_encoder
+
 # Rankor model imports
 from src.rankor.models import Thing, RankedList, ThingScore
 
@@ -98,7 +101,8 @@ def delete_a_ranked_list(ranked_list_id):
         raise ResourceNotFoundInDatabaseError(resource_type="ranked list",
                                               resource_id=ranked_list_id)
     # Success: Respond with the deleted document that's no longer in the database
-    return RankedList(**deleted_doc).to_json()
+    # (Don't instantiate it, as we don't need validation of a doc we just deleted)
+    return jsonable_encoder(deleted_doc)
 
 
 @ranked_list_endpoints.route("/rankor/rankedlists/<ObjectId:ranked_list_id>/", 
