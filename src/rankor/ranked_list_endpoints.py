@@ -55,7 +55,7 @@ def create_a_new_ranked_list():
     """
     # Retrieve the data from the request and record the timestamp of creation
     new_ranked_list_data = request.get_json()
-    new_ranked_list_data["date_created"] = datetime.utcnow()
+    new_ranked_list_data["time_created"] = datetime.utcnow()
 
     # Check the database to ensure that there isn't another one with the exact 
     # same name, raise an error if it does
@@ -157,7 +157,7 @@ def edit_a_ranked_list(ranked_list_id):
     # Validate through instantiating it as a RankedList and add a timestamp
     # to record when this update happened.
     validated_update = RankedList(**update_data)
-    validated_update.date_updated = datetime.utcnow()
+    validated_update.time_edited = datetime.utcnow()
 
     # Apply these updates to the given fields in the database.
     updated_doc = db.ranked_lists.find_one_and_update(

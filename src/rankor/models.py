@@ -80,10 +80,10 @@ class Thing(MongoModel):
     """
     name: str
     image_url: Optional[AnyUrl]
-    category: Optional[str]     # Future idea: Turn categories into a class? Also add a tag class?
+    category: Optional[str]        # Make new models: Category, Tag
     extra_data: Optional[Dict]
-    date_created: Optional[datetime]
-    date_updated: Optional[datetime]
+    time_created: Optional[datetime]
+    time_edited: Optional[datetime]
 
 
 
@@ -116,7 +116,7 @@ class Fight(MongoModel):
     fighting_things: conlist(PyObjectId, min_items=2, max_items=2) 
     result: Literal['FIRST_THING_WINS', 'SECOND_THING_WINS', 'DRAW']
     winner: Optional[PyObjectId]
-    date_fought: Optional[datetime]
+    time_fought: Optional[datetime]
 
 
 
@@ -257,8 +257,8 @@ class RankedList(MongoModel):
     name: str
     thing_scores: List[ThingScore]
     fights: List[PyObjectId]
-    date_created: Optional[datetime]
-    date_updated: Optional[datetime]
+    time_created: Optional[datetime]
+    time_edited: Optional[datetime]
     score_used_to_rank: Literal["rankor_score", 
                                 "min_possible_score", 
                                 "mu"] = "rankor_score"
@@ -284,7 +284,9 @@ class RankedList(MongoModel):
                                               "date_fought", 
                                               datetime.utcnow())
         return sorted(self.fights, key=time_of_fight)
-    
+
+
+
     # actually get this from a mixin class: ScoreCalculator
     def calculate_scores_from_scratch(self):
         pass

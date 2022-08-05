@@ -61,7 +61,7 @@ def create_a_new_thing():
     """
     # Retrieve the data from the request and record the timestamp of creation
     new_thing_data = request.get_json()
-    new_thing_data["date_created"] = datetime.utcnow()
+    new_thing_data["time_created"] = datetime.utcnow()
 
     # Check the database to ensure that there isn't another Thing with the exact 
     # same name, raise an error if it does
@@ -144,7 +144,7 @@ def edit_a_thing(thing_id):
     # Validate through instantiating it as a Thing and add a timestamp
     # to store when this update happened.
     validated_update = Thing(**update_data)
-    validated_update.date_updated = datetime.utcnow()
+    validated_update.time_edited = datetime.utcnow()
     print(f'validated update: {validated_update.to_json()}')
     # Get our target thing with this id and apply these updates to the 
     # given fields in the database.
