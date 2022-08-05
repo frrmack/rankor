@@ -211,7 +211,7 @@ class ThingScore(BaseModel):
     to directly rank Things by mu (our best guess for their underlying 'true' score). rankor_score
     is only what this rankor api suggests as a good ranking score design.
     """
-    thing_id: PyObjectId
+    thing: PyObjectId
 
     mu    = settings.DEFAULT_INITIAL_SCORE_MU_VALUE
     sigma = settings.DEFAULT_INITIAL_SCORE_SIGMA_VALUE
