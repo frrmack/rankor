@@ -264,12 +264,26 @@ class RankedList(MongoModel):
                                 "mu"] = "rankor_score"
 
     @property
+    def ranked_things(self):
+        """
+        Sort the thing_scores list based on the chosen score metric and
+        return it as the ranked list of things
+        """
+        sorting_metric = lambda thing_score: getattr(thing_score, 
+                                                     self.score_used_to_rank)
+        self.thing_scores.sort(key=sorting_metric, reverse=True)
+        return self.thing_scores
+
+    @property
     def top_5_things(self):
-        pass
+        return self.ranked_things[:5]
 
     @property
     def last_5_fights(self):
-        pass
+        time_of_fight = lambda fight: getattr(fight, 
+                                              "date_fought", 
+                                              datetime.utcnow())
+        return sorted(self.fights, key=time_of_fight)
     
     # actually get this from a mixin class: ScoreCalculator
     def calculate_scores_from_scratch(self):
@@ -322,15 +336,16 @@ if __name__ == '__main__':
     print(aliens_vs_terminator.to_json())
     #
     best_to_worst_james_cameron_movies = RankedList(name = "Favorite Cameron Movies",
-                                                    thing_scores  = [ThingScore(thing_id="12345678901234567890abcd"),
-                                                                     ThingScore(thing_id="12345678901234567890ffff")
+                                                    thing_scores  = [ThingScore(thing="12345678901234567890abcd"),
+                                                                     ThingScore(thing="12345678901234567890ffff")
                                                                     ],
                                                     fights = ["5647382910aaaa0192837465"],
                                                     _id = "aaaaabbbbbcccccdddddefef"
                                                     )
     print( best_to_worst_james_cameron_movies.to_json() )
-    print( best_to_worst_james_cameron_movies.to_bson() )
-
+    print( best_to_worst_james_cameron_movies.top_5_things )
+    print( best_to_worst_james_cameron_movies.last_5_fights )
+    
 
 
 
