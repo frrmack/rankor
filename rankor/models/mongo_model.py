@@ -5,6 +5,10 @@ from pydantic import BaseModel, Field
 from typing import Optional
 
 
+# JSON encoding
+import json
+
+
 # This is used to help Pydantic handle the bson ObjectId field from mongodb.
 # You can find more discussion and examples around how to handle this issue
 # at https://stackoverflow.com/questions/59503461/how-to-parse-objectid-in-a-pydantic-model
@@ -43,7 +47,9 @@ class MongoModel(BaseModel):
     The to_json and to_bson methods are just for convenience to ensure correct 
     serialization with these strict typing schemas. For example, bson supports 
     native ObjectId and datetime types, but the json encoder converts ObjectId 
-    to a string with its hex value, and datetime into an ISO8601 string. 
+    to a string with its hex value, and datetime into an ISO8601 string. The 
+    jsonable_dict method provides the same json encoding as to_json, but keeps 
+    the result as a dict instead of the final string. 
     """
     id: Optional[PyObjectId] = Field(None, alias="_id")
 
@@ -57,6 +63,18 @@ class MongoModel(BaseModel):
         json with sorted keys and indents for readability.
         """
         return self.json(exclude_none=True, indent=2, sort_keys=True)
+
+
+    def jsonable_dict(self):
+        """
+        Encodes complex classes in relevant serialization types just as the 
+        to_json() method, but return a dict representation with these 
+        json-able contents instead of a json string. This is handy when you
+        need the encoding but want to keep a dict, for example when you need
+        to include it in another dict which will be encoded to json in its
+        entirety.
+        """
+        return json.loads(self.to_json())
 
 
     def to_bson(self):

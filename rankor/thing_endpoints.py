@@ -16,8 +16,11 @@ from pymongo.collection import ReturnDocument
 # Python datetime import for timestamps
 from datetime import datetime
 
+# Encoder imports
+import json
+
 # Rankor model imports
-from rankor.models import Thing
+from rankor.models import Thing, thing
 
 # Exception imports
 from rankor.errors import (ResourceNotFoundInDatabaseError,
@@ -200,7 +203,7 @@ def list_all_things():
     # the 10 things that start from there (the 51st through 60th things). 
     # This is page 6. We will also provide links to page 5, page 7, and the last page.
     page_docs_query = db.things.find().sort("name").skip(num_skip).limit(page_size)
-    things_in_this_page = [Thing(**doc).to_json() for doc in page_docs_query]
+    things_in_this_page = [Thing(**doc).jsonable_dict() for doc in page_docs_query]
 
     # Links to this very page and the last page you can get
     links = {
@@ -215,11 +218,13 @@ def list_all_things():
         links["next"] = {"href": url_for(".list_all_things", page=page+1, _external=True)}
 
     # Return the full response
-    return {
+    return json.dumps({
             "things": things_in_this_page, 
             "_page": page,
             "_links": links,
-           }
+           },
+           indent=2,
+           sort_keys=True)
 
 
 @thing_endpoints.route("/rankor/things/<ObjectId:thing_id>/", methods=["GET"])
