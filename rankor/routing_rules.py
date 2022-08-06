@@ -35,7 +35,7 @@ from werkzeug.routing import RequestPath, Rule as WerkzeugDefaultRoutingRule
 
 
 # Rankor imports: The Exception to be raised in case of a missing trailing slash
-from src.rankor.errors import NoTrailingSlashError
+from rankor.errors import NoTrailingSlashError
 
 
 # Update the default routing Rule from Werkzeug that Flask uses, to raise an

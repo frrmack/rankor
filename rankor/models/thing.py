@@ -4,7 +4,7 @@ from typing import Optional, Dict
 from datetime import datetime
 
 # Rankor superclass for models, handling encodings and bson ObjectIds
-from src.rankor.models.mongo_model import MongoModel
+from rankor.models.mongo_model import MongoModel
 
 
 class Thing(MongoModel):

@@ -7,8 +7,8 @@ setup(
     version="0.0.1",
     author="Irmak Sirer",
     author_email="irmak.sirer@gmail.com",
-    packages=find_packages(where="src"),
-    package_dir={"": "src"},
+    packages=find_packages(where=""),
+    package_dir={"": "rankor"},
     install_requires=[
         "fastapi == 0.79.0",
         "Flask == 2.1.2",

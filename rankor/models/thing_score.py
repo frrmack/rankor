@@ -5,7 +5,7 @@ from pydantic import BaseModel
 
 # This is used to help Pydantic handle the bson ObjectId field from mongodb
 # More info in the module itself
-from src.rankor.models.pyobjectid import PyObjectIdString
+from rankor.models.pyobjectid import PyObjectIdString
 
 # Api settings (for scoring priors)
 import settings

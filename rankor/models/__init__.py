@@ -7,15 +7,15 @@
 
 # Import the main models from their respective files, so the rest
 # of rankor can import them directly from rankor.models
-from src.rankor.models.thing import Thing
-from src.rankor.models.fight import Fight
-from src.rankor.models.thing_score import ThingScore
-from src.rankor.models.ranked_list import RankedList
+from rankor.models.thing import Thing
+from rankor.models.fight import Fight
+from rankor.models.thing_score import ThingScore
+from rankor.models.ranked_list import RankedList
 
 
 # Import the ObjectId-related pydantic fields so they can be imported
 # directly from rankor.models
-from src.rankor.models.pyobjectid import PyObjectId
+from rankor.models.pyobjectid import PyObjectId
 
 
 

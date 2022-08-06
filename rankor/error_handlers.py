@@ -4,7 +4,7 @@
 
 
 # specific errors to handle differently
-from src.rankor.errors import SameNameResourceAlreadyExistsError
+from rankor.errors import SameNameResourceAlreadyExistsError
 
 # robust JSON encoding from fastapi
 from fastapi.encoders import jsonable_encoder

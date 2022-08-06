@@ -4,11 +4,11 @@ from typing import Optional, Literal
 from datetime import datetime
 
 # Rankor superclass for models, handling encodings and bson ObjectIds
-from src.rankor.models.mongo_model import MongoModel
+from rankor.models.mongo_model import MongoModel
 
 # This is used to help Pydantic handle the bson ObjectId field from mongodb
 # More info in the module itself
-from src.rankor.models.pyobjectid import PyObjectIdString
+from rankor.models.pyobjectid import PyObjectIdString
 
 
 class Fight(MongoModel):

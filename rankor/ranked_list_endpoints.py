@@ -20,18 +20,18 @@ from datetime import datetime
 from fastapi.encoders import jsonable_encoder
 
 # Rankor model imports
-from src.rankor.models import Thing, RankedList, ThingScore
+from rankor.models import Thing, RankedList, ThingScore
 
 # Exception imports
 from werkzeug.exceptions import Forbidden
-from src.rankor.errors import (ResourceNotFoundInDatabaseError,
+from rankor.errors import (ResourceNotFoundInDatabaseError,
                                SameNameResourceAlreadyExistsError)
 
 # Api settings import
 import settings
 
 # Database interface import
-from src.rankor import db
+from rankor import db
 
 
 # The blueprint with all the Thing endpoints

@@ -15,7 +15,7 @@ from typing import Optional
 # You can find more discussion and examples around how to handle this issue
 # at https://stackoverflow.com/questions/59503461/how-to-parse-objectid-in-a-pydantic-model
 # and more notes in rankor's pyobjectid.py as well
-from src.rankor.models.pyobjectid import PyObjectId
+from rankor.models.pyobjectid import PyObjectId
 
 
 
