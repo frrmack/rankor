@@ -6,8 +6,8 @@
 # specific errors to handle differently
 from rankor.errors import SameNameResourceAlreadyExistsError
 
-# robust JSON encoding from fastapi
-from fastapi.encoders import jsonable_encoder
+# JSON encoding of error responses
+import json
 
 
 def http_error_response(http_exception):
@@ -26,7 +26,7 @@ def http_error_response(http_exception):
                      "http_status_code": http_status_code}
     if isinstance(http_exception, SameNameResourceAlreadyExistsError):
         response_dict.update({"existing_resource":http_exception.same_name_resource})
-    return jsonable_encoder(response_dict), http_status_code
+    return json.dumps(response_dict, indent=2, sort_keys=True), http_status_code
 
 
 def data_validation_error_response(validation_error):
@@ -45,10 +45,12 @@ def data_validation_error_response(validation_error):
     num_validation_issues = len(validation_error.errors())
     details = {"number_of_validation_errors": num_validation_issues,
                "validation_error_list": validation_error.errors()}
-    response = jsonable_encoder({"error_type": type(validation_error).__name__, 
-                                 "error": err_msg,
-                                 "error_details": details,
-                                 "http_status_code": http_status_code})
+    response = json.dumps({"error_type": type(validation_error).__name__, 
+                           "error": err_msg,
+                           "error_details": details,
+                           "http_status_code": http_status_code},
+                           indent=2,
+                           sort_keys=True)
     return response, http_status_code
 
 
@@ -62,9 +64,11 @@ def database_error_response(pymongo_error):
     ExecutionTimeout that results due to or during a database operation.
     """
     http_status_code = 500      # Internal Server Error
-    response = jsonable_encoder({"error_type": type(pymongo_error).__name__,  
-                                 "error": pymongo_error.message,
-                                 "http_status_code": http_status_code})
+    response = json.dumps({"error_type": type(pymongo_error).__name__,  
+                           "error": pymongo_error.message,
+                           "http_status_code": http_status_code},
+                          indent=2,
+                          sort_keys=True)
     return response, http_status_code
 
 
@@ -85,24 +89,10 @@ def bson_format_error_response(bson_error):
     ObjectId type in keys, it only accepts it in values.
     """
     http_status_code = 400      # Bad Request
-    response = jsonable_encoder({"error_type": type(bson_error).__name__,  
-                                 "error": bson_error.args[0],
-                                 "http_status_code": http_status_code})
+    response = json.dumps({"error_type": type(bson_error).__name__,  
+                           "error": bson_error.args[0],
+                           "http_status_code": http_status_code},
+                          indent=2,
+                          sort_keys=True)
     return response, http_status_code
 
-
-
-# def general_json_error_response(error):
-#     """
-#     General catch all error handler to return all remaining error responses 
-#     as JSON (instead of Flask's default HTML)
-#     """
-#     http_code = 500
-#     print(dir(error))
-#     print(error.errors())
-#     if isinstance(error, HTTPException):
-#         http_code = error.code
-#     elif isinstance(error, DuplicateKeyError):
-#         http_code = 400
-#     return jsonify({"error_type": type(error).__name__,  
-#                     "error": error.description}), http_code

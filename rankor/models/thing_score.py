@@ -105,7 +105,7 @@ class ThingScore(BaseModel):
         Overwrites BaseModel's dict method to include calculated score properties
         in the dict representation of the model instance. This method is
         used both for dict representations (for bson encoding through pymongo) 
-        and for json representations (through fastapi's jsonable encoder)
+        and for json representations (through pydantic's json encoder)
         """
         obj_dict = super(ThingScore, self).dict(*args, **kwargs)
         properties_dict = dict(min_possible_score=self.min_possible_score,

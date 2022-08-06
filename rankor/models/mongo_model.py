@@ -1,9 +1,3 @@
-# This is a Flask project, not a FastAPI project, but this
-# single function from FastAPI is a great way to handle converting
-# stuff between JSON and Python types (datetime, for example)
-from fastapi.encoders import jsonable_encoder
-
-
 # Pydantic provides data validation and creates a schema using typing,
 # which is Python's own runtime support for type hints. This is good
 # and necessary for a robust api. 
@@ -33,27 +27,49 @@ class MongoModel(BaseModel):
     assign it to this object during the write, and will save it under the "_id"
     field.
     
-    We are using Pydantic to have strict data validation, and what we do below
-    (creating a custom field with an ObjectId type) method ensures that Pydantic 
-    validates  this _id field correctly as a bson object id type. This field
-    is Optional, because WE don't want to create an id when we create a model instance.
-    We want id creation to happen automatically by mongo. When we convert this python
-    model object instance to bson as part of writing it to mongo (pymongo converts a 
-    python dict representing this model instance into a bson when we tell it to store 
-    it in the database), it won't have an _id field so that mongo can create it itself. 
-    But if we read / rewrite / etc. a model object that had already been written to 
-    mongo once (and therefore it already has an id with the alias "_id"), it will stay
-    on, and will still be validated as the correct ObjectId type. 
+    We are using Pydantic to have strict data validation, and what we do 
+    below (creating a custom field with an ObjectId type) method ensures that 
+    Pydantic validates  this _id field correctly as a bson object id type. 
+    This field is Optional, because WE don't want to create an id when we 
+    create a model instance. We want id creation to happen automatically by 
+    mongodb. When we convert this python model instance to bson as part of 
+    writing it to mongo (pymongo converts a python dict representing this 
+    model instance into a bson when we tell it to store it in the database), 
+    it won't have an _id field so that mongo can create it itself. But if we 
+    read / rewrite / etc. a model object that had already been written to 
+    mongodb once (and therefore it already has an id with the alias "_id"), it 
+    will stay on, and will still be validated as the correct ObjectId type. 
     
-    The json and bson encoders are just convenience functions to ensure correct 
-    serialization with these strict typing schemas. bson supports native ObjectId and 
-    datetime types, but the json encoder converts ObjectId to a string with its hex value,
-    and datetime into an ISO8601 string.
+    The to_json and to_bson methods are just for convenience to ensure correct 
+    serialization with these strict typing schemas. For example, bson supports 
+    native ObjectId and datetime types, but the json encoder converts ObjectId 
+    to a string with its hex value, and datetime into an ISO8601 string. 
     """
     id: Optional[PyObjectId] = Field(None, alias="_id")
 
+
     def to_json(self):
-        return jsonable_encoder(self, exclude_none=True)
+        """
+        A simple wrapper around BaseModel.json() with a few keyword arguments 
+        already set as the default json serialization behavior of MongoModel. 
+        It excludes fields that are None from the json result by default (this
+        includes optional fields that aren't set), and pretty-print-ifies the 
+        json with sorted keys and indents for readability.
+        """
+        return self.json(exclude_none=True, indent=2, sort_keys=True)
+
 
     def to_bson(self):
+        """
+        A simple wrapper around BaseModel.dict(). It has by_alias set to True, 
+        which is very important, as we want the 'id' field of a MongoModel to 
+        be recorded by its alias '_id' in a bson document to be written to 
+        mongodb. There is more info on this in rankor/models/pyobjectid.py, 
+        but basically we are avoiding calling the field '_id' directly to 
+        avoid pydantic treating it as a private field. We get around this 
+        by calling it 'id' and using the alias '_id' for it. Like to_json(),
+        this also excludes fields that are set to None from the model's
+        representation (including optional fields that are not set).
+        """
         return self.dict(by_alias=True, exclude_none=True)
+

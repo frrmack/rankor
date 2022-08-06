@@ -10,7 +10,6 @@ setup(
     packages=find_packages(where=""),
     package_dir={"": "rankor"},
     install_requires=[
-        "fastapi == 0.79.0",
         "Flask == 2.1.2",
         "Flask-PyMongo==2.3.0",
         "pymongo[srv] == 4.1.1",
