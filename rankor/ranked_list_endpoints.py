@@ -59,12 +59,15 @@ def create_a_new_ranked_list():
 
     # Check the database to ensure that there isn't another one with the exact 
     # same name, raise an error if it does
-    same_name_ranked_list = db.ranked_lists.find_one({
+    if "name" in new_ranked_list_data:
+        same_name_ranked_list = db.ranked_lists.find_one({
                                             "name": new_ranked_list_data["name"]
                                             })
-    if same_name_ranked_list:
-        raise SameNameResourceAlreadyExistsError(resource_type="ranked list",
-                                       same_name_resource=same_name_ranked_list)
+        if same_name_ranked_list:
+            raise SameNameResourceAlreadyExistsError(
+                                    resource_type="ranked list",
+                                    same_name_resource=same_name_ranked_list
+                                    )
 
     # A RankedList has a dictionary that maps each thing to its score
     # in this RankedList, we are going to initialize the scores for all of them

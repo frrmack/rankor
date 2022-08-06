@@ -65,10 +65,13 @@ def create_a_new_thing():
 
     # Check the database to ensure that there isn't another Thing with the exact 
     # same name, raise an error if it does
-    same_name_thing = db.things.find_one({"name": new_thing_data["name"]})
-    if same_name_thing:
-        raise SameNameResourceAlreadyExistsError(resource_type="thing",
-                                                 same_name_resource=same_name_thing)
+    if "name" in new_thing_data:
+        same_name_thing = db.things.find_one({"name": new_thing_data["name"]})
+        if same_name_thing:
+            raise SameNameResourceAlreadyExistsError(
+                                                resource_type="thing",
+                                                same_name_resource=same_name_thing
+                                                )
 
     # Create the new Thing instance, which also validates its data using pydantic,
     # insert it into the database, and retrieve the _id that mongodb automatically 
