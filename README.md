@@ -1,4 +1,4 @@
-![RANKOR](https://raw.githubusercontent.com/frrmack/rankor/master/Rankor_logo_white.png)
+![RANKOR](https://raw.githubusercontent.com/frrmack/rankor/master/logo/rankor_logo_white.png)
 
 A web app for ranking things by comparing pairs of them.
 
