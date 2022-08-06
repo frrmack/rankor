@@ -4,17 +4,14 @@
 from pydantic import BaseModel, Field
 from typing import Optional
 
-
 # JSON encoding
 import json
-
 
 # This is used to help Pydantic handle the bson ObjectId field from mongodb.
 # You can find more discussion and examples around how to handle this issue
 # at https://stackoverflow.com/questions/59503461/how-to-parse-objectid-in-a-pydantic-model
 # and more notes in rankor's pyobjectid.py as well
 from rankor.models.pyobjectid import PyObjectId
-
 
 
 class MongoModel(BaseModel):
@@ -72,7 +69,14 @@ class MongoModel(BaseModel):
         json-able contents instead of a json string. This is handy when you
         need the encoding but want to keep a dict, for example when you need
         to include it in another dict which will be encoded to json in its
-        entirety.
+        entirety. 
+        While re-parsing a json dumped by BaseModel.json is slightly ridiculous, 
+        pydantic.json.pydantic_encoder, pydantic.BaseModel.json, and 
+        pydantic.BaseModel.dict are written in a way that this functionality
+        is a bit difficult to ensure without writing a custom json encoder or 
+        using an existing one (such as fastapi.encoders.jsonable_encoder), and
+        it's easier to just do this instead. The performance difference is 
+        absolutely negligible for rankor's use cases.
         """
         return json.loads(self.to_json())
 
