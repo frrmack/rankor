@@ -8,7 +8,7 @@ from rankor.models.mongo_model import MongoModel
 
 # This is used to help Pydantic handle the bson ObjectId field from mongodb
 # More info in the module itself
-from src.rankor.models.pyobjectid import PyObjectId
+from src.rankor.models.pyobjectid import PyObjectIdString
 
 
 class ThingCollection(MongoModel):
@@ -23,4 +23,4 @@ class ThingCollection(MongoModel):
     get a ranked list like 'My favorite action movies of the last decade'.
     """
     name: str
-    things: List[PyObjectId]
+    things: List[PyObjectIdString]

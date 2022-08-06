@@ -10,7 +10,7 @@ from src.rankor.models.thing_score import ThingScore
 
 # This is used to help Pydantic handle the bson ObjectId field from mongodb
 # More info in the module itself
-from src.rankor.models.pyobjectid import PyObjectId
+from src.rankor.models.pyobjectid import PyObjectIdString
 
 
 class RankedList(MongoModel):
@@ -29,7 +29,7 @@ class RankedList(MongoModel):
     """
     name: str
     thing_scores: List[ThingScore]
-    fights: List[PyObjectId]
+    fights: List[PyObjectIdString]
     time_created: Optional[datetime]
     time_edited: Optional[datetime]
     score_used_to_rank: Literal["rankor_score", 

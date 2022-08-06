@@ -8,7 +8,7 @@ from src.rankor.models.mongo_model import MongoModel
 
 # This is used to help Pydantic handle the bson ObjectId field from mongodb
 # More info in the module itself
-from src.rankor.models.pyobjectid import PyObjectId
+from src.rankor.models.pyobjectid import PyObjectIdString
 
 
 class Fight(MongoModel):
@@ -36,8 +36,8 @@ class Fight(MongoModel):
     stronger player will likely win more of the Fights, but not necessarily all, and 
     they may even lose the majority just by random chance -- even if that's less likely.
     """
-    ranked_list: PyObjectId
-    fighting_things: conlist(PyObjectId, min_items=2, max_items=2) 
+    ranked_list: PyObjectIdString
+    fighting_things: conlist(PyObjectIdString, min_items=2, max_items=2) 
     result: Literal['FIRST_THING_WINS', 'SECOND_THING_WINS', 'DRAW']
-    winner: Optional[PyObjectId]
+    winner: Optional[PyObjectIdString]
     time_fought: Optional[datetime]
