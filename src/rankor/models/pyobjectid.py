@@ -5,7 +5,7 @@
 # handle mongodb's bson object ids, check out the following link:
 # https://stackoverflow.com/questions/59503461/how-to-parse-objectid-in-a-pydantic-model
 # If you're wondering why we are using this alias="_id" part when
-# we are defining id fields with this PyObjecId in the models below,
+# we are defining id fields with this PyObjecId in the MongoModels,
 # check out the following:
 # https://www.mongodb.com/community/forums/t/why-do-we-need-alias-id-in-pydantic-model-of-fastapi/170728/3
 
@@ -14,7 +14,7 @@ from bson import ObjectId as BsonObjectId
 from pydantic.json import ENCODERS_BY_TYPE
 
 
-class PyObjectId(BsonObjectId):
+class BsonObjectIdValidator(object):
 
     @classmethod
     def __get_validators__(cls):
@@ -31,18 +31,11 @@ class PyObjectId(BsonObjectId):
         field_schema.update(type="string")
 
 
-class PyObjectIdString(str):
+class PyObjectId(BsonObjectId, BsonObjectIdValidator):
+    pass
 
-    @classmethod
-    def __get_validators__(cls):
-        yield cls.validate
-
-    @classmethod
-    def validate(cls, value):
-        if not cls.is_valid(value):
-            raise ValueError("Not a valid bson object id")
-        return cls(value)
-
+class PyObjectIdString(str, BsonObjectIdValidator):
+    pass
 
 
 ENCODERS_BY_TYPE[BsonObjectId] = PyObjectIdString
