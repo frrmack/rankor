@@ -32,7 +32,7 @@ class BsonObjectIdValidator(object):
     @classmethod
     def validate(cls, value):
         if not BsonObjectId.is_valid(value):
-            raise ValueError("Not a valid bson object id")
+            raise ValueError("Not a valid bson ObjectId, it must be a 24 character hex string")
         return value
 
     @classmethod
