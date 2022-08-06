@@ -31,5 +31,19 @@ class PyObjectId(BsonObjectId):
         field_schema.update(type="string")
 
 
-ENCODERS_BY_TYPE[BsonObjectId] = str
-ENCODERS_BY_TYPE[PyObjectId] = str
+class PyObjectIdString(str):
+
+    @classmethod
+    def __get_validators__(cls):
+        yield cls.validate
+
+    @classmethod
+    def validate(cls, value):
+        if not cls.is_valid(value):
+            raise ValueError("Not a valid bson object id")
+        return cls(value)
+
+
+
+ENCODERS_BY_TYPE[BsonObjectId] = PyObjectIdString
+ENCODERS_BY_TYPE[PyObjectId] = PyObjectIdString
