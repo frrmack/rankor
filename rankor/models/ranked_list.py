@@ -39,19 +39,22 @@ class RankedList(MongoModel):
     @property
     def ranked_things(self):
         """
-        Sort the thing_scores list based on the chosen score metric and
-        return it as the ranked list of things
+        Sort the list of things (and their score objects) based on the chosen
+        score metric from the score object and return this as the ranked list of
+        things
         """
         thing_list_with_scores = [
             { 
                 "thing": thing_id,
-                "score": score
-            } for thing_id, score in self.thing_scores.items()
+                "score": score.dict()
+            } 
+            for thing_id, score 
+            in self.thing_scores.items()
         ]
-        sorting_metric = lambda thing_with_score: getattr(
-            thing_with_score["score"], 
-            self.score_used_to_rank
-        )        
+
+        def sorting_metric(thing_with_score_dict):
+            return thing_with_score_dict["score"][self.score_used_to_rank]
+
         return sorted(
             thing_list_with_scores, 
             key=sorting_metric, 
