@@ -1,5 +1,5 @@
 
-.PHONY: all install clean test run
+.PHONY: all install clean test rundev run
 
 
 all:
@@ -10,8 +10,8 @@ all:
 	@echo "run     - Run production server"
 
 
-test:
-	python -m tests.run_all_tests
+install:
+	python -m pip install -e .
 
 
 clean:
@@ -20,8 +20,8 @@ clean:
 	find tests -name '__pycache__' | xargs rm -rf
 
 
-install:
-	python -m pip install -e .
+test:
+	python -m tests.run_all_tests
 
 
 rundev:
