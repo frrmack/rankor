@@ -95,7 +95,7 @@ class MongoModel(BaseModel):
         return json.loads(self.to_json())
 
 
-    def to_bsonable_dictable_dict(self):
+    def to_bsonable_dict(self):
         """
         A simple wrapper around BaseModel.dict(). It has by_alias set to True,
         which is very important, as we want the 'id' field of a MongoModel to be
