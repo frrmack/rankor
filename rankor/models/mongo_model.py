@@ -29,17 +29,17 @@ class MongoModel(BaseModel):
     field.
     
     We are using Pydantic to have strict data validation, and what we do 
-    below (creating a custom field with an ObjectId type) method ensures that 
+    below (creating a custom field with an ObjectId type) ensures that 
     Pydantic validates  this _id field correctly as a bson object id type. 
     This field is Optional, because WE don't want to create an id when we 
     create a model instance. We want id creation to happen automatically by 
     mongodb. When we convert this python model instance to bson as part of 
-    writing it to mongo (pymongo converts a python dict representing this 
+    writing it to mongodb (pymongo converts a python dict representing this 
     model instance into a bson when we tell it to store it in the database), 
-    it won't have an _id field so that mongo can create it itself. But if we 
-    read / rewrite / etc. a model object that had already been written to 
-    mongodb once (and therefore it already has an id with the alias "_id"), it 
-    will stay on, and will still be validated as the correct ObjectId type. 
+    it won't have an _id field so that mongodb can create it itself. But if 
+    we read / rewrite / revalidate a model object that had already been written 
+    to mongodb once (and therefore it already has an id with the alias "_id"), 
+    it will stay on, and will still be validated as the correct ObjectId type. 
     
     The to_json and to_bson methods are just for convenience to ensure correct 
     serialization with these strict typing schemas. For example, bson supports 
@@ -93,7 +93,7 @@ class MongoModel(BaseModel):
         avoid pydantic treating it as a private field. We get around this 
         by calling it 'id' and using the alias '_id' for it. Like to_json(),
         this also excludes fields that are set to None from the model's
-        representation (including optional fields that are not set).
+        representation (this includes optional fields that are not set).
         """
         return self.dict(by_alias=True, exclude_none=True)
 
