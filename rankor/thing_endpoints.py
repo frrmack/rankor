@@ -160,7 +160,10 @@ def edit_a_thing(thing_id):
 
 
 # Delete a Thing        |   DELETE  /rankor/things/<thing_id>/
-@thing_endpoints.route("/rankor/things/<ObjectId:thing_id>/", methods=["DELETE"])
+@thing_endpoints.route(
+    "/rankor/things/<ObjectId:thing_id>/", 
+    methods=["DELETE"]
+)
 def delete_a_thing(thing_id):
     """
     DELETE request to remove a Thing from the database
@@ -292,7 +295,10 @@ def list_all_things():
 
 
 # Get one Thing         |   GET     /rankor/things/<thing_id>/
-@thing_endpoints.route("/rankor/things/<ObjectId:thing_id>/", methods=["GET"])
+@thing_endpoints.route(
+    "/rankor/things/<ObjectId:thing_id>/", 
+    methods=["GET"]
+)
 def get_one_thing(thing_id): 
     """
     GET request to retrieve the data for a single Thing using its id
