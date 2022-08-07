@@ -77,16 +77,16 @@ class RankedList(MongoModel):
         return sorted(self.fights, key=time_of_fight)
 
 
-
-    # actually get this from a mixin class: ScoreCalculator
+    # actually let a ScoreCalculator class do this in score_calculation.py
     def calculate_scores_from_scratch(self):
         pass
 
-    # actually get this from a mixin class: ScoreCalculator
+    # actually let a ScoreCalculator class do this in score_calculation.py
     def update_scores(self, fight):
         pass
 
-    # actually get this from a mixin class: Matchmaker
+    # actually let a Matchmaker class (which takes a ranked list in init) do
+    # this in matchmaking,py
     def arrange_new_fight(self):
         pass
 
@@ -94,8 +94,11 @@ class RankedList(MongoModel):
         sum_dict = self.dict(exclude_none=False)
         sum_dict.pop("thing_scores")
         sum_dict.pop("fights")
-        sum_dict.update(dict(top_5_things=self.top_5_things,
-                             number_of_fights=self.number_of_fights,
-                             last_5_fights=self.last_5_fights)
-                       )
+        sum_dict.update(
+            dict(
+                top_5_things=self.top_5_things,
+                number_of_fights=self.number_of_fights,
+                last_5_fights=self.last_5_fights
+            )   
+        )
         return sum_dict
