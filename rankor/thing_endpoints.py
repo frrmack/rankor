@@ -1,10 +1,10 @@
 # Thing endpoints: /rankor/things/
 #
 # Create a new Thing    |   POST    /rankor/things/
-# Delete a Thing        |   DELETE  /rankor/things/<thing_id>
-# Edit a Thing          |   PUT     /rankor/things/<thing_id>
+# Delete a Thing        |   DELETE  /rankor/things/<thing_id>/
+# Edit a Thing          |   PUT     /rankor/things/<thing_id>/
 # List all Things       |   GET     /rankor/things/     
-# Show one Thing        |   GET     /rankor/things/<thing_id>
+# Show one Thing        |   GET     /rankor/things/<thing_id>/
 
 
 # Flask imports
@@ -24,7 +24,7 @@ from rankor.models import Thing, thing
 
 # Exception imports
 from rankor.errors import (ResourceNotFoundInDatabaseError,
-                               SameNameResourceAlreadyExistsError)
+                           SameNameResourceAlreadyExistsError)
 
 # Api settings import
 import settings
@@ -105,7 +105,7 @@ def delete_a_thing(thing_id):
     return Thing(**deleted_thing_doc).to_json()
 
 
-@thing_endpoints.route("/rankor/things/<ObjectId:thing_id>", methods=["PUT"])
+@thing_endpoints.route("/rankor/things/<ObjectId:thing_id>/", methods=["PUT"])
 def edit_a_thing(thing_id):
     """
     PUT request to update the data of a Thing that already exists in the database.

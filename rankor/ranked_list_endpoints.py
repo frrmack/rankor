@@ -1,10 +1,10 @@
 # RankedList endpoints: /rankor/rankedlists/
 #
 # Create a new RankedList   |   POST    /rankor/rankedlists/
-# Delete a RankedList       |   DELETE  /rankor/rankedlists/<ranked_list_id>
-# Edit a RankedList         |   PUT     /rankor/rankedlists/<ranked_list_id>
+# Delete a RankedList       |   DELETE  /rankor/rankedlists/<ranked_list_id>/
+# Edit a RankedList         |   PUT     /rankor/rankedlists/<ranked_list_id>/
 # List all RankedLists      |   GET     /rankor/rankedlists/
-# Get one RankedList        |   GET     /rankor/rankedlists/<ranked_list_id>
+# Get one RankedList        |   GET     /rankor/rankedlists/<ranked_list_id>/
 
 
 # Flask imports
