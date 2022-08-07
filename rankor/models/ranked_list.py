@@ -6,7 +6,7 @@ from datetime import datetime
 from rankor.models.mongo_model import MongoModel
 
 # Scores are a rankor model without a separate database collection
-from rankor.models.thing_score import Score
+from rankor.models.score import Score
 
 # This is used to help Pydantic handle the bson ObjectId field from mongodb
 # More info in the module itself

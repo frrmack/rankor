@@ -112,12 +112,17 @@ class Score(BaseModel):
     def dict(self, *args, **kwargs):
         """
         Overwrites BaseModel's dict method to include calculated score
-        properties in the dict representation of the model instance. This method
-        is used for both
-        -  bson encodings (MongoModel.to_bsonable_dict() converted
-           to bson through pymongo) 
-        -  json encodings (MongoModel.to_jsonable_dict() and
+        properties in the dict representation of the model instance. This dict
+        method in all models is used for
+        
+        -  bson encodings (such as MongoModel.to_bsonable_dict() converted to
+           bson through pymongo) 
+
+        -  json encodings (such as MongoModel.to_jsonable_dict() and
            MongoModel.to_json() using pydantic's json encoder)
+           
+        -  direct dict representations in native python without any specified
+           encoding purposes
         """
         obj_dict = super(Score, self).dict(*args, **kwargs)
         properties_dict = dict(min_possible_score=self.min_possible_score,

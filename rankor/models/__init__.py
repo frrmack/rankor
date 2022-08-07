@@ -9,7 +9,7 @@
 # of rankor can import them directly from rankor.models
 from rankor.models.thing import Thing
 from rankor.models.fight import Fight
-from rankor.models.thing_score import Score
+from rankor.models.score import Score
 from rankor.models.ranked_list import RankedList
 
 
