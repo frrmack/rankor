@@ -65,18 +65,20 @@ class MongoModel(BaseModel):
     def jsonable_dict(self):
         """
         Encodes complex classes in relevant serialization types just as the 
-        to_json() method, but return a dict representation with these 
-        json-able contents instead of a json string. This is handy when you
-        need the encoding but want to keep a dict, for example when you need
-        to include it in another dict which will be encoded to json in its
-        entirety. 
-        While re-parsing a json dumped by BaseModel.json is slightly ridiculous, 
-        pydantic.json.pydantic_encoder, pydantic.BaseModel.json, and 
-        pydantic.BaseModel.dict are written in a way that this functionality
-        is a bit difficult to ensure without writing a custom json encoder or 
-        using an existing one (such as fastapi.encoders.jsonable_encoder), and
-        it's simpler and more straightforward to just do this instead. The 
-        performance difference is absolutely negligible for rankor's use cases.
+        to_json() method (such as converting datetime objects to isoformat 
+        timestamp strings, for example), but returns a dict representation 
+        with these json-able contents instead of a json string. This is handy 
+        when you need the encoding but want to keep a dict, for example when 
+        you need to include it in another dict which will be encoded to json 
+        in its entirety. 
+        While re-parsing a json dumped from a dict by BaseModel.json is 
+        slightly ridiculous, pydantic.json.pydantic_encoder, 
+        pydantic.BaseModel.json, and pydantic.BaseModel.dict are written in a 
+        way that this functionality is a bit difficult to ensure without 
+        writing a custom json encoder or using an existing one (such as 
+        fastapi.encoders.jsonable_encoder), and it's simpler and more 
+        straightforward to just do this instead. The performance difference is 
+        absolutely negligible for rankor's use cases.
         """
         return json.loads(self.to_json())
 
