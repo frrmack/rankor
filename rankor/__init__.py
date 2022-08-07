@@ -24,7 +24,7 @@ from rankor.error_handlers import (http_error_response,
 from werkzeug.exceptions import HTTPException
 app.register_error_handler(HTTPException, http_error_response)
 
-from pydantic import ValidationError
+from pydantic.errors import ValidationError
 app.register_error_handler(ValidationError, data_validation_error_response)
 
 from pymongo.errors import PyMongoError
@@ -54,7 +54,7 @@ app.register_blueprint(ranked_list_endpoints)
 # Delete a Thing        |   DELETE  /rankor/things/<thing_id>/
 # Delete ALL Things     |   DELETE  /rankor/things/delete-all/
 # List all Things       |   GET     /rankor/things/     
-# Get one Thing        |   GET     /rankor/things/<thing_id>/
+# Get one Thing         |   GET     /rankor/things/<thing_id>/
 #------------------------------------------------------------------------------
 # RankedList endpoints: /rankor/rankedlists/
 #
