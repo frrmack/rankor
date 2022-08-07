@@ -13,6 +13,7 @@ setup(
         "Flask == 2.1.2",
         "Flask-PyMongo==2.3.0",
         "pymongo[srv] == 4.1.1",
+        "gunicorn==20.1.0",
         "pydantic == 1.9.1",
         "trueskill == 0.4.5"
     ]

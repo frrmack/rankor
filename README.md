@@ -26,7 +26,7 @@ pyenv activate rankor
 
 ## Install rankor locally
 With the virtual environment active, install rankor including all its dependencies:
-`pip install -e .`
+`make install`
 
 
 ## Install mongodb and set up a database
@@ -59,11 +59,19 @@ Install mongo unless you already have it and start the server following the step
 
 
 
-## Run development server
-- Start python server in project root: `python server.py`
+## Run all tests
+Run all the tests to confirm there are no errors:
+`make test`
 
+
+## Run development server
+Start Flask's development server with rankor:
+`make rundev`
 
 
 ## Run production server
-- `gunicorn --bind 0.0.0.0:5000 server:app -w 4` (change `-w 4` to however many workers you want)
+Start a gunicorn server with the rankor wsgi app and 4 workers
+`make run`
+
+You can change `-w 4` to however many workers you want in the Makefile under `run:`
 
