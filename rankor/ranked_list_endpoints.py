@@ -1,8 +1,9 @@
 # RankedList endpoints: /rankor/rankedlists/
 #
 # Create a new RankedList   |   POST    /rankor/rankedlists/
-# Delete a RankedList       |   DELETE  /rankor/rankedlists/<ranked_list_id>/
 # Edit a RankedList         |   PUT     /rankor/rankedlists/<ranked_list_id>/
+# Delete a RankedList       |   DELETE  /rankor/rankedlists/<ranked_list_id>/
+# Delete ALL RankedLists    |   DELETE  /rankor/rankedlists/delete-all/
 # List all RankedLists      |   GET     /rankor/rankedlists/
 # Get one RankedList        |   GET     /rankor/rankedlists/<ranked_list_id>/
 
@@ -15,6 +16,9 @@ from pymongo.collection import ReturnDocument
 
 # Python datetime import for timestamps
 from datetime import datetime
+
+# Encoder imports
+import json
 
 # Rankor model imports
 from rankor.models import Thing, RankedList, ThingScore
@@ -36,7 +40,11 @@ from rankor import db
 ranked_list_endpoints = Blueprint('ranked_list_endpoints', __name__)
 
 
-@ranked_list_endpoints.route("/rankor/rankedlists/", methods=["POST"])
+# Create a new RankedList   |   POST    /rankor/rankedlists/
+@ranked_list_endpoints.route(
+    "/rankor/rankedlists/", 
+    methods=["POST"]
+)
 def create_a_new_ranked_list():
     """
     POST request to directly create a new RankedList
@@ -57,14 +65,14 @@ def create_a_new_ranked_list():
     # Check the database to ensure that there isn't another one with the exact 
     # same name, raise an error if it does
     if "name" in new_ranked_list_data:
-        same_name_ranked_list = db.ranked_lists.find_one({
-                                            "name": new_ranked_list_data["name"]
-                                            })
+        same_name_ranked_list = db.ranked_lists.find_one(
+            {"name": new_ranked_list_data["name"]}
+        )
         if same_name_ranked_list:
             raise SameNameResourceAlreadyExistsError(
-                                    resource_type="ranked list",
-                                    same_name_resource=same_name_ranked_list
-                                    )
+                resource_type="ranked list",
+                same_name_resource=same_name_ranked_list
+            )
 
     # A RankedList has a dictionary that maps each thing to its score
     # in this RankedList, we are going to initialize the scores for all of them
@@ -83,29 +91,15 @@ def create_a_new_ranked_list():
     new_ranked_list.id = insert_result.inserted_id
 
     # Success: respond with the new ranked list
-    return new_ranked_list.to_json()
+    return new_ranked_list.to_json(), 200
 
 
 
-@ranked_list_endpoints.route("/rankor/rankedlists/<ObjectId:ranked_list_id>/", 
-                             methods=["DELETE"])
-def delete_a_ranked_list(ranked_list_id):
-    """
-    DELETE request to remove a RankedList from the database
-
-    Example:
-    curl -i -X DELETE 'http://localhost:5000/rankor/rankedlists/12345678901234567890ffff/'   
-    """
-    deleted_doc = db.ranked_lists.find_one_and_delete({"_id": ranked_list_id})
-    if deleted_doc is None:
-        raise ResourceNotFoundInDatabaseError(resource_type="ranked list",
-                                              resource_id=ranked_list_id)
-    # Success: Respond with the deleted document that's no longer in the database
-    return RankedList(**deleted_doc).to_json()
-
-
-@ranked_list_endpoints.route("/rankor/rankedlists/<ObjectId:ranked_list_id>/", 
-                             methods=["PUT"])
+# Edit a RankedList         |   PUT     /rankor/rankedlists/<ranked_list_id>/
+@ranked_list_endpoints.route(
+    "/rankor/rankedlists/<ObjectId:ranked_list_id>/", 
+    methods=["PUT"]
+)
 def edit_a_ranked_list(ranked_list_id):
     """
     PUT request to update the data of a RankedList that already exists in the database.
@@ -147,8 +141,10 @@ def edit_a_ranked_list(ranked_list_id):
     # essential fields for full validation
     doc_to_update = db.ranked_lists.find_one({"_id": ranked_list_id})
     if doc_to_update is None:
-        raise ResourceNotFoundInDatabaseError(resource_type="ranked list",
-                                              resource_id=ranked_list_id)
+        raise ResourceNotFoundInDatabaseError(
+            resource_type="ranked list",
+            resource_id=ranked_list_id
+            )
     for field in ("name", "thing_scores", "fights"):
          if field not in update_data:
               update_data[field] = doc_to_update[field]
@@ -160,24 +156,78 @@ def edit_a_ranked_list(ranked_list_id):
 
     # Apply these updates to the given fields in the database.
     updated_doc = db.ranked_lists.find_one_and_update(
-                                             {"_id": ranked_list_id},
-                                             {"$set": validated_update.to_bson()},
-                                             return_document=ReturnDocument.AFTER
-                                             )
+        {"_id": ranked_list_id},
+        {"$set": validated_update.to_bson()},
+        return_document=ReturnDocument.AFTER
+        )
 
     # If unsuccessful, abort with a 404 Not Found error
     if updated_doc is None:
-        raise ResourceNotFoundInDatabaseError(resource_type="ranked list",
-                                              resource_id=ranked_list_id)
+        raise ResourceNotFoundInDatabaseError(
+            resource_type="ranked list",
+            resource_id=ranked_list_id
+            )
     # Success: respond with the new, updated RankedList
-    return RankedList(**updated_doc).to_json()
+    return RankedList(**updated_doc).to_json(), 200
 
 
 
+# Delete a RankedList       |   DELETE  /rankor/rankedlists/<ranked_list_id>/
+@ranked_list_endpoints.route(
+    "/rankor/rankedlists/<ObjectId:ranked_list_id>/", 
+    methods=["DELETE"]
+)
+def delete_a_ranked_list(ranked_list_id):
+    """
+    DELETE request to remove a RankedList from the database
+
+    Example:
+    curl -i -X DELETE 'http://localhost:5000/rankor/rankedlists/12345678901234567890ffff/'   
+    """
+    deleted_doc = db.ranked_lists.find_one_and_delete(
+        {"_id": ranked_list_id}
+    )
+    if deleted_doc is None:
+        raise ResourceNotFoundInDatabaseError(
+            resource_type="ranked list",
+            resource_id=ranked_list_id
+        )
+    # Success: Respond with the deleted document that's no longer in the database
+    return RankedList(**deleted_doc).to_json(), 200
 
 
-@ranked_list_endpoints.route("/rankor/rankedlists/<ObjectId:ranked_list_id>/", 
-                       methods=["GET"])
+# Delete ALL RankedLists    |   DELETE  /rankor/rankedlists/delete-all/
+@ranked_list_endpoints.route(
+    "/rankor/rankedlists/delete-all/", 
+    methods=["DELETE"]
+)
+def delete_ALL_ranked_lists():
+    """
+    DELETE request to delete ALL existing RankedLists
+    This purges the entire ranked_lists collection in the database
+    It's basically an endpoint to reset back to factory settings
+
+    Example:
+    curl -i -X DELETE 'http://localhost:5000/rankor/rankedlists/delete-all/'   
+    """
+    deletion_info = db.ranked_lists.delete_many({})
+    # Success: Respond with the number of deleted documents
+    return json.dumps(
+        {
+            "result": "success",
+            "msg": f"{deletion_info.deleted_count} ranked lists deleted"
+        },
+        indent=2,
+        sort_keys=True
+    ), 200
+
+
+
+# Get one RankedList        |   GET     /rankor/rankedlists/<ranked_list_id>/
+@ranked_list_endpoints.route(
+    "/rankor/rankedlists/<ObjectId:ranked_list_id>/", 
+    methods=["GET"]
+)
 def get_one_ranked_list(ranked_list_id): 
     """
     GET request to retrieve the data for a single RankedList using its id
@@ -187,10 +237,12 @@ def get_one_ranked_list(ranked_list_id):
     """
     # Retrieve the document with this id from the database and respond
     # with it, or raise an HTTP 404 if you can't find it
-    doc = db.ranked_lists.find_one({"_id": ranked_list_id}, )
+    doc = db.ranked_lists.find_one({"_id": ranked_list_id})
     if doc is None:
-        raise ResourceNotFoundInDatabaseError(resource_type="ranked list",
-                                              resource_id=ranked_list_id)
+        raise ResourceNotFoundInDatabaseError(
+            resource_type = "ranked list",
+            resource_id = ranked_list_id
+        )
     # Success: respond with the ranked list 
-    return RankedList(**doc).to_json()
+    return RankedList(**doc).to_json(), 200
 
