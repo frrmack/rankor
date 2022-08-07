@@ -9,7 +9,7 @@
 # of rankor can import them directly from rankor.models
 from rankor.models.thing import Thing
 from rankor.models.fight import Fight
-from rankor.models.thing_score import ThingScore
+from rankor.models.thing_score import Score
 from rankor.models.ranked_list import RankedList
 
 
@@ -53,13 +53,15 @@ if __name__ == '__main__':
                                 )
     print(aliens_vs_terminator.to_json())
     #
-    best_to_worst_james_cameron_movies = RankedList(name = "Favorite Cameron Movies",
-                                                    thing_scores  = [ThingScore(thing="12345678901234567890abcd"),
-                                                                     ThingScore(thing="12345678901234567890ffff")
-                                                                    ],
-                                                    fights = ["5647382910aaaa0192837465"],
-                                                    _id = "aaaaabbbbbcccccdddddefef"
-                                                    )
+    best_to_worst_james_cameron_movies = RankedList(
+        name = "Favorite Cameron Movies",
+        thing_scores  = {
+            "12345678901234567890abcd" : Score(),
+            "12345678901234567890ffff" : Score()
+        },
+        fights = ["5647382910aaaa0192837465"],
+        _id = "aaaaabbbbbcccccdddddefef"
+    )
     print( best_to_worst_james_cameron_movies.to_json() )
     print( best_to_worst_james_cameron_movies.top_5_things )
     print( best_to_worst_james_cameron_movies.last_5_fights )

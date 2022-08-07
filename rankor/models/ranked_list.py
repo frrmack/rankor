@@ -1,12 +1,12 @@
 # Data types and type hints for the pydantic schema
-from typing import Optional, List, Literal
+from typing import Optional, Dict, List, Literal
 from datetime import datetime
 
 # Rankor superclass for models, handling encodings and bson ObjectIds
 from rankor.models.mongo_model import MongoModel
 
 # Scores are a rankor model without a separate database collection
-from rankor.models.thing_score import ThingScore
+from rankor.models.thing_score import Score
 
 # This is used to help Pydantic handle the bson ObjectId field from mongodb
 # More info in the module itself
@@ -28,7 +28,7 @@ class RankedList(MongoModel):
     these scores.
     """
     name: str
-    thing_scores: List[ThingScore]
+    thing_scores: Dict[PyObjectIdString, Score]
     fights: List[PyObjectIdString]
     time_created: Optional[datetime]
     time_edited: Optional[datetime]
@@ -42,10 +42,21 @@ class RankedList(MongoModel):
         Sort the thing_scores list based on the chosen score metric and
         return it as the ranked list of things
         """
-        sorting_metric = lambda thing_score: getattr(thing_score, 
-                                                     self.score_used_to_rank)
-        self.thing_scores.sort(key=sorting_metric, reverse=True)
-        return self.thing_scores
+        thing_list_with_scores = [
+            { 
+                "thing": thing_id,
+                "score": score
+            } for thing_id, score in self.thing_scores.items()
+        ]
+        sorting_metric = lambda thing_with_score: getattr(
+            thing_with_score["score"], 
+            self.score_used_to_rank
+        )        
+        return sorted(
+            thing_list_with_scores, 
+            key=sorting_metric, 
+            reverse=True
+        )
 
     @property
     def top_5_things(self):

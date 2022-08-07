@@ -21,7 +21,7 @@ from datetime import datetime
 import json
 
 # Rankor model imports
-from rankor.models import Thing, RankedList, ThingScore
+from rankor.models import Thing, RankedList, Score
 
 # Exception imports
 from werkzeug.exceptions import Forbidden
@@ -79,8 +79,8 @@ def create_a_new_ranked_list():
     # with the default initialization scores defined in the api settings.
     # It also has a list of fights, which will be empty now, at the time
     # of creation. 
-    things_in_ranked_list = [Thing(**doc) for doc in db.things.find()]
-    initial_scores = [ThingScore(thing=thing.id) for thing in things_in_ranked_list]
+    things_of_ranked_list = [Thing(**doc) for doc in db.things.find()]
+    initial_scores = {thing.id: Score() for thing in things_of_ranked_list}
     new_ranked_list_data["thing_scores"] = initial_scores
     new_ranked_list_data["fights"] = []
 
