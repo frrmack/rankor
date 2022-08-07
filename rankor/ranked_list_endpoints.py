@@ -196,6 +196,7 @@ def delete_a_ranked_list(ranked_list_id):
     return RankedList(**deleted_doc).to_json(), 200
 
 
+
 # Delete ALL RankedLists    |   DELETE  /rankor/rankedlists/delete-all/
 @ranked_list_endpoints.route(
     "/rankor/rankedlists/delete-all/", 

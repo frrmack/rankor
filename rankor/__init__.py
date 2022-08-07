@@ -49,11 +49,12 @@ app.register_blueprint(ranked_list_endpoints)
 #------------------------------------------------------------------------------
 # Thing endpoints: /rankor/things/
 #
-# Add a new Thing       |   POST    /rankor/things/
-# Delete a Thing        |   DELETE  /rankor/things/<thing_id>/
+# Create a new Thing    |   POST    /rankor/things/
 # Edit a Thing          |   PUT     /rankor/things/<thing_id>/
+# Delete a Thing        |   DELETE  /rankor/things/<thing_id>/
+# Delete ALL Things     |   DELETE  /rankor/things/delete-all/
 # List all Things       |   GET     /rankor/things/     
-# Show one Thing        |   GET     /rankor/things/<thing_id>/
+# Get one Thing        |   GET     /rankor/things/<thing_id>/
 #------------------------------------------------------------------------------
 # RankedList endpoints: /rankor/rankedlists/
 #
@@ -62,7 +63,7 @@ app.register_blueprint(ranked_list_endpoints)
 # Delete a RankedList       |   DELETE  /rankor/rankedlists/<ranked_list_id>/
 # Delete ALL RankedLists    |   DELETE  /rankor/rankedlists/delete-all/
 # List all RankedLists      |   GET     /rankor/rankedlists/
-# Get a RankedList          |   GET     /rankor/rankedlists/<ranked_list_id>/
+# Get one RankedList        |   GET     /rankor/rankedlists/<ranked_list_id>/
 #------------------------------------------------------------------------------
 # Score endpoint for a given RankedList: /rankor/rankedlists/<ranked_list_id>/scores/
 #

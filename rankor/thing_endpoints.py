@@ -1,10 +1,11 @@
 # Thing endpoints: /rankor/things/
 #
 # Create a new Thing    |   POST    /rankor/things/
-# Delete a Thing        |   DELETE  /rankor/things/<thing_id>/
 # Edit a Thing          |   PUT     /rankor/things/<thing_id>/
+# Delete a Thing        |   DELETE  /rankor/things/<thing_id>/
+# Delete ALL Things     |   DELETE  /rankor/things/delete-all/
 # List all Things       |   GET     /rankor/things/     
-# Show one Thing        |   GET     /rankor/things/<thing_id>/
+# Get one Thing         |   GET     /rankor/things/<thing_id>/
 
 
 # Flask imports
@@ -39,7 +40,11 @@ thing_endpoints = Blueprint('thing_endpoints', __name__)
 
 
 
-@thing_endpoints.route("/rankor/things/", methods=["POST"])
+# Create a new Thing    |   POST    /rankor/things/
+@thing_endpoints.route(
+    "/rankor/things/", 
+    methods=["POST"]
+)
 def create_a_new_thing():
     """
     POST request to directly add a new Thing to the database.
@@ -69,9 +74,9 @@ def create_a_new_thing():
         same_name_thing = db.things.find_one({"name": new_thing_data["name"]})
         if same_name_thing:
             raise SameNameResourceAlreadyExistsError(
-                                                resource_type="thing",
-                                                same_name_resource=same_name_thing
-                                                )
+                resource_type="thing",
+                same_name_resource=same_name_thing
+            )
 
     # Create the new Thing instance, which also validates its data using pydantic,
     # insert it into the database, and retrieve the _id that mongodb automatically 
@@ -85,27 +90,12 @@ def create_a_new_thing():
     return new_thing.to_json()
 
 
-@thing_endpoints.route("/rankor/things/<ObjectId:thing_id>/", methods=["DELETE"])
-def delete_a_thing(thing_id):
-    """
-    DELETE request to remove a Thing from the database
 
-    Example:
-    curl -i -X DELETE 'http://localhost:5000/rankor/things/12345678901234567890abcd/'   
-    """
-    # Kill the Thing document with this id in the database
-    deleted_thing_doc = db.things.find_one_and_delete({"_id": thing_id})
-    # If unsuccessful, abort and send an HTTP 404 error
-    if deleted_thing_doc is None:
-        raise ResourceNotFoundInDatabaseError(resource_type="thing",
-                                              resource_id=thing_id)
-
-    # Success: Respond with the deleted Thing document that's 
-    # no longer in the database 
-    return Thing(**deleted_thing_doc).to_json()
-
-
-@thing_endpoints.route("/rankor/things/<ObjectId:thing_id>/", methods=["PUT"])
+# Edit a Thing          |   PUT     /rankor/things/<thing_id>/
+@thing_endpoints.route(
+    "/rankor/things/<ObjectId:thing_id>/", 
+    methods=["PUT"]
+)
 def edit_a_thing(thing_id):
     """
     PUT request to update the data of a Thing that already exists in the database.
@@ -139,8 +129,10 @@ def edit_a_thing(thing_id):
     if 'name' not in update_data:
         thing_doc_we_are_updating = db.things.find_one({"_id": thing_id})
         if thing_doc_we_are_updating is None:
-            raise ResourceNotFoundInDatabaseError(resource_type="thing",
-                                                  resource_id=thing_id)
+            raise ResourceNotFoundInDatabaseError(
+                resource_type="thing",
+                resource_id=thing_id
+            )
         update_data['name'] = thing_doc_we_are_updating['name']
     # Now we know for sure that our thing_update_data has a name.
     # Validate through instantiating it as a Thing and add a timestamp
@@ -150,21 +142,80 @@ def edit_a_thing(thing_id):
     print(f'validated update: {validated_update.to_json()}')
     # Get our target thing with this id and apply these updates to the 
     # given fields in the database.
-    updated_doc = db.things.find_one_and_update({"_id": thing_id},
-                                                 {"$set": validated_update.to_bson()},
-                                                 return_document=ReturnDocument.AFTER,
-                                                )
+    updated_doc = db.things.find_one_and_update(
+        {"_id": thing_id},
+        {"$set": validated_update.to_bson()},
+        return_document=ReturnDocument.AFTER,
+    )
     print(updated_doc)
     # If unsuccessful, abort and send an HTTP 404 error
     if updated_doc is None:
-        raise ResourceNotFoundInDatabaseError(resource_type="thing",
-                                              resource_id=thing_id)
+        raise ResourceNotFoundInDatabaseError(
+            resource_type="thing",
+            resource_id=thing_id
+        )
     # Success: respond with the new, updated Thing
     return Thing(**updated_doc).to_json()
 
 
 
-@thing_endpoints.route("/rankor/things/", methods=["GET"])
+# Delete a Thing        |   DELETE  /rankor/things/<thing_id>/
+@thing_endpoints.route("/rankor/things/<ObjectId:thing_id>/", methods=["DELETE"])
+def delete_a_thing(thing_id):
+    """
+    DELETE request to remove a Thing from the database
+
+    Example:
+    curl -i -X DELETE 'http://localhost:5000/rankor/things/12345678901234567890abcd/'   
+    """
+    # Kill the Thing document with this id in the database
+    deleted_thing_doc = db.things.find_one_and_delete({"_id": thing_id})
+    # If unsuccessful, abort and send an HTTP 404 error
+    if deleted_thing_doc is None:
+        raise ResourceNotFoundInDatabaseError(
+            resource_type="thing",
+            resource_id=thing_id
+        )
+
+    # Success: Respond with the deleted Thing document that's 
+    # no longer in the database 
+    return Thing(**deleted_thing_doc).to_json()
+    
+    
+
+# Delete ALL Things        |   DELETE  /rankor/things/delete-all/
+@thing_endpoints.route(
+    "/rankor/things/delete-all/", 
+    methods=["DELETE"]
+)
+def delete_ALL_things():
+    """
+    DELETE request to delete ALL existing Things
+    This purges the entire things collection in the database
+    It's basically an endpoint to reset back to factory settings
+
+    Example:
+    curl -i -X DELETE 'http://localhost:5000/rankor/things/delete-all/'   
+    """
+    # Delete all documents in the database's things collection
+    deletion_info = db.things.delete_many({})
+    # Success: Respond with a message on the number of deleted documents
+    return json.dumps(
+        {
+            "result": "success",
+            "msg": f"{deletion_info.deleted_count} things deleted"
+        },
+        indent=2,
+        sort_keys=True
+    ), 200
+
+
+
+# List all Things       |   GET     /rankor/things/     
+@thing_endpoints.route(
+    "/rankor/things/", 
+    methods=["GET"]
+)
 def list_all_things():
     """
     GET request to list all Things in the database.
@@ -188,7 +239,8 @@ def list_all_things():
     # Note: if no page parameter is given, we will default to page 1
     page = int(request.args.get("page", 1))
     page_size = settings.NUMBER_OF_ITEMS_IN_EACH_RESPONSE_PAGE 
-    num_skip = number_of_thing_docs_to_skip_to_reach_this_page = page_size * (page-1)
+    number_of_thing_docs_to_skip_to_reach_this_page = page_size * (page-1)
+    num_skip = number_of_thing_docs_to_skip_to_reach_this_page   # shorter name
     number_of_all_things = db.things.count_documents({})
     last_page = (number_of_all_things // page_size) + 1
 
@@ -201,32 +253,45 @@ def list_all_things():
     # the database, sort them by name, then skip the first 50 things (since they
     # were in the previous 5 pages), then use mongo's limit functionality to list 
     # the 10 things that start from there (the 51st through 60th things). 
-    # This is page 6. We will also provide links to page 5, page 7, and the last page.
+    # This is page 6. We will also provide links to page 5, page 7, and the last 
+    # page.
     page_docs_query = db.things.find().sort("name").skip(num_skip).limit(page_size)
     things_in_this_page = [Thing(**doc).jsonable_dict() for doc in page_docs_query]
 
     # Links to this very page and the last page you can get
     links = {
-        "self": {"href": url_for(".list_all_things", page=page, _external=True)},
-        "last": {"href": url_for(".list_all_things", page=last_page, _external = True)},
+        "self": {
+            "href": url_for(".list_all_things", page=page, _external=True)
+        },
+        "last": {
+            "href": url_for(".list_all_things", page=last_page, _external = True)
+        },
     }
     # Add a 'prev' link if it's not on the first page:
     if page > 1:
-        links["prev"] = {"href": url_for(".list_all_things", page=page-1, _external=True)}
+        links["prev"] = {
+            "href": url_for(".list_all_things", page=page-1, _external=True)
+        }
     # Add a 'next' link if it's not on the last page:
     if page - 1 < number_of_all_things // page_size:
-        links["next"] = {"href": url_for(".list_all_things", page=page+1, _external=True)}
+        links["next"] = {
+            "href": url_for(".list_all_things", page=page+1, _external=True)
+            }
 
     # Return the full response
-    return json.dumps({
+    return json.dumps(
+        {
             "things": things_in_this_page, 
             "_page": page,
             "_links": links,
-           },
-           indent=2,
-           sort_keys=True)
+        },
+        indent=2,
+        sort_keys=True
+    )
 
 
+
+# Get one Thing         |   GET     /rankor/things/<thing_id>/
 @thing_endpoints.route("/rankor/things/<ObjectId:thing_id>/", methods=["GET"])
 def get_one_thing(thing_id): 
     """
@@ -258,7 +323,9 @@ def get_one_thing(thing_id):
     thing_doc = db.things.find_one({"_id": thing_id}, )
     # If failure: 404 Not Found Error
     if thing_doc is None:
-        raise ResourceNotFoundInDatabaseError(resource_type="thing",
-                                              resource_id=thing_id)
+        raise ResourceNotFoundInDatabaseError(
+            resource_type="thing",
+            resource_id=thing_id
+        )
     # Success: respond with the thing 
     return Thing(**thing_doc).to_json()
