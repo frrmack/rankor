@@ -75,8 +75,8 @@ class MongoModel(BaseModel):
         pydantic.BaseModel.dict are written in a way that this functionality
         is a bit difficult to ensure without writing a custom json encoder or 
         using an existing one (such as fastapi.encoders.jsonable_encoder), and
-        it's easier to just do this instead. The performance difference is 
-        absolutely negligible for rankor's use cases.
+        it's simpler and more straightforward to just do this instead. The 
+        performance difference is absolutely negligible for rankor's use cases.
         """
         return json.loads(self.to_json())
 
