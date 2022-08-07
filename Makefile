@@ -15,13 +15,15 @@ install:
 
 
 clean:
-	rm -rf rankor/*.egg-info tests/.pytest_cache pip-wheel-metadata .DS_Store rankor/.DS_Store
-	find rankor -name '__pycache__' | xargs rm -rf
-	find tests -name '__pycache__' | xargs rm -rf
+	rm -rf rankor/*.egg-info pip-wheel-metadata
+	find . -name '__pycache__' | xargs rm -rf
+	find . -name '.pytest_cache' | xargs rm -rf
+	find . -name '.DS_Store' | xargs rm -rf
 
 
 test:
 	python -m tests.run_all_tests
+	@echo "All tests passed successfully."
 
 
 rundev:
