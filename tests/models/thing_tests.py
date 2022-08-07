@@ -58,7 +58,7 @@ def test_dict_encoding_for_bson_conversion():
                        image_url = "https://m.media-amazon.com/images/I/61qCgQZyhOL._AC_SY879_.jpg",
                        extra_data = {"director":"James Cameron", "year":1982},
                        _id = PyObjectId("12345678901234567890abcd"))
-    assert terminator.to_bson() == {'_id': PyObjectId('12345678901234567890abcd'), 
+    assert terminator.to_bsonable_dict() == {'_id': PyObjectId('12345678901234567890abcd'), 
                                     'name': 'The Terminator', 
                                     'image_url': AnyUrl(url='https://m.media-amazon.com/images/I/61qCgQZyhOL._AC_SY879_.jpg',
                                                         scheme='https'),

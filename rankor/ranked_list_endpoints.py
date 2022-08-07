@@ -87,7 +87,7 @@ def create_a_new_ranked_list():
     # Create, validate, and insert the RankedList instance into the database,
     # retrieve the auto-assigned id to include in the success response
     new_ranked_list = RankedList(**new_ranked_list_data)
-    insert_result = db.ranked_lists.insert_one(new_ranked_list.to_bson())
+    insert_result = db.ranked_lists.insert_one(new_ranked_list.to_bsonable_dict())
     new_ranked_list.id = insert_result.inserted_id
 
     # Success: respond with the new ranked list
@@ -157,7 +157,7 @@ def edit_a_ranked_list(ranked_list_id):
     # Apply these updates to the given fields in the database.
     updated_doc = db.ranked_lists.find_one_and_update(
         {"_id": ranked_list_id},
-        {"$set": validated_update.to_bson()},
+        {"$set": validated_update.to_bsonable_dict()},
         return_document=ReturnDocument.AFTER
         )
 

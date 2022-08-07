@@ -83,7 +83,7 @@ def create_a_new_thing():
     # assigned it. When returning it as a success reponse, put the newly assigned id 
     # in as well.
     new_thing = Thing(**new_thing_data)
-    insert_result = db.things.insert_one(new_thing.to_bson())
+    insert_result = db.things.insert_one(new_thing.to_bsonable_dict())
     new_thing.id = insert_result.inserted_id
 
     # Success: respond in json with the added thing
@@ -144,7 +144,7 @@ def edit_a_thing(thing_id):
     # given fields in the database.
     updated_doc = db.things.find_one_and_update(
         {"_id": thing_id},
-        {"$set": validated_update.to_bson()},
+        {"$set": validated_update.to_bsonable_dict()},
         return_document=ReturnDocument.AFTER,
     )
     print(updated_doc)
@@ -259,7 +259,7 @@ def list_all_things():
     # This is page 6. We will also provide links to page 5, page 7, and the last 
     # page.
     page_docs_query = db.things.find().sort("name").skip(num_skip).limit(page_size)
-    things_in_this_page = [Thing(**doc).jsonable_dict() for doc in page_docs_query]
+    things_in_this_page = [Thing(**doc).to_jsonable_dict() for doc in page_docs_query]
 
     # Links to this very page and the last page you can get
     links = {

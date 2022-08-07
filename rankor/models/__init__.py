@@ -41,7 +41,7 @@ if __name__ == '__main__':
                          _id = PyObjectId("12345678901234567890ffff")
                         )
     print( terminator_thing.to_json() )
-    print( aliens_thing.to_bson())
+    print( aliens_thing.to_bsonable_dict())
     #
     aliens_vs_terminator = Fight(fighting_things = ["12345678901234567890abcd",
                                                     "12345678901234567890ffff"
