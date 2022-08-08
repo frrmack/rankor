@@ -74,7 +74,7 @@ class RankedList(MongoModel):
         time_of_fight = lambda fight: getattr(fight, 
                                               "date_fought", 
                                               datetime.utcnow())
-        return sorted(self.fights, key=time_of_fight)
+        return sorted(self.fights, key=time_of_fight, reverse=True)[:5]
 
 
     # actually let a ScoreCalculator class do this in score_calculation.py
@@ -91,7 +91,7 @@ class RankedList(MongoModel):
         pass
 
     def summary_dict(self):
-        sum_dict = self.dict(exclude_none=False)
+        sum_dict = self.dict(exclude_none=True)
         sum_dict.pop("thing_scores")
         sum_dict.pop("fights")
         sum_dict.update(
