@@ -63,7 +63,7 @@ if __name__ == '__main__':
         _id = "aaaaabbbbbcccccdddddefef"
     )
     print( best_to_worst_james_cameron_movies.to_json() )
-    print( best_to_worst_james_cameron_movies.top_5_things )
-    print( best_to_worst_james_cameron_movies.last_5_fights )
+    print( best_to_worst_james_cameron_movies.top_3_things )
+    print( best_to_worst_james_cameron_movies.last_3_fights )
     print( best_to_worst_james_cameron_movies.summary_dict())
 

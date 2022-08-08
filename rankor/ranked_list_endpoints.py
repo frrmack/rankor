@@ -245,7 +245,7 @@ def get_one_ranked_list(ranked_list_id):
     """
     GET request to retrieve details of a single RankedList using its id. Besides
     the metadata of the RankedList, it provides some useful summary data, such
-    as "number of fights", "top_5_things", "last_5_fights". It also contains
+    as "number of fights", "top_3_things", "last_3_fights". It also contains
     links to the relevant paginated endpoints to a) get the ranked Thing list
     with their scores, and b) details of all the Fights fought within the
     context of this RankedList.
@@ -264,10 +264,10 @@ def get_one_ranked_list(ranked_list_id):
 
     # Get the RankedList summary with practical information useful for a user
     ranked_list_information = RankedList(**doc).summary_dict()
-    # top_5_things & last_5_fights only have id strings for Things and Fights.
+    # top_3_things & last_3_fights only have id strings for Things and Fights.
     # Retrieve their actual data to respond with. 
     # First the Things:
-    for thing_score_dict in ranked_list_information["top_5_things"]:
+    for thing_score_dict in ranked_list_information["top_3_things"]:
         thing_id = thing_score_dict["thing"]
         print(thing_id)
         thing_doc = db.things.find_one({"_id": PyObjectId(thing_id)})
@@ -278,16 +278,16 @@ def get_one_ranked_list(ranked_list_id):
             )
         thing_score_dict["thing"] = Thing(**thing_doc).to_jsonable_dict()
     # Now the Fights:
-    last_5_fights_with_details = []
-    for fight_id in ranked_list_information["last_5_fights"]:
+    last_3_fights_with_details = []
+    for fight_id in ranked_list_information["last_3_fights"]:
         fight_doc = db.fights.find_one({"_id": PyObjectId(fight_id)})
         if fight_doc is None:
             raise ResourceNotFoundInDatabaseError(
                 resource_type = "fight (referred to in this ranked list)",
                 resource_id = fight_id
             )
-        last_5_fights_with_details.append(Fight(**fight_doc).to_jsonable_dict())
-    ranked_list_information["last_5_fights"] = last_5_fights_with_details
+        last_3_fights_with_details.append(Fight(**fight_doc).to_jsonable_dict())
+    ranked_list_information["last_3_fights"] = last_3_fights_with_details
 
     # Add links to the paginated endpoints for both the ranked list of all
     # Things (with their Scores) and the list of all fights fought within the
@@ -323,7 +323,7 @@ def raw_data_of_a_ranked_list(ranked_list_id):
     
     This returns how a RankedList is stored in the database. It doesn't have
     informative properties of the regular RankedList endpoint (like
-    "top_5_things", "number of fights", "last_5_fights"), no links to a
+    "top_3_things", "number of fights", "last_3_fights"), no links to a
     paginated ranked_things list with Thing details, or a paginated fights list
     with Fight details. Besides the metadata (like "name", "time_created",
     "time_edited", "score_used_to_rank"), it has a dict that maps Thing ids to
