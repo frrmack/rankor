@@ -19,6 +19,7 @@ from datetime import datetime
 
 # Encoder imports
 import json
+from pydantic.json import pydantic_encoder
 
 # Rankor model imports
 from rankor.models import Thing, thing
@@ -40,7 +41,7 @@ thing_endpoints = Blueprint('thing_endpoints', __name__)
 
 
 
-# Create a new Thing    |   POST    /rankor/things/
+# Create a new Thing    |   POST   /rankor/things/
 @thing_endpoints.route(
     "/rankor/things/", 
     methods=["POST"]
@@ -91,7 +92,7 @@ def create_a_new_thing():
 
 
 
-# Edit a Thing          |   PUT     /rankor/things/<thing_id>/
+# Edit a Thing    |   PUT   /rankor/things/<thing_id>/
 @thing_endpoints.route(
     "/rankor/things/<ObjectId:thing_id>/", 
     methods=["PUT"]
@@ -159,7 +160,7 @@ def edit_a_thing(thing_id):
 
 
 
-# Delete a Thing        |   DELETE  /rankor/things/<thing_id>/
+# Delete a Thing    |   DELETE  /rankor/things/<thing_id>/
 @thing_endpoints.route(
     "/rankor/things/<ObjectId:thing_id>/", 
     methods=["DELETE"]
@@ -186,7 +187,7 @@ def delete_a_thing(thing_id):
     
     
 
-# Delete ALL Things        |   DELETE  /rankor/things/delete-all/
+# Delete ALL Things   |   DELETE  /rankor/things/delete-all/
 @thing_endpoints.route(
     "/rankor/things/delete-all/", 
     methods=["DELETE"]
@@ -208,13 +209,14 @@ def delete_ALL_things():
             "result": "success",
             "msg": f"{deletion_info.deleted_count} things deleted"
         },
+        default=pydantic_encoder,
         indent=2,
         sort_keys=True
     ), 200
 
 
 
-# List all Things       |   GET     /rankor/things/     
+# List all Things    |   GET   /rankor/things/     
 @thing_endpoints.route(
     "/rankor/things/", 
     methods=["GET"]
@@ -267,7 +269,7 @@ def list_all_things():
             "href": url_for(".list_all_things", page=page, _external=True)
         },
         "last": {
-            "href": url_for(".list_all_things", page=last_page, _external = True)
+            "href": url_for(".list_all_things", page=last_page, _external=True)
         },
     }
     # Add a 'prev' link if it's not on the first page:
@@ -279,7 +281,7 @@ def list_all_things():
     if page - 1 < number_of_all_things // page_size:
         links["next"] = {
             "href": url_for(".list_all_things", page=page+1, _external=True)
-            }
+        }
 
     # Return the full response
     return json.dumps(
@@ -288,13 +290,14 @@ def list_all_things():
             "_page": page,
             "_links": links,
         },
+        default=pydantic_encoder,
         indent=2,
         sort_keys=True
     )
 
 
 
-# Get one Thing         |   GET     /rankor/things/<thing_id>/
+# Get one Thing    |   GET   /rankor/things/<thing_id>/
 @thing_endpoints.route(
     "/rankor/things/<ObjectId:thing_id>/", 
     methods=["GET"]
@@ -326,7 +329,7 @@ def get_one_thing(thing_id):
     # with the data formats anywhere, the system will fail at these validation
     # checkpoints rather than somewhere random in the middle of the code when
     # the data is actually used.
-    thing_doc = db.things.find_one({"_id": thing_id}, )
+    thing_doc = db.things.find_one({"_id": thing_id})
     # If failure: 404 Not Found Error
     if thing_doc is None:
         raise ResourceNotFoundInDatabaseError(
