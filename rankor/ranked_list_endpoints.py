@@ -24,12 +24,17 @@ import json
 from pydantic.json import pydantic_encoder
 
 # Rankor model imports
-from rankor.models import Thing, RankedList, Score, PyObjectIdString
+from rankor.models import (Thing, 
+                           Fight, 
+                           RankedList, 
+                           Score, 
+                           PyObjectId, 
+                           PyObjectIdString)
 
 # Exception imports
 from werkzeug.exceptions import Forbidden
 from rankor.errors import (ResourceNotFoundInDatabaseError,
-                               SameNameResourceAlreadyExistsError)
+                           SameNameResourceAlreadyExistsError)
 
 # Api settings import
 import settings
@@ -256,12 +261,42 @@ def get_one_ranked_list(ranked_list_id):
             resource_type = "ranked list",
             resource_id = ranked_list_id
         )
+
+    # Get the RankedList summary with practical information useful for a user
     ranked_list_information = RankedList(**doc).summary_dict()
-    print(ranked_list_information)
+    # top_5_things & last_5_fights only have id strings for Things and Fights.
+    # Retrieve their actual data to respond with. 
+    # First the Things:
+    for thing_score_dict in ranked_list_information["top_5_things"]:
+        thing_id = thing_score_dict["thing"]
+        print(thing_id)
+        thing_doc = db.things.find_one({"_id": PyObjectId(thing_id)})
+        if thing_doc is None:
+            raise ResourceNotFoundInDatabaseError(
+                resource_type = "thing (referred to in this ranked list)",
+                resource_id = thing_id
+            )
+        thing_score_dict["thing"] = Thing(**thing_doc).to_jsonable_dict()
+    # Now the Fights:
+    last_5_fights_with_details = []
+    for fight_id in ranked_list_information["last_5_fights"]:
+        fight_doc = db.fights.find_one({"_id": PyObjectId(fight_id)})
+        if fight_doc is None:
+            raise ResourceNotFoundInDatabaseError(
+                resource_type = "fight (referred to in this ranked list)",
+                resource_id = fight_id
+            )
+        last_5_fights_with_details.append(Fight(**fight_doc).to_jsonable_dict())
+    ranked_list_information["last_5_fights"] = last_5_fights_with_details
+
+    # Add links to the paginated endpoints for both the ranked list of all
+    # Things (with their Scores) and the list of all fights fought within the
+    # context of this RankedList.
     links = {
         "ranked_full_list_of_things": f"/rankor/rankedlists/{ranked_list_id}/ranks/",
         "recorded_fights": f"/rankor/rankedlists/{ranked_list_id}/fights/"
     }
+    # Respond with all this
     return json.dumps(
         {
             "ranked_list": ranked_list_information,
