@@ -1,11 +1,13 @@
 # RankedList endpoints: /rankor/rankedlists/
 #
-# Create a new RankedList   |   POST    /rankor/rankedlists/
-# Edit a RankedList         |   PUT     /rankor/rankedlists/<ranked_list_id>/
-# Delete a RankedList       |   DELETE  /rankor/rankedlists/<ranked_list_id>/
-# Delete ALL RankedLists    |   DELETE  /rankor/rankedlists/delete-all/
-# List all RankedLists      |   GET     /rankor/rankedlists/
-# Get one RankedList        |   GET     /rankor/rankedlists/<ranked_list_id>/
+# Create a new RankedList    |   POST    /rankor/rankedlists/
+# Edit a RankedList          |   PUT     /rankor/rankedlists/<ranked_list_id>/
+# Delete a RankedList        |   DELETE  /rankor/rankedlists/<ranked_list_id>/
+# Delete ALL RankedLists     |   DELETE  /rankor/rankedlists/delete-all/
+# List all RankedLists       |   GET     /rankor/rankedlists/
+# Get one RankedList         |   GET     /rankor/rankedlists/<ranked_list_id>/
+# [Raw data of a RankedList] |   GET     /rankor/rankedlists/raw/<ranked_list_id>/
+
 
 
 # Flask imports
@@ -231,10 +233,15 @@ def delete_ALL_ranked_lists():
 )
 def get_one_ranked_list(ranked_list_id): 
     """
-    GET request to retrieve the data for a single RankedList using its id
+    GET request to retrieve details of a single RankedList using its id. Besides
+    the metadata of the RankedList, it provides some useful summary data, such
+    as "number of fights", "top_5_things", "last_5_fights". It also contains
+    links to the relevant paginated endpoints to a) get the ranked Thing list
+    with their scores, and b) details of all the Fights fought within the
+    context of this RankedList.
 
-    For example:
-    curl -i -X GET 'http://localhost:5000/rankor/rankedlists/a4325678901234567890bcd5/'
+    For example: curl -i -X GET
+    'http://localhost:5000/rankor/rankedlists/raw/a4325678901234567890bcd5/'
     """
     # Retrieve the document with this id from the database and respond
     # with it, or raise an HTTP 404 if you can't find it
@@ -245,5 +252,47 @@ def get_one_ranked_list(ranked_list_id):
             resource_id = ranked_list_id
         )
     # Success: respond with the ranked list 
+    return RankedList(**doc).to_json(), 200
+
+
+
+
+# [Raw data of a RankedList] |   GET  /rankor/rankedlists/raw/<ranked_list_id>/
+@ranked_list_endpoints.route(
+    "/rankor/rankedlists/raw/<ObjectId:ranked_list_id>/", 
+    methods=["GET"]
+)
+def raw_data_of_a_ranked_list(ranked_list_id): 
+    """
+    Special GET request to retrieve the underlying raw data for a single
+    RankedList using its id. Not intented for regular use, just for
+    development/debugging purposes---to check under the hood if necessary.
+    
+    This returns how a RankedList is stored in the database. It doesn't have
+    informative properties of the regular RankedList endpoint (like
+    "top_5_things", "number of fights", "last_5_fights"), no links to a
+    paginated ranked_things list with Thing details, or a paginated fights list
+    with Fight details. Besides the metadata (like "name", "time_created",
+    "time_edited", "score_used_to_rank"), it has a dict that maps Thing ids to
+    Score data ("thing_scores"), and a list of fight ids ("fights"). 
+    
+    No pagination, just a json encoding of the full single bson document storing
+    the raw data of the RankedList. With only id references to Things and
+    Fights, it's not too useful to a user facing front end app for most use
+    cases. It is convenient to check things during development or debugging, and
+    potentially for a few behind-the-scenes use cases.
+
+    For example: curl -i -X GET
+    'http://localhost:5000/rankor/rankedlists/raw/a4325678901234567890bcd5/'
+    """
+    # Retrieve the document with this id from the database and respond
+    # with it, or raise an HTTP 404 if you can't find it
+    doc = db.ranked_lists.find_one({"_id": ranked_list_id})
+    if doc is None:
+        raise ResourceNotFoundInDatabaseError(
+            resource_type = "ranked list",
+            resource_id = ranked_list_id
+        )
+    # Success: respond with the raw ranked list 
     return RankedList(**doc).to_json(), 200
 
