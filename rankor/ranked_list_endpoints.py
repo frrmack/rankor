@@ -21,9 +21,10 @@ from datetime import datetime
 
 # Encoder imports
 import json
+from pydantic.json import pydantic_encoder
 
 # Rankor model imports
-from rankor.models import Thing, RankedList, Score
+from rankor.models import Thing, RankedList, Score, PyObjectIdString
 
 # Exception imports
 from werkzeug.exceptions import Forbidden
@@ -82,7 +83,10 @@ def create_a_new_ranked_list():
     # It also has a list of fights, which will be empty now, at the time
     # of creation. 
     things_of_ranked_list = [Thing(**doc) for doc in db.things.find()]
-    initial_scores = {thing.id: Score() for thing in things_of_ranked_list}
+    initial_scores = {
+        PyObjectIdString(thing.id): Score() 
+        for thing in things_of_ranked_list
+    }
     new_ranked_list_data["thing_scores"] = initial_scores
     new_ranked_list_data["fights"] = []
 
@@ -220,6 +224,7 @@ def delete_ALL_ranked_lists():
             "result": "success",
             "msg": f"{deletion_info.deleted_count} ranked lists deleted"
         },
+        default=pydantic_encoder,
         indent=2,
         sort_keys=True
     ), 200
@@ -243,16 +248,29 @@ def get_one_ranked_list(ranked_list_id):
     For example: curl -i -X GET
     'http://localhost:5000/rankor/rankedlists/raw/a4325678901234567890bcd5/'
     """
-    # Retrieve the document with this id from the database and respond
-    # with it, or raise an HTTP 404 if you can't find it
+    # Retrieve the RankedList document with this id from the database or raise 
+    # an HTTP 404 if you can't find it
     doc = db.ranked_lists.find_one({"_id": ranked_list_id})
     if doc is None:
         raise ResourceNotFoundInDatabaseError(
             resource_type = "ranked list",
             resource_id = ranked_list_id
         )
-    # Success: respond with the ranked list 
-    return RankedList(**doc).to_json(), 200
+    ranked_list_information = RankedList(**doc).summary_dict()
+    print(ranked_list_information)
+    links = {
+        "ranked_full_list_of_things": f"/rankor/rankedlists/{ranked_list_id}/ranks/",
+        "recorded_fights": f"/rankor/rankedlists/{ranked_list_id}/fights/"
+    }
+    return json.dumps(
+        {
+            "ranked_list": ranked_list_information,
+            "_links": links
+        },
+        default=pydantic_encoder,
+        indent=2,
+        sort_keys=True
+    )
 
 
 

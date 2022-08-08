@@ -65,10 +65,10 @@ app.register_blueprint(ranked_list_endpoints)
 # List all RankedLists      |   GET     /rankor/rankedlists/
 # Get one RankedList        |   GET     /rankor/rankedlists/<ranked_list_id>/
 #------------------------------------------------------------------------------
-# Score endpoint for a given RankedList: /rankor/rankedlists/<ranked_list_id>/scores/
+# Ranks endpoint for a given RankedList: /rankor/rankedlists/<ranked_list_id>/ranks/
 #
-# Get the scores of the ranked Things in a RankedList 
-# GET     /rankor/rankedlists/<ranked_list_id>/scores/
+# Get the list of the ranked Things and their Scores in a RankedList 
+# GET     /rankor/rankedlists/<ranked_list_id>/ranks/
 #------------------------------------------------------------------------------
 # Fight endpoints for a given RankedList: /rankor/rankedlists/<ranked_list_id>/fights/
 #

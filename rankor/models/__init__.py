@@ -15,7 +15,7 @@ from rankor.models.ranked_list import RankedList
 
 # Import the ObjectId-related pydantic fields so they can be imported
 # directly from rankor.models
-from rankor.models.pyobjectid import PyObjectId
+from rankor.models.pyobjectid import PyObjectId, PyObjectIdString
 
 
 
