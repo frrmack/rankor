@@ -72,12 +72,12 @@ def test_json_encoding():
                    _id = PyObjectId("12345678901234567890ffff"),
                    other_data = {"director": "James Cameron"})
     expected_json = """{
-  "other_data": {
-    "director": "James Cameron"
-  },
   "id": "12345678901234567890ffff",
   "image_url": "https://m.media-amazon.com/images/I/91kkGWtyqTL._AC_SL1500_.jpg",
-  "name": "Aliens"
+  "name": "Aliens",
+  "other_data": {
+    "director": "James Cameron"
+  }
 }"""
     assert aliens.to_json() == expected_json, f"Json encoding failed {type(aliens.to_json())}"
 
