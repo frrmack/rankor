@@ -33,7 +33,7 @@ if __name__ == '__main__':
 
     terminator_thing = Thing(name = "The Terminator", 
                              image_url = "https://m.media-amazon.com/images/I/61qCgQZyhOL._AC_SY879_.jpg",
-                             extra_data = {"director":"James Cameron", "year":1982},
+                             other_data = {"director":"James Cameron", "year":1982},
                              _id = PyObjectId("12345678901234567890abcd")
                             )
     aliens_thing = Thing(name = "Aliens",

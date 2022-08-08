@@ -5,7 +5,7 @@ from pydantic import ValidationError, AnyUrl
 def test_initialization():
     assert isinstance(  Thing(name = "The Terminator", 
                               image_url = "https://m.media-amazon.com/images/I/61qCgQZyhOL._AC_SY879_.jpg",
-                              extra_data = {"director":"James Cameron", "year":1982},
+                              other_data = {"director":"James Cameron", "year":1982},
                               _id = PyObjectId("12345678901234567890abcd")
                              ),
                         Thing) is True, "Initialization failed"
@@ -56,13 +56,13 @@ def test_validation_error_on_invalid_bson_id():
 def test_dict_encoding_for_bson_conversion():
     terminator = Thing(name = "The Terminator", 
                        image_url = "https://m.media-amazon.com/images/I/61qCgQZyhOL._AC_SY879_.jpg",
-                       extra_data = {"director":"James Cameron", "year":1982},
+                       other_data = {"director":"James Cameron", "year":1982},
                        _id = PyObjectId("12345678901234567890abcd"))
     assert terminator.to_bsonable_dict() == {'_id': PyObjectId('12345678901234567890abcd'), 
                                     'name': 'The Terminator', 
                                     'image_url': AnyUrl(url='https://m.media-amazon.com/images/I/61qCgQZyhOL._AC_SY879_.jpg',
                                                         scheme='https'),
-                                    'extra_data': {'director': 'James Cameron', 'year': 1982}
+                                    'other_data': {'director': 'James Cameron', 'year': 1982}
                                    }, "Dict encoding (for pymongo to convert to bson) failure"
 
 
@@ -70,9 +70,9 @@ def test_json_encoding():
     aliens = Thing(name = "Aliens",
                    image_url = "https://m.media-amazon.com/images/I/91kkGWtyqTL._AC_SL1500_.jpg",
                    _id = PyObjectId("12345678901234567890ffff"),
-                   extra_data = {"director": "James Cameron"})
+                   other_data = {"director": "James Cameron"})
     expected_json = """{
-  "extra_data": {
+  "other_data": {
     "director": "James Cameron"
   },
   "id": "12345678901234567890ffff",

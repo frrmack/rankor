@@ -54,13 +54,13 @@ def create_a_new_thing():
     name: str
     image_url: Optional[AnyUrl]
     category: Optional[str]     
-    extra_data: Optional[Json]
+    other_data: Optional[Json]
 
     Attach the contents of the new Thing as data in JSON format.
     Example:
     curl -d '{"name": "Terminator", 
               "image_url": "https://m.media-amazon.com/images/I/61qCgQZyhOL._AC_SY879_.jpg", 
-              "extra_data": {"director": "James Cameron", "year": 1982}
+              "other_data": {"director": "James Cameron", "year": 1982}
              }' 
          -H "Content-Type: application/json" 
          -X POST http://localhost:5000/rankor/things/

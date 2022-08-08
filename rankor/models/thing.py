@@ -17,6 +17,6 @@ class Thing(MongoModel):
     name: str
     image_url: Optional[AnyUrl]
     category: Optional[str]        # Make new models: Category, Tag
-    extra_data: Optional[Dict]
+    other_data: Optional[Dict]
     time_created: Optional[datetime]
     time_edited: Optional[datetime]
