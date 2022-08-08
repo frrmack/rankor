@@ -43,7 +43,7 @@ import settings
 from rankor import db
 
 
-# The blueprint with all the Thing endpoints
+# The blueprint with all the RankedList endpoints
 # This will be registered to the Flask app
 ranked_list_endpoints = Blueprint('ranked_list_endpoints', __name__)
 
