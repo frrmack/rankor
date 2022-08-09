@@ -113,19 +113,26 @@ def create_a_new_ranked_list():
 )
 def edit_a_ranked_list(ranked_list_id):
     """
-    PUT request to update the data of a RankedList that already exists in the database.
+    PUT request to update the data of a RankedList that already exists in the
+    database.
 
-    By default, you can only edit the metadata of a RankedList, which is just its name.
-    This means that you can only change their name using the edit endpoint. Fights can 
-    be saved to or deleted from RankedLists via other endpoints (fight_endpoints.py),
-    and this is normally the only way to influence the fights list and as a result 
-    the thing_scores list in a RankedList. 
-    If settings.ALLOW_MANUAL_EDITING_OF_RANKEDLIST_FIGHTS_OR_SCORES is set to True 
-    instead of the default False, this endpoint will allow you to directly update these 
-    lists.    
-    Doing this is NOT recommended, as it's not a good way of handling the data, it's 
-    prone to introducing silent errors that will come back to bite you later, and it's 
-    easy to mess up unless you know exactly what you're doing.
+    By default, you can only edit the metadata of a RankedList with this
+    endpoint, which is just its name and score_used_to_rank (and the
+    time_created timestamp if you want to override the automatically assigned
+    value for some reason). Fights can be saved to or deleted from RankedLists
+    via other endpoints (fight_endpoints.py), and this is normally the only way
+    to influence the fights list and (indirectly) the thing_scores dict of a
+    RankedList. If settings.ALLOW_MANUAL_EDITING_OF_RANKEDLIST_FIGHTS_OR_SCORES
+    is set to True instead of the default False, this endpoint will allow you to
+    directly update these fields. Doing this is NOT recommended, as it's not a
+    good way of handling the data, it's prone to introducing silent errors that
+    will come back to bite you later, and it's easy to mess up unless you know
+    exactly what you're doing.
+
+    Properties of a RankedList, such as top_3_things or last_3_fights are not
+    stored, but calculated using the other fields. Therefore they are never
+    editable. They will change based on the fights list and the thing_scores
+    dict.
 
     Example (name change from 'My Favorite Movies' to 'Action Movie Ranked List with Max'):
     curl -d '{"name": "Action Movie Ranked List with Max"}'
@@ -216,11 +223,10 @@ def delete_a_ranked_list(ranked_list_id):
 def delete_ALL_ranked_lists():
     """
     DELETE request to delete ALL existing RankedLists
-    This purges the entire ranked_lists collection in the database
-    It's basically an endpoint to reset back to factory settings
+    This nuclear bomb purges the entire ranked_lists collection in the database
+    It's basically an endpoint to reset back to factory settings to start over
 
-    Example:
-    curl -i -X DELETE 'http://localhost:5000/rankor/rankedlists/delete-all/'   
+    Example: curl -i -X DELETE 'http://localhost:5000/rankor/rankedlists/delete-all/'   
     """
     deletion_info = db.ranked_lists.delete_many({})
     # Success: Respond with the number of deleted documents
@@ -243,15 +249,16 @@ def delete_ALL_ranked_lists():
 )
 def get_one_ranked_list(ranked_list_id): 
     """
-    GET request to retrieve details of a single RankedList using its id. Besides
-    the metadata of the RankedList, it provides some useful summary data, such
-    as "number of fights", "top_3_things", "last_3_fights". It also contains
-    links to the relevant paginated endpoints to a) get the ranked Thing list
-    with their scores, and b) details of all the Fights fought within the
-    context of this RankedList.
+    GET request to retrieve details of a single RankedList using its id. 
+    
+    Besides the metadata of the RankedList, it provides some useful summary
+    data, such as "number of fights", "top_3_things", "last_3_fights". It also
+    contains links to the relevant paginated endpoints to a) get the ranked
+    Thing list with their scores, and b) details of all the Fights fought within
+    the context of this RankedList.
 
-    For example: curl -i -X GET
-    'http://localhost:5000/rankor/rankedlists/raw/a4325678901234567890bcd5/'
+    For example: 
+    curl -i -X GET 'http://localhost:5000/rankor/rankedlists/raw/a4325678901234567890bcd5/'
     """
     # Retrieve the RankedList document with this id from the database or raise 
     # an HTTP 404 if you can't find it
@@ -293,8 +300,12 @@ def get_one_ranked_list(ranked_list_id):
     # Things (with their Scores) and the list of all fights fought within the
     # context of this RankedList.
     links = {
-        "ranked_full_list_of_things": f"/rankor/rankedlists/{ranked_list_id}/ranks/",
-        "recorded_fights": f"/rankor/rankedlists/{ranked_list_id}/fights/"
+        "full_ranked_list_of_things": {
+            "href": f"/rankor/rankedlists/{ranked_list_id}/ranks/"
+        },
+        "recorded_fights": {
+            "href": f"/rankor/rankedlists/{ranked_list_id}/fights/"
+        }
     }
     # Respond with all this
     return json.dumps(
