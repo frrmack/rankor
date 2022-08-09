@@ -21,9 +21,13 @@ def http_error_response(http_exception):
     504 Gateway Timeout, etc.
     """
     http_status_code = http_exception.code
-    response_dict = {"error_type": type(http_exception).__name__,  
-                     "error": http_exception.description,
-                     "http_status_code": http_status_code}
+    response_dict = {
+        "result": "failure",
+        "error_category": "HTTP error",
+        "error_type": type(http_exception).__name__,  
+        "error": http_exception.description,
+        "http_status_code": http_status_code
+    }
     if isinstance(http_exception, SameNameResourceAlreadyExistsError):
         response_dict.update({"existing_resource":http_exception.same_name_resource})
     return json.dumps(response_dict, indent=2, sort_keys=True), http_status_code
@@ -45,12 +49,18 @@ def data_validation_error_response(validation_error):
     num_validation_issues = len(validation_error.errors())
     details = {"number_of_validation_errors": num_validation_issues,
                "validation_error_list": validation_error.errors()}
-    response = json.dumps({"error_type": type(validation_error).__name__, 
-                           "error": err_msg,
-                           "error_details": details,
-                           "http_status_code": http_status_code},
-                           indent=2,
-                           sort_keys=True)
+    response = json.dumps(
+        {
+            "result": "failure",
+            "error_category": "Data validation error",            
+            "error_type": type(validation_error).__name__, 
+            "error": err_msg,
+            "error_details": details,
+            "http_status_code": http_status_code
+        },
+        indent=2,
+        sort_keys=True
+    )
     return response, http_status_code
 
 
@@ -64,11 +74,17 @@ def database_error_response(pymongo_error):
     ExecutionTimeout that results due to or during a database operation.
     """
     http_status_code = 500      # Internal Server Error
-    response = json.dumps({"error_type": type(pymongo_error).__name__,  
-                           "error": pymongo_error.message,
-                           "http_status_code": http_status_code},
-                          indent=2,
-                          sort_keys=True)
+    response = json.dumps(
+        {
+            "result": "failure",
+            "error_category": "Database error",
+            "error_type": type(pymongo_error).__name__,  
+            "error": pymongo_error.message,
+            "http_status_code": http_status_code
+        },
+        indent=2,
+        sort_keys=True
+    )
     return response, http_status_code
 
 
@@ -89,10 +105,16 @@ def bson_format_error_response(bson_error):
     ObjectId type in keys, it only accepts it in values.
     """
     http_status_code = 400      # Bad Request
-    response = json.dumps({"error_type": type(bson_error).__name__,  
-                           "error": bson_error.args[0],
-                           "http_status_code": http_status_code},
-                          indent=2,
-                          sort_keys=True)
+    response = json.dumps(
+        {
+            "result": "failure",
+            "error_category": "Bson format error",            
+            "error_type": type(bson_error).__name__,  
+            "error": bson_error.args[0],
+            "http_status_code": http_status_code
+        },
+        indent=2,
+        sort_keys=True
+    )
     return response, http_status_code
 
