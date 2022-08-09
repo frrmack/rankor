@@ -182,7 +182,7 @@ def edit_a_ranked_list(ranked_list_id):
     PUT request to update the data of a RankedList that already exists in the
     database.
 
-    By default, you can only edit the metadata of a RankedList with this
+    By default, you can only edit the basic data of a RankedList with this
     endpoint, which is just its name and score_used_to_rank (and the
     time_created timestamp if you want to override the automatically assigned
     value for some reason). Fights can be saved to or deleted from RankedLists
