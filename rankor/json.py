@@ -13,13 +13,18 @@ def to_json(obj, **kwargs):
     models or data types of rankor model fields.
     
     It uses pydantic's encoder, which uses the pydantic.json.ENCODERS_BY_TYPE
-    dict to figure out how to encode non-basic types. 
-    For example, all datetime objects are converted to an ISO8601 string via
-    their datetime.datetime.isoformat() method, and when we define PyObjectId
-    and PyObjectIdString in rankor.models.pyobjectid, we are updating this
-    ENCODERS_BY_TYPE how to encode BsonObjectId and PyObjectId (by converting
-    them into PyObjectIdStrings). Any other rankor choices on how to encode
-    different data types can be done by further updating this ENCODERS_BY_TYPE.
+    dict to figure out how to encode non-basic types. For example, all datetime
+    objects are converted to an ISO8601 string via their
+    datetime.datetime.isoformat() method by default, since pydantic's
+    pydantic.json.ENCODERS_BY_TYPE dict has the key-value pair 
+    {datetime.datetime: isoformat} where isoformat is a function defined as
+    def isoformat(o): return o.isoformat()
+
+    When we define PyObjectId and PyObjectIdString in rankor.models.pyobjectid,
+    we also update this ENCODERS_BY_TYPE, telling it how to encode BsonObjectId
+    and PyObjectId (by converting them into PyObjectIdStrings). Any other rankor
+    choices on how to encode different data types can be implemented by further
+    updating this ENCODERS_BY_TYPE dict.
 
     This function also defines rankor's default json pretty-print format with
     the indent and sort_keys keywords
