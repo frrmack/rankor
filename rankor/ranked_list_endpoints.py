@@ -48,6 +48,64 @@ from rankor import db
 ranked_list_endpoints = Blueprint('ranked_list_endpoints', __name__)
 
 
+# The following function is used to represent a ranked_list whenever an endpoint
+# needs to respond with one. It provides a much more useful response than
+# directly returning how a ranked_list is stored in the database. You can check
+# the last endpoint here, raw_data_of_a_ranked_list, to see how and why the
+# response cooked below is chosen as the standard ranked list representation.
+def ranked_list_response(ranked_list):
+    """
+    Creates a response with the useful information of a RankedList and links to
+    other (paginated) endpoints for the full list of things (ranked with scores)
+    and all the recorded fights within this RankedList. 
+    """
+    # Get the RankedList summary with practical information useful for a user
+    ranked_list_representation = ranked_list.summary_dict()
+
+    # top_3_things & last_3_fights only have id strings for Things and Fights.
+    # Retrieve their actual data to respond with. 
+    # First the Things:
+    for thing_score_dict in ranked_list_representation["top_3_things"]:
+        thing_id = thing_score_dict["thing"]
+        thing_doc = db.things.find_one({"_id": PyObjectId(thing_id)})
+        if thing_doc is None:
+            raise ResourceNotFoundInDatabaseError(
+                resource_type = "thing (referred to in this ranked list)",
+                resource_id = thing_id
+            )
+        thing_score_dict["thing"] = Thing(**thing_doc).to_jsonable_dict()
+    # Now the Fights:
+    last_3_fights_with_details = []
+    for fight_id in ranked_list_representation["last_3_fights"]:
+        fight_doc = db.fights.find_one({"_id": PyObjectId(fight_id)})
+        if fight_doc is None:
+            raise ResourceNotFoundInDatabaseError(
+                resource_type = "fight (referred to in this ranked list)",
+                resource_id = fight_id
+            )
+        last_3_fights_with_details.append(Fight(**fight_doc).to_jsonable_dict())
+    ranked_list_representation["last_3_fights"] = last_3_fights_with_details
+
+    # Add links to the paginated endpoints for both the ranked list of all
+    # Things (with their Scores) and the list of all fights fought within the
+    # context of this RankedList.
+    links = {
+        "full_ranked_list_of_things": {
+            "href": f"/rankor/rankedlists/{ranked_list.id}/ranks/"
+        },
+        "recorded_fights": {
+            "href": f"/rankor/rankedlists/{ranked_list.id}/fights/"
+        }
+    }
+
+    # The response dict includes all this
+    return {
+        "data": ranked_list_representation,
+        "_links": links
+    }
+
+
+
 # Create a new RankedList   |   POST    /rankor/rankedlists/
 @ranked_list_endpoints.route(
     "/rankor/rankedlists/", 
@@ -102,7 +160,19 @@ def create_a_new_ranked_list():
     new_ranked_list.id = insert_result.inserted_id
 
     # Success: respond with the new ranked list
-    return new_ranked_list.to_json(), 200
+    return json.dumps(
+        {
+            "result": "success",
+            "msg": f"New ranked list created and given id {new_ranked_list.id}",
+            "ranked_list": ranked_list_response(new_ranked_list),
+            "http_status_code": 200
+        },
+        default=pydantic_encoder,
+        indent=2,
+        sort_keys=True
+    ), 200
+
+        
 
 
 
@@ -134,7 +204,8 @@ def edit_a_ranked_list(ranked_list_id):
     editable. They will change based on the fights list and the thing_scores
     dict.
 
-    Example (name change from 'My Favorite Movies' to 'Action Movie Ranked List with Max'):
+    Example (name change from 'My Favorite Movies' to 'Action Movie Ranked 
+    List with Max'):
     curl -d '{"name": "Action Movie Ranked List with Max"}'
          -H "Content-Type: application/json" 
          -X PUT http://localhost:5000/rankor/things/12345678901234567890ffff/       
@@ -186,7 +257,18 @@ def edit_a_ranked_list(ranked_list_id):
             resource_id=ranked_list_id
             )
     # Success: respond with the new, updated RankedList
-    return RankedList(**updated_doc).to_json(), 200
+    edited_ranked_list = RankedList(**updated_doc)
+    return json.dumps(
+        {
+            "result": "success",
+            "msg": f"Successfully edited ranked list with id {ranked_list_id}",
+            "ranked_list": ranked_list_response(edited_ranked_list),
+            "http_status_code": 200
+        },
+        default=pydantic_encoder,
+        indent=2,
+        sort_keys=True
+    ), 200
 
 
 
@@ -210,8 +292,21 @@ def delete_a_ranked_list(ranked_list_id):
             resource_type="ranked list",
             resource_id=ranked_list_id
         )
-    # Success: Respond with the deleted document that's no longer in the database
-    return RankedList(**deleted_doc).to_json(), 200
+    # Success: Respond with the metadata of the deleted document that's no
+    # longer in the database
+    deleted_doc.pop("thing_scores", None)
+    deleted_doc.pop("fights", None)
+    return json.dumps(
+        {
+            "result": "success",
+            "msg": f"Ranked list with id {ranked_list_id} deleted.",
+            "ranked_list": {"data": deleted_doc},
+            "http_status_code": 200
+        },
+        default=pydantic_encoder,
+        indent=2,
+        sort_keys=True
+    ), 200
 
 
 
@@ -233,7 +328,8 @@ def delete_ALL_ranked_lists():
     return json.dumps(
         {
             "result": "success",
-            "msg": f"{deletion_info.deleted_count} ranked lists deleted"
+            "msg": f"{deletion_info.deleted_count} ranked lists deleted",
+            "http_status_code": 200
         },
         default=pydantic_encoder,
         indent=2,
@@ -268,56 +364,21 @@ def get_one_ranked_list(ranked_list_id):
             resource_type = "ranked list",
             resource_id = ranked_list_id
         )
-
-    # Get the RankedList summary with practical information useful for a user
-    ranked_list_information = RankedList(**doc).summary_dict()
-    # top_3_things & last_3_fights only have id strings for Things and Fights.
-    # Retrieve their actual data to respond with. 
-    # First the Things:
-    for thing_score_dict in ranked_list_information["top_3_things"]:
-        thing_id = thing_score_dict["thing"]
-        print(thing_id)
-        thing_doc = db.things.find_one({"_id": PyObjectId(thing_id)})
-        if thing_doc is None:
-            raise ResourceNotFoundInDatabaseError(
-                resource_type = "thing (referred to in this ranked list)",
-                resource_id = thing_id
-            )
-        thing_score_dict["thing"] = Thing(**thing_doc).to_jsonable_dict()
-    # Now the Fights:
-    last_3_fights_with_details = []
-    for fight_id in ranked_list_information["last_3_fights"]:
-        fight_doc = db.fights.find_one({"_id": PyObjectId(fight_id)})
-        if fight_doc is None:
-            raise ResourceNotFoundInDatabaseError(
-                resource_type = "fight (referred to in this ranked list)",
-                resource_id = fight_id
-            )
-        last_3_fights_with_details.append(Fight(**fight_doc).to_jsonable_dict())
-    ranked_list_information["last_3_fights"] = last_3_fights_with_details
-
-    # Add links to the paginated endpoints for both the ranked list of all
-    # Things (with their Scores) and the list of all fights fought within the
-    # context of this RankedList.
-    links = {
-        "full_ranked_list_of_things": {
-            "href": f"/rankor/rankedlists/{ranked_list_id}/ranks/"
-        },
-        "recorded_fights": {
-            "href": f"/rankor/rankedlists/{ranked_list_id}/fights/"
-        }
-    }
-    # Respond with all this
     return json.dumps(
         {
-            "ranked_list": ranked_list_information,
-            "_links": links
+            "result": "success",
+            "msg": f"Successfully retrieved ranked list with id {ranked_list_id}",
+            "ranked_list": ranked_list_response(RankedList(**doc)),
+            "http_status_code": 200
         },
         default=pydantic_encoder,
         indent=2,
         sort_keys=True
-    )
+    ), 200
 
+    
+    
+    ranked_list_response(RankedList(**doc)),200
 
 
 
@@ -358,5 +419,16 @@ def raw_data_of_a_ranked_list(ranked_list_id):
             resource_id = ranked_list_id
         )
     # Success: respond with the raw ranked list 
-    return RankedList(**doc).to_json(), 200
+    return json.dumps(
+        {
+            "result": "success",
+            "msg": f"Successfully retrieved raw data of ranked list with id {ranked_list_id}",
+            "ranked_list_raw_data": RankedList(**doc).to_jsonable_dict(),
+            "http_status_code": 200
+        },
+        default=pydantic_encoder,
+        indent=2,
+        sort_keys=True
+    ), 200
+
 
