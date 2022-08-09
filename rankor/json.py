@@ -1,24 +1,25 @@
 # Rankor's JSON encoding relies on pydantic's, this module only has a couple of
-# simple wrappers for convenience
+# simple wrappers for convenience. The MongoModel class (upon which almost all
+# rankor models are built) has its own
 
 import json
-from pydantic.json import pydantic_encoder, ENCODERS_BY_TYPE
+from pydantic.json import pydantic_encoder
 
 
 def to_json(obj, **kwargs):
     """
     Encode any object into a JSON string. This includes rankor models, or any
-    data structure based on dicts, lists, etc. that include rankor models or
-    data types of rankor model fields.
+    complex data structure based on dicts, lists, etc. that include rankor
+    models or data types of rankor model fields.
     
-    It uses pydantic's encoder, which uses the ENCODERS_BY_TYPE dict to figure
-    out how to encode non-basic types. For example, all datetime objects are
-    converted to an ISO8601 string via their datetime.datetime.isoformat()
-    method, and when we define PyObjectId and PyObjectIdString in
-    rankor.models.pyobjectid, we are updating this ENCODERS_BY_TYPE how to
-    encode BsonObjectId and PyObjectId (by converting them into
-    PyObjectIdStrings). Any other rankor choices on how to encode different data
-    types can be done by further updating this ENCODERS_BY_TYPE.
+    It uses pydantic's encoder, which uses the pydantic.json.ENCODERS_BY_TYPE
+    dict to figure out how to encode non-basic types. 
+    For example, all datetime objects are converted to an ISO8601 string via
+    their datetime.datetime.isoformat() method, and when we define PyObjectId
+    and PyObjectIdString in rankor.models.pyobjectid, we are updating this
+    ENCODERS_BY_TYPE how to encode BsonObjectId and PyObjectId (by converting
+    them into PyObjectIdStrings). Any other rankor choices on how to encode
+    different data types can be done by further updating this ENCODERS_BY_TYPE.
 
     This function also defines rankor's default json pretty-print format with
     the indent and sort_keys keywords
