@@ -7,7 +7,7 @@
 from rankor.errors import SameNameResourceAlreadyExistsError
 
 # JSON encoding of error responses
-import json
+from rankor.json import to_json
 
 
 def http_error_response(http_exception):
@@ -29,8 +29,10 @@ def http_error_response(http_exception):
         "http_status_code": http_status_code
     }
     if isinstance(http_exception, SameNameResourceAlreadyExistsError):
-        response_dict.update({"existing_resource":http_exception.same_name_resource})
-    return json.dumps(response_dict, indent=2, sort_keys=True), http_status_code
+        response_dict.update(
+            {"existing_resource": http_exception.same_name_resource}
+        )
+    return to_json(response_dict), http_status_code
 
 
 def data_validation_error_response(validation_error):
@@ -45,11 +47,14 @@ def data_validation_error_response(validation_error):
     http_status_code = 400      # Bad Request
     err_msg = ("The data of this resource does not fully match the validation "
                "requirements. Please ensure existence of all required fields, "
-               "valid field names, and valid data types for those fields' values.")    
+               "valid field names, and valid data types for those fields' "
+               "values.")    
     num_validation_issues = len(validation_error.errors())
-    details = {"number_of_validation_errors": num_validation_issues,
-               "validation_error_list": validation_error.errors()}
-    response = json.dumps(
+    details = {
+        "number_of_validation_errors": num_validation_issues,
+        "validation_error_list": validation_error.errors()
+    }
+    return to_json(
         {
             "result": "failure",
             "error_category": "Data validation error",            
@@ -57,11 +62,8 @@ def data_validation_error_response(validation_error):
             "error": err_msg,
             "error_details": details,
             "http_status_code": http_status_code
-        },
-        indent=2,
-        sort_keys=True
-    )
-    return response, http_status_code
+        }
+    ), http_status_code
 
 
 def database_error_response(pymongo_error):
@@ -74,18 +76,15 @@ def database_error_response(pymongo_error):
     ExecutionTimeout that results due to or during a database operation.
     """
     http_status_code = 500      # Internal Server Error
-    response = json.dumps(
+    return to_json(
         {
             "result": "failure",
             "error_category": "Database error",
             "error_type": type(pymongo_error).__name__,  
             "error": pymongo_error.message,
             "http_status_code": http_status_code
-        },
-        indent=2,
-        sort_keys=True
-    )
-    return response, http_status_code
+        }
+    ), http_status_code
 
 
 def bson_format_error_response(bson_error):
@@ -105,16 +104,13 @@ def bson_format_error_response(bson_error):
     ObjectId type in keys, it only accepts it in values.
     """
     http_status_code = 400      # Bad Request
-    response = json.dumps(
+    return to_json(
         {
             "result": "failure",
             "error_category": "Bson format error",            
             "error_type": type(bson_error).__name__,  
             "error": bson_error.args[0],
             "http_status_code": http_status_code
-        },
-        indent=2,
-        sort_keys=True
-    )
-    return response, http_status_code
+        }
+    ), http_status_code
 
