@@ -285,7 +285,7 @@ def delete_a_ranked_list(ranked_list_id):
             resource_type="ranked list",
             resource_id=ranked_list_id
         )
-    # Success: Respond with the metadata of the deleted document that's no
+    # Success: Respond with the basic data of the deleted document that's no
     # longer in the database
     deleted_doc.pop("thing_scores", None)
     deleted_doc.pop("fights", None)
@@ -334,7 +334,7 @@ def get_one_ranked_list(ranked_list_id):
     """
     GET request to retrieve details of a single RankedList using its id. 
     
-    Besides the metadata of the RankedList, it provides some useful summary
+    Besides the basic data of the RankedList, it provides some useful summary
     data, such as "number of fights", "top_3_things", "last_3_fights". It also
     contains links to the relevant paginated endpoints to a) get the ranked
     Thing list with their scores, and b) details of all the Fights fought within
@@ -381,7 +381,7 @@ def raw_data_of_a_ranked_list(ranked_list_id):
     informative properties of the regular RankedList endpoint (like
     "top_3_things", "number of fights", "last_3_fights"), no links to a
     paginated ranked_things list with Thing details, or a paginated fights list
-    with Fight details. Besides the metadata (like "name", "time_created",
+    with Fight details. Besides the basic data (like "name", "time_created",
     "time_edited", "score_used_to_rank"), it has a dict that maps Thing ids to
     Score data ("thing_scores"), and a list of fight ids ("fights"). 
     

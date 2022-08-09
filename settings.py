@@ -12,7 +12,7 @@ NUMBER_OF_ITEMS_IN_EACH_RESPONSE_PAGE = 20
 # Setting to let RankedList edit endpoint accept fights and thing_scores
 # fields
 ALLOW_MANUAL_EDITING_OF_RANKEDLIST_FIGHTS_OR_SCORES = False
-# RankedList edits/updates are limited to their metadata only by default.
+# RankedList edits/updates are limited to their basic data only by default.
 # This means that you can only change their name using the edit endpoint.
 # Fights can be saved to or deleted from RankedLists via other endpoints,
 # and this is normally the only way to influence the fights list and the
