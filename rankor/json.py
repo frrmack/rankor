@@ -47,7 +47,7 @@ def to_jsonable_dict(obj, **kwargs):
     but want to keep a dict, for example when you need to include it in another
     dict which will be encoded to json in its entirety. 
 
-    While re-parsing a json dumped from a dict by to_json() is slightly
+    While re-parsing a json dumped by to_json() into a dict again is slightly
     ridiculous, pydantic.json.pydantic_encoder, json.JSONEncoder and json.dumps
     are written in a way that this functionality is a bit difficult to ensure
     without writing a custom json encoder from scratch or using an existing

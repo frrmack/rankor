@@ -17,9 +17,9 @@ db = pymongo.db
 
 # Import and register error handlers
 from rankor.error_handlers import (http_error_response,
-                                       data_validation_error_response,
-                                       database_error_response,
-                                       bson_format_error_response)
+                                   data_validation_error_response,
+                                   database_error_response,
+                                   bson_format_error_response)
 
 from werkzeug.exceptions import HTTPException
 app.register_error_handler(HTTPException, http_error_response)
