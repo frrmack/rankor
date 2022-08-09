@@ -20,8 +20,7 @@ from pymongo.collection import ReturnDocument
 from datetime import datetime
 
 # Encoder imports
-import json
-from pydantic.json import pydantic_encoder
+from rankor.json import to_json
 
 # Rankor model imports
 from rankor.models import (Thing, 
@@ -160,16 +159,13 @@ def create_a_new_ranked_list():
     new_ranked_list.id = insert_result.inserted_id
 
     # Success: respond with the new ranked list
-    return json.dumps(
+    return to_json(
         {
             "result": "success",
             "msg": f"New ranked list created and given id {new_ranked_list.id}",
             "ranked_list": ranked_list_response(new_ranked_list),
             "http_status_code": 200
         },
-        default=pydantic_encoder,
-        indent=2,
-        sort_keys=True
     ), 200
 
         
@@ -258,16 +254,13 @@ def edit_a_ranked_list(ranked_list_id):
             )
     # Success: respond with the new, updated RankedList
     edited_ranked_list = RankedList(**updated_doc)
-    return json.dumps(
+    return to_json(
         {
             "result": "success",
             "msg": f"Successfully edited ranked list with id {ranked_list_id}",
             "ranked_list": ranked_list_response(edited_ranked_list),
             "http_status_code": 200
         },
-        default=pydantic_encoder,
-        indent=2,
-        sort_keys=True
     ), 200
 
 
@@ -296,16 +289,13 @@ def delete_a_ranked_list(ranked_list_id):
     # longer in the database
     deleted_doc.pop("thing_scores", None)
     deleted_doc.pop("fights", None)
-    return json.dumps(
+    return to_json(
         {
             "result": "success",
             "msg": f"Ranked list with id {ranked_list_id} deleted.",
             "ranked_list": {"data": deleted_doc},
             "http_status_code": 200
         },
-        default=pydantic_encoder,
-        indent=2,
-        sort_keys=True
     ), 200
 
 
@@ -325,15 +315,12 @@ def delete_ALL_ranked_lists():
     """
     deletion_info = db.ranked_lists.delete_many({})
     # Success: Respond with the number of deleted documents
-    return json.dumps(
+    return to_json(
         {
             "result": "success",
             "msg": f"{deletion_info.deleted_count} ranked lists deleted",
             "http_status_code": 200
         },
-        default=pydantic_encoder,
-        indent=2,
-        sort_keys=True
     ), 200
 
 
@@ -364,16 +351,13 @@ def get_one_ranked_list(ranked_list_id):
             resource_type = "ranked list",
             resource_id = ranked_list_id
         )
-    return json.dumps(
+    return to_json(
         {
             "result": "success",
             "msg": f"Successfully retrieved ranked list with id {ranked_list_id}",
             "ranked_list": ranked_list_response(RankedList(**doc)),
             "http_status_code": 200
         },
-        default=pydantic_encoder,
-        indent=2,
-        sort_keys=True
     ), 200
 
     
@@ -419,16 +403,13 @@ def raw_data_of_a_ranked_list(ranked_list_id):
             resource_id = ranked_list_id
         )
     # Success: respond with the raw ranked list 
-    return json.dumps(
+    return to_json(
         {
             "result": "success",
             "msg": f"Successfully retrieved raw data of ranked list with id {ranked_list_id}",
             "ranked_list_raw_data": RankedList(**doc).to_jsonable_dict(),
             "http_status_code": 200
         },
-        default=pydantic_encoder,
-        indent=2,
-        sort_keys=True
     ), 200
 
 
