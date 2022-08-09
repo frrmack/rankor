@@ -283,21 +283,21 @@ def list_all_things():
 
     # Links to this very page and the last page you can get
     links = {
-        "self": {
+        "this_page": {
             "href": url_for(".list_all_things", page=page, _external=True)
         },
-        "last": {
+        "last_page": {
             "href": url_for(".list_all_things", page=last_page, _external=True)
         },
     }
     # Add a 'prev' link if it's not on the first page:
     if page > 1:
-        links["prev"] = {
+        links["prev_page"] = {
             "href": url_for(".list_all_things", page=page-1, _external=True)
         }
     # Add a 'next' link if it's not on the last page:
     if page - 1 < number_of_all_things // page_size:
-        links["next"] = {
+        links["next_page"] = {
             "href": url_for(".list_all_things", page=page+1, _external=True)
         }
 
