@@ -18,11 +18,10 @@ from pymongo.collection import ReturnDocument
 from datetime import datetime
 
 # Encoder imports
-import json
-from pydantic.json import pydantic_encoder
+from rankor.json import to_json
 
 # Rankor model imports
-from rankor.models import Thing, thing
+from rankor.models import Thing
 
 # Exception imports
 from rankor.errors import (ResourceNotFoundInDatabaseError,
@@ -88,7 +87,14 @@ def create_a_new_thing():
     new_thing.id = insert_result.inserted_id
 
     # Success: respond in json with the added thing
-    return new_thing.to_json()
+    return to_json(
+        {
+            "result": "success",
+            "msg": f"New thing created and given id {new_thing.id}",
+            "thing": new_thing,
+            "http_status_code": 200
+        },
+    ), 200
 
 
 
@@ -156,7 +162,14 @@ def edit_a_thing(thing_id):
             resource_id=thing_id
         )
     # Success: respond with the new, updated Thing
-    return Thing(**updated_doc).to_json()
+    return to_json(
+        {
+            "result": "success",
+            "msg": f"Successfully edited thing with id {thing_id}",
+            "thing": Thing(**updated_doc).to_json(),
+            "http_status_code": 200
+        },
+    ), 200
 
 
 
@@ -183,7 +196,14 @@ def delete_a_thing(thing_id):
 
     # Success: Respond with the deleted Thing document that's 
     # no longer in the database 
-    return Thing(**deleted_thing_doc).to_json()
+    return to_json(
+        {
+            "result": "success",
+            "msg": f"thing with id {thing_id} deleted.",
+            "thing": deleted_thing_doc,
+            "http_status_code": 200
+        },
+    ), 200
     
     
 
@@ -204,14 +224,12 @@ def delete_ALL_things():
     # Delete all documents in the database's things collection
     deletion_info = db.things.delete_many({})
     # Success: Respond with a message on the number of deleted documents
-    return json.dumps(
+    return to_json(
         {
             "result": "success",
-            "msg": f"{deletion_info.deleted_count} things deleted"
+            "msg": f"{deletion_info.deleted_count} things deleted",
+            "http_status_code": 200
         },
-        default=pydantic_encoder,
-        indent=2,
-        sort_keys=True
     ), 200
 
 
@@ -284,16 +302,17 @@ def list_all_things():
         }
 
     # Return the full response
-    return json.dumps(
+    return to_json(
         {
+            "result": "success",
+            "msg": (f"Successfully retrieved page {page} of the list "
+                    f"of all {number_of_all_things} things"),
             "things": things_in_this_page, 
             "_page": page,
             "_links": links,
-        },
-        default=pydantic_encoder,
-        indent=2,
-        sort_keys=True
-    )
+            "http_status_code": 200
+        }
+    ), 200
 
 
 
@@ -337,4 +356,11 @@ def get_one_thing(thing_id):
             resource_id=thing_id
         )
     # Success: respond with the thing 
-    return Thing(**thing_doc).to_json()
+    return to_json(
+        {
+            "result": "success",
+            "msg": f"Successfully retrieved thing with id {thing_id}",
+            "thing": Thing(**thing_doc),
+            "http_status_code": 200
+        }
+    ), 200

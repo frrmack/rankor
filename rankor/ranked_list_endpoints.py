@@ -165,7 +165,7 @@ def create_a_new_ranked_list():
             "msg": f"New ranked list created and given id {new_ranked_list.id}",
             "ranked_list": ranked_list_response(new_ranked_list),
             "http_status_code": 200
-        },
+        }
     ), 200
 
         
@@ -260,7 +260,7 @@ def edit_a_ranked_list(ranked_list_id):
             "msg": f"Successfully edited ranked list with id {ranked_list_id}",
             "ranked_list": ranked_list_response(edited_ranked_list),
             "http_status_code": 200
-        },
+        }
     ), 200
 
 
@@ -295,7 +295,7 @@ def delete_a_ranked_list(ranked_list_id):
             "msg": f"Ranked list with id {ranked_list_id} deleted.",
             "ranked_list": {"data": deleted_doc},
             "http_status_code": 200
-        },
+        }
     ), 200
 
 
@@ -320,7 +320,7 @@ def delete_ALL_ranked_lists():
             "result": "success",
             "msg": f"{deletion_info.deleted_count} ranked lists deleted",
             "http_status_code": 200
-        },
+        }
     ), 200
 
 
@@ -357,7 +357,7 @@ def get_one_ranked_list(ranked_list_id):
             "msg": f"Successfully retrieved ranked list with id {ranked_list_id}",
             "ranked_list": ranked_list_response(RankedList(**doc)),
             "http_status_code": 200
-        },
+        }
     ), 200
 
     
@@ -409,7 +409,7 @@ def raw_data_of_a_ranked_list(ranked_list_id):
             "msg": f"Successfully retrieved raw data of ranked list with id {ranked_list_id}",
             "ranked_list_raw_data": RankedList(**doc).to_jsonable_dict(),
             "http_status_code": 200
-        },
+        }
     ), 200
 
 
