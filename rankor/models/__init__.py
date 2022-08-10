@@ -1,9 +1,10 @@
-# The data models used by rankor built with pydantic.
-#
-# Pydantic provides data validation and creates a schema using typing,
-# which is Python's own runtime support for type hints. This is good
-# and necessary for a robust api. 
+"""
+The data models used by rankor built with pydantic.
 
+Pydantic provides data validation and creates a schema using typing,
+which is Python's own runtime support for type hints. This is good
+and necessary for a robust api. 
+"""
 
 # Import the main models from their respective files, so the rest
 # of rankor can import them directly from rankor.models

@@ -1,14 +1,14 @@
-# RankedList endpoints: /rankor/rankedlists/
-#
-# Create a new RankedList    |   POST    /rankor/rankedlists/
-# Edit a RankedList          |   PUT     /rankor/rankedlists/<ranked_list_id>/
-# Delete a RankedList        |   DELETE  /rankor/rankedlists/<ranked_list_id>/
-# Delete ALL RankedLists     |   DELETE  /rankor/rankedlists/delete-all/
-# List all RankedLists       |   GET     /rankor/rankedlists/
-# Get one RankedList         |   GET     /rankor/rankedlists/<ranked_list_id>/
-# [Raw data of a RankedList] |   GET     /rankor/rankedlists/raw/<ranked_list_id>/
+"""
+RankedList endpoints: /rankor/rankedlists/
 
-
+Create a new RankedList    |   POST    /rankor/rankedlists/
+Edit a RankedList          |   PUT     /rankor/rankedlists/<ranked_list_id>/
+Delete a RankedList        |   DELETE  /rankor/rankedlists/<ranked_list_id>/
+Delete ALL RankedLists     |   DELETE  /rankor/rankedlists/delete-all/
+List all RankedLists       |   GET     /rankor/rankedlists/
+Get one RankedList         |   GET     /rankor/rankedlists/<ranked_list_id>/
+[Raw data of a RankedList] |   GET     /rankor/rankedlists/raw/<ranked_list_id>/
+"""
 
 # Flask imports
 from flask import Blueprint, request

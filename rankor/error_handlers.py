@@ -1,7 +1,9 @@
-# Error handlers to return valid and useful responses in case of errors. 
-# These are critical to provide JSON responses instead of Flask's default HTML
-# responses; they also try to provide enough information for maximum context.
+"""
+Error handlers to return valid and useful responses in case of errors. 
 
+These are critical to provide JSON responses instead of Flask's default HTML
+responses. They also try to provide enough information for maximum context.
+"""
 
 # specific errors to handle differently
 from rankor.errors import SameNameResourceAlreadyExistsError

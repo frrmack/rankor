@@ -1,12 +1,13 @@
-# Thing endpoints: /rankor/things/
-#
-# Create a new Thing    |   POST    /rankor/things/
-# Edit a Thing          |   PUT     /rankor/things/<thing_id>/
-# Delete a Thing        |   DELETE  /rankor/things/<thing_id>/
-# Delete ALL Things     |   DELETE  /rankor/things/delete-all/
-# List all Things       |   GET     /rankor/things/     
-# Get one Thing         |   GET     /rankor/things/<thing_id>/
+"""
+Thing endpoints: /rankor/things/
 
+Create a new Thing    |   POST    /rankor/things/
+Edit a Thing          |   PUT     /rankor/things/<thing_id>/
+Delete a Thing        |   DELETE  /rankor/things/<thing_id>/
+Delete ALL Things     |   DELETE  /rankor/things/delete-all/
+List all Things       |   GET     /rankor/things/     
+Get one Thing         |   GET     /rankor/things/<thing_id>/
+"""
 
 # Flask imports
 from flask import Blueprint, request, url_for

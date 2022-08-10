@@ -1,14 +1,17 @@
-# This is a small piece of code to help pydantic handle the bson 
-# ObjectId field assigned by mongodb -- it ensures both correct 
-# validation by pydantic and correct string encoding into json.
-# To understand why we are defining a PyObjectId for pydantic to
-# handle mongodb's bson object ids, check out the following link:
-# https://stackoverflow.com/questions/59503461/how-to-parse-objectid-in-a-pydantic-model
-# If you're wondering why we are using this alias="_id" part when
-# we are defining id fields with this PyObjecId in the MongoModels,
-# check out the following:
-# https://www.mongodb.com/community/forums/t/why-do-we-need-alias-id-in-pydantic-model-of-fastapi/170728/3
+"""
+Custom pydantic field data types PyObjectId and PyObjectIdString.
 
+These data types help pydantic handle and validate the bson ObjectId field
+assigned by mongodb -- it ensures both correct validation by pydantic and
+correct string encoding into json. To understand why we are defining a
+PyObjectId for pydantic to handle mongodb's bson object ids, check out the
+following link:
+https://stackoverflow.com/questions/59503461/how-to-parse-objectid-in-a-pydantic-model
+
+If you're wondering why we are using the alias="_id" part when we are defining
+id fields with this PyObjecId in the MongoModels, check out the following:
+https://www.mongodb.com/community/forums/t/why-do-we-need-alias-id-in-pydantic-model-of-fastapi/170728/3
+"""
 
 # data type we want to build our custom Pydantic field types for
 from bson import ObjectId as BsonObjectId

@@ -1,6 +1,12 @@
-# Rankor's JSON encoding relies on pydantic's, this module only has a couple of
-# simple wrappers for convenience. The MongoModel class (upon which almost all
-# rankor models are built) has its own
+"""
+JSON encoding code that knows how to handle rankor's model and field data types.
+
+Rankor's JSON encoding relies on pydantic's, this module only has a couple of
+simple wrappers for convenience. The MongoModel class (upon which almost all
+rankor models are built) has its own to_json and to_jsonable_dict methods, which
+are also used throughout rankor's code. The functions here provide standalone
+encoders that can be used on any object, including those models.
+"""
 
 import json
 from pydantic.json import pydantic_encoder

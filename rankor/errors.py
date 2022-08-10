@@ -1,7 +1,9 @@
-# Exceptions raised by Rankor
-# Custom exceptions for specific purposes that are not covered by exceptions 
-# defined in other packages that rankor uses (such as flask, pymongo, etc.)
+"""
+Exceptions raised by rankor.
 
+Custom Exceptions for specific purposes that are not covered by Exceptions 
+defined in other packages that rankor uses (such as flask, pymongo, etc.)
+"""
 
 # Exception imports from other packages
 from werkzeug.exceptions import NotFound, Conflict
