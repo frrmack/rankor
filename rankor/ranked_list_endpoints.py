@@ -162,7 +162,10 @@ def create_a_new_ranked_list():
     return to_json(
         {
             "result": "success",
-            "msg": f"New ranked list created and given id {new_ranked_list.id}",
+            "msg": (
+                f"New ranked list created and "
+                f"given id {new_ranked_list.id}"
+            ),
             "ranked_list": ranked_list_response(new_ranked_list),
             "http_status_code": 200
         }
@@ -354,7 +357,10 @@ def get_one_ranked_list(ranked_list_id):
     return to_json(
         {
             "result": "success",
-            "msg": f"Successfully retrieved ranked list with id {ranked_list_id}",
+            "msg": (
+                f"Successfully retrieved ranked list "
+                f"with id {ranked_list_id}"
+            ),
             "ranked_list": ranked_list_response(RankedList(**doc)),
             "http_status_code": 200
         }
@@ -406,7 +412,10 @@ def raw_data_of_a_ranked_list(ranked_list_id):
     return to_json(
         {
             "result": "success",
-            "msg": f"Successfully retrieved raw data of ranked list with id {ranked_list_id}",
+            "msg": (
+                f"Successfully retrieved raw data of ranked list "
+                f"with id {ranked_list_id}"
+            ),
             "ranked_list_raw_data": RankedList(**doc).to_jsonable_dict(),
             "http_status_code": 200
         }

@@ -305,8 +305,8 @@ def list_all_things():
     return to_json(
         {
             "result": "success",
-            "msg": (f"Successfully retrieved page {page} of the list "
-                    f"of all {number_of_all_things} things"),
+            "msg": (f"Successfully retrieved page {page} of {last_page} "
+                    f"for the list of all {number_of_all_things} things"),
             "things": things_in_this_page, 
             "_page": page,
             "_links": links,
