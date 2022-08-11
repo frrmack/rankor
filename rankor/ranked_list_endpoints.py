@@ -59,7 +59,7 @@ ranked_list_endpoints = Blueprint('ranked_list_endpoints', __name__)
 # needs to respond with one. It provides a much more useful response than
 # directly returning how a ranked_list is stored in the database. You can check
 # the last endpoint here, raw_data_of_a_ranked_list, to see how and why the
-# response cooked below is chosen as the standard ranked list representation.
+# response cooked below is chosen as the standard ranked list data representation.
 def ranked_list_data_response(ranked_list):
     """
     Creates a data object with useful information about a RankedList pulled from
