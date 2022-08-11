@@ -76,17 +76,21 @@ class Paginator(object):
         try:
             self.page_size = settings.NUMBER_ITEMS_IN_EACH_PAGE[self.model_str]
             if not isinstance(self.page_size, int): 
-                raise ValueError
-        except (ValueError, KeyError, IndexError, TypeError):
+                raise ValueError(
+                    f"Page size for this case is '{self.page_size}', "
+                    f"which is not an integer."
+                )
+        except (ValueError, KeyError, IndexError, TypeError) as error:
             raise InternalServerError(
-                "NUMBER_OF_ITEMS_IN_EACH_PAGE setting (a dict "
-                "in settings.py) should have the following "
-                "format: Each key needs to be the snake_case "
-                "name of a model, and the value needs to be an "
-                "integer denoting how many instances of that "
-                "model to include in each page of a response "
-                "when a list of such model instances are requested. "
-                "The current setting violates this requirement."
+                f"NUMBER_OF_ITEMS_IN_EACH_PAGE setting (a dict "
+                f"in settings.py) should have the following "
+                f"format: Each key needs to be the snake_case "
+                f"name of a model, and the value needs to be an "
+                f"integer denoting how many instances of that "
+                f"model to include in each page of a response "
+                f"when a list of such model instances are requested. "
+                f"The current setting violates this requirement. "
+                f"{str(error)}"
             )
         try:
             (
@@ -94,25 +98,37 @@ class Paginator(object):
                 sorting_direction  
             ) = settings.SORT_ITEMS_BY_FIELD[self.model_str]
             if not isinstance(self.sorting_field, str): 
-                raise ValueError
+                raise ValueError(
+                    f"The first element of the tuple, the field, "
+                    f"is {repr(self.sorting_field)}, which is "
+                    f"not a string."
+                )
             if self.sorting_field not in model.__fields__.keys():
-                raise ValueError
+                raise ValueError(
+                    f"The first element of the tuple, the field, "
+                    f"is '{self.sorting_field}', which is not a "
+                    f"valid field of the {model.__name__} model."
+                )
             if sorting_direction == "ascending":
                 self.sort_reversed = False
             elif sorting_direction == "descending":
                 self.sort_reversed = True
             else:
-                raise ValueError
+                raise ValueError(
+                    f"The second element of the tuple, the sorting direction, "
+                    f"is '{sorting_direction}', which is neither 'ascending' "
+                    f"nor 'descending'."
+                )
         except (ValueError, KeyError, IndexError, TypeError) as error:
             raise InternalServerError(
-                "Entries in the SORT_ITEMS_BY_FIELD setting "
-                "(a dict) should have the following format: "
-                "Each key needs to be the snake_case name of "
-                "a model, and the value needs to be a tuple "
-                "with two elements. The first is the name of "
-                "a field of the model, and the latter is either "
-                "'ascending' or 'descending'. The current setting "
-                "violates this requirement."
+                f"Entries in the SORT_ITEMS_BY_FIELD setting "
+                f"(a dict) should have the following format: "
+                f"Each key needs to be the snake_case name of "
+                f"a model, and the value needs to be a tuple "
+                f"with two elements. The first is the name of "
+                f"a field of the model, and the latter is either "
+                f"'ascending' or 'descending'. The current setting "
+                f"violates this requirement. {str(error)}"
             )
 
 
