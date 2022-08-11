@@ -62,17 +62,18 @@ ranked_list_endpoints = Blueprint('ranked_list_endpoints', __name__)
 # response cooked below is chosen as the standard ranked list representation.
 def ranked_list_data_response(ranked_list):
     """
-    Creates a data representation with the useful information of a RankedList
-    and links to other (paginated) endpoints for the full list of things (ranked
-    with scores) and all the recorded fights within this RankedList. 
+    Creates a data object with useful information about a RankedList pulled from
+    multiple collections, and links to other (paginated) endpoints: a) full
+    ranked list of things and their scores, b) all the recorded fights within
+    this RankedList. 
     """
-    # Get the RankedList summary with practical information useful for a user
-    ranked_list_representation = ranked_list.summary_dict()
+    # Get the RankedList summary (practical information useful for an end user)
+    ranked_list_data = ranked_list.summary_dict()
 
     # top_3_things & last_3_fights only have id strings for Things and Fights.
     # Retrieve their actual data to respond with. 
     # First the Things:
-    for thing_score_dict in ranked_list_representation["top_3_things"]:
+    for thing_score_dict in ranked_list_data["top_3_things"]:
         thing_id = thing_score_dict["thing"]
         thing_doc = db.things.find_one({"_id": PyObjectId(thing_id)})
         if thing_doc is None:
@@ -83,7 +84,7 @@ def ranked_list_data_response(ranked_list):
         thing_score_dict["thing"] = Thing(**thing_doc).to_jsonable_dict()
     # Now the Fights:
     last_3_fights_with_details = []
-    for fight_id in ranked_list_representation["last_3_fights"]:
+    for fight_id in ranked_list_data["last_3_fights"]:
         fight_doc = db.fights.find_one({"_id": PyObjectId(fight_id)})
         if fight_doc is None:
             raise ResourceNotFoundInDatabaseError(
@@ -91,13 +92,13 @@ def ranked_list_data_response(ranked_list):
                 resource_id = fight_id
             )
         last_3_fights_with_details.append(Fight(**fight_doc).to_jsonable_dict())
-    ranked_list_representation["last_3_fights"] = last_3_fights_with_details
+    ranked_list_data["last_3_fights"] = last_3_fights_with_details
 
     # Add links to the paginated endpoints for both the ranked list of all
     # Things (with their Scores) and the list of all fights fought within the
     # context of this RankedList.
     links = {
-        "full_ranked_list_of_things": {
+        "ranked_and_scored_things": {
             "href": f"/rankor/rankedlists/{ranked_list.id}/ranks/"
         },
         "recorded_fights": {
@@ -109,7 +110,7 @@ def ranked_list_data_response(ranked_list):
     return {
         "_kind": "ranked_list",
         "_links": links,
-        "data": ranked_list_representation
+        "data": ranked_list_data
     }
 
 
