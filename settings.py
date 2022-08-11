@@ -1,8 +1,37 @@
-# THESE ARE THE MANUAL SETTINGS FOR A SPECIFIC INSTANCE OF THE RANKOR API
+"""
+SETTINGS FOR A SPECIFIC INSTANCE OF THE RANKOR API
+"""
+
+# Import dotenv and read environmental variables in a file called .env into the
+# os.environ dict in case you need to read a setting from the environment (to
+# keep it untracked by the repository)
+import os
+import dotenv
+dotenv.load_dotenv()
+
 
 
 # Database connection
 MONGO_DATABASE_URI = 'mongodb://localhost:27017/rankor'
+# This is the uri to connect to the mongodb database that powers the api server.
+# If the database is not protected through authentication and if you don't mind
+# this uri to be pushed to an online repository where the entire world can see
+# it (such as a local project where you have a local mongo database not even
+# open to the Internet---something like 'mongodb://localhost:27017/rankor'), you
+# can just directly put the uri here. If however, you are using a cluster uri
+# that shouldn't be committed to a repository (most cases), you can use dotenv,
+# a python package that helps you read environmental variables. Put your uri,
+# which may look something like
+# "mongodb+srv://USERNAME:PASSW0RD@cluster0-abcde.azure.mongodb.net/rankor", for
+# example, into a separate file in the project root directory and call this file
+# .env. For example, the contents of your .env file may be a single line that
+# look like this (no spaces either side of the "=", this is shell syntax):
+# MONGO_URI="mongodb+srv://USERNAME:PASSW0RD@cluster0-abcde.azure.mongodb.net/rankor"
+# Do not commit this .env file to the repo (the .gitignore that comes with
+# rankor already knows not to track it). This setting file already uses the
+# dotenv package to read the .env file. All you have to do now is to set this
+# setting to: MONGO_DATABASE_URI = os.environ["MONGO_URI"]
+
 
 
 # Response pagination
@@ -23,22 +52,7 @@ SORT_ITEMS_BY_FIELD = {
     # the edit_ranked_list endpoint later.
     "fight":        ("date_fought", "descending")
 } 
-
-
-# Setting to let RankedList edit endpoint accept fights and thing_scores
-# fields
-ALLOW_MANUAL_EDITING_OF_RANKEDLIST_FIGHTS_OR_SCORES = False
-# RankedList edits/updates are limited to their basic data only by default.
-# This means that you can only change their name using the edit endpoint.
-# Fights can be saved to or deleted from RankedLists via other endpoints,
-# and this is normally the only way to influence the fights list and the
-# thing_scores list in a RankedList. If you set the setting above to True, 
-# the RankedList edit endpoint will allow you to directly update these 
-# lists.
-# Doing this is NOT recommended, as it's not a good way of handling the 
-# data, it's prone to introducing slient errors that will come back to 
-# bite you later, and it's easy to mess up unless you know exactly what
-# you're doing.
+# These settings
 
 
 # TrueSkill mu and sigma initialization values for Things that did not
@@ -80,3 +94,19 @@ DEFAULT_INITIAL_SCORE_SIGMA_VALUE = 15
 # don't need to worry about these in a lot of cases. The best way to make sure
 # is to run a few experiments with different initial values but the same fight
 # results to see if the resulting scores are converging or not.
+
+
+# Setting to let RankedList edit endpoint accept fights and thing_scores
+# fields
+ALLOW_MANUAL_EDITING_OF_RANKEDLIST_FIGHTS_OR_SCORES = False
+# RankedList edits/updates are limited to their basic data only by default.
+# This means that you can only change their name using the edit endpoint.
+# Fights can be saved to or deleted from RankedLists via other endpoints,
+# and this is normally the only way to influence the fights list and the
+# thing_scores list in a RankedList. If you set the setting above to True, 
+# the RankedList edit endpoint will allow you to directly update all fields
+# of the RankedList model, which include these lists.
+# Doing this is NOT recommended, as it's not a good way of handling the 
+# data, it's prone to introducing slient errors that will come back to 
+# bite you later, and it's easy to mess up unless you know exactly what
+# you're doing.

@@ -15,6 +15,7 @@ setup(
         "pymongo[srv] == 4.1.1",
         "gunicorn==20.1.0",
         "pydantic == 1.9.1",
-        "trueskill == 0.4.5"
+        "trueskill == 0.4.5",
+        "python-dotenv==0.20.0"
     ]
 )
