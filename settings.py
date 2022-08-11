@@ -44,20 +44,24 @@ NUMBER_ITEMS_IN_EACH_PAGE = {
 SORT_ITEMS_BY_FIELD = {
     "thing":        ("name", "ascending"),
     "ranked_list":  ("time_created", "descending"),
-    # ScoredThings are sorted by one of multiple existing score metrics. The
-    # chosen metric may differ from RankedList to RankedList. It's not a global
-    # setting, but one set differently for each RankedList. The default is
-    # rankor_score, but a RankedList's score_used_to_rank field can be set to
-    # another metric using the create_ranked_list endpoint at its conception or
-    # the edit_ranked_list endpoint later.
+    # ScoredThings in a RankedList are sorted by one of multiple existing score
+    # metrics. The chosen metric may differ from RankedList to RankedList. It's
+    # not a global setting, but one set differently for each RankedList. The
+    # default is rankor_score, but a RankedList's score_used_to_rank field can
+    # be set to another metric using the create_ranked_list endpoint at its
+    # conception or the edit_ranked_list endpoint later.
     "fight":        ("time_fought", "descending")
 } 
-# These settings
+# These settings are pretty straightforward. The endpoints that respond with
+# lists (which may get long) paginate those lists, and deliver them in chunks.
+# These settings determine a) how many of each should be put in a single page,
+# and b) which field to sort them by before dividing them into pages.
 
 
-# TrueSkill mu and sigma initialization values for Things that did not
-# fight yet. These define the prior, and they will also determine what 
-# the score ranges will be roughly.
+
+# TrueSkill mu and sigma initialization values for Things that did not fight
+# yet. These define the prior, and they will also roughly determine what the
+# score ranges will be.
 DEFAULT_INITIAL_SCORE_MU_VALUE = 50
 DEFAULT_INITIAL_SCORE_SIGMA_VALUE = 15
 # These are the mean and standard deviation of the Gaussian prior for 
