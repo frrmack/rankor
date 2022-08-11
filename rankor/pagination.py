@@ -5,14 +5,14 @@ This provides the logic with which endpoints that return long lists divide their
 responses into multiple pages.
 """
 
-# Inspection tool import to validate settings
-from dataclasses import fields
-
 # Flask imports
 from flask import url_for
 
 # Error imports
 from werkzeug.exceptions import BadRequest, InternalServerError
+
+# Model type imports (for explicit argument typing)
+from pydantic import BaseModel
 
 # Encoder imports
 from rankor.json import to_jsonable_dict, to_json
@@ -50,8 +50,13 @@ class Paginator(object):
     These links are there to help iterate over all results.
     """
 
-    def init(self, endpoint, model, collection_query={}):
-        self.endpoint = endpoint
+    def __init__(
+        self, 
+        endpoint_name: str, 
+        model: BaseModel, 
+        collection_query: dict = {}
+    ):
+        self.endpoint = endpoint_name
         self.model = model
         self.collection_query = collection_query
         def camel_case_to_snake_case(string):
@@ -59,7 +64,7 @@ class Paginator(object):
                 [
                     '_' + char.lower() if char.isupper()
                     else char 
-                    for char in str
+                    for char in string
                 ]
             ).lstrip('_')
         # how the model is referred to in text, i.e. RankedList --> ranked_list
@@ -90,17 +95,15 @@ class Paginator(object):
             ) = settings.SORT_ITEMS_BY_FIELD[self.model_str]
             if not isinstance(self.sorting_field, str): 
                 raise ValueError
-            if self.sorting_field not in [
-                field.name for field in fields(model)
-            ]:
+            if self.sorting_field not in model.__fields__.keys():
                 raise ValueError
-            if sorting_direction is "ascending":
+            if sorting_direction == "ascending":
                 self.sort_reversed = False
-            elif sorting_direction is "descending":
+            elif sorting_direction == "descending":
                 self.sort_reversed = True
             else:
-                raise ValueError()
-        except (ValueError, KeyError, IndexError, TypeError):
+                raise ValueError
+        except (ValueError, KeyError, IndexError, TypeError) as error:
             raise InternalServerError(
                 "Entries in the SORT_ITEMS_BY_FIELD setting "
                 "(a dict) should have the following format: "
@@ -113,13 +116,27 @@ class Paginator(object):
             )
 
 
-    def paginate(self, requested_page):
+    def paginate(self, requested_page=None):
         """
         Retrieve the list of items from the database, sort them, divide them
         into pages, and respond with the requested page.
         """
+        
+        # The default page in absence of a specific request is the first one
+        if requested_page is None:
+            requested_page = 1
+
+        # Validate that the page number is an integer
+        try:
+            page = int(requested_page)
+        except ValueError:
+            raise BadRequest(
+                f"Your request includes an invalid page parameter "
+                f"({requested_page}). The value of the page "
+                f"parameter needs to be an integer."
+            )
+            
         # Get the counts to help paginate
-        page = requested_page   # shorter name for more concise code
         num_all_docs = self.db_collection.count_documents(self.collection_query)
         num_docs_to_skip = self.page_size * (page - 1)
         num_pages = last_page = (num_all_docs // self.page_size) + 1
@@ -161,7 +178,7 @@ class Paginator(object):
         links = {
             "this_page": {
                 "href": url_for(self.endpoint, page=page, _external=True),
-                "page": requested_page
+                "page": page
             },
             "last_page": {
                 "href": url_for(self.endpoint, page=last_page, _external=True),

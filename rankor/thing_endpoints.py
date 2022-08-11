@@ -9,6 +9,10 @@ List all Things       |   GET     /rankor/things/
 Get one Thing         |   GET     /rankor/things/<thing_id>/
 """
 
+# Python inspection imports 
+# (to get the name of an endpoint from within)
+from sys import _getframe
+
 # Flask imports
 from flask import Blueprint, request, url_for
 
@@ -23,6 +27,9 @@ from rankor.json import to_json
 
 # Rankor model imports
 from rankor.models import Thing
+
+# Pagination imports
+from pagination import Paginator
 
 # Exception imports
 from rankor.errors import (ResourceNotFoundInDatabaseError,
@@ -251,69 +258,22 @@ def list_all_things():
     You can ask for a specific page, for example:
     curl -i -X GET 'http://localhost:5000/rankor/things/?page=3'
 
-    If you don't give a page parameter, it will return page 1.
-    The response will also include the page number and the following links:
-    self: the link to get this very page
-    last: the link to get the last page
-    prev: the link to get the previous page
-    next: the link to get the next page
+    If you don't give a page parameter, it will return page 1. The response will
+    also include the page number and the links to the following endpoint uris:
+    - this_page
+    - next_page     (if there is one)
+    - previous_page (if there is one)
+    - last_page
     These links are there to help iterate over all results.
     """
-    # Define the parameters / counts to help paginate
-    # Note: if no page parameter is given, we will default to page 1
-    page = int(request.args.get("page", 1))
-    page_size = settings.NUMBER_OF_ITEMS_IN_EACH_RESPONSE_PAGE 
-    number_of_thing_docs_to_skip_to_reach_this_page = page_size * (page-1)
-    num_skip = number_of_thing_docs_to_skip_to_reach_this_page   # shorter name
-    number_of_all_things = db.things.count_documents({})
-    last_page = (number_of_all_things // page_size) + 1
-
-    # We will sort all things alphabetically, then divide this list into pages
-    # that only include page_size items. Page size is a constant setting defined
-    # in settings.py in the root of the repository.
-    #
-    # For example, if the page size is 10 (each page has 10 things in it),
-    # and we need to respond with page 6, we will first retrieve all things from 
-    # the database, sort them by name, then skip the first 50 things (since they
-    # were in the previous 5 pages), then use mongo's limit functionality to list 
-    # the 10 things that start from there (the 51st through 60th things). 
-    # This is page 6. We will also provide links to page 5, page 7, and the last 
-    # page.
-    page_docs_query = db.things.find().sort("name").skip(num_skip).limit(page_size)
-    things_in_this_page = [Thing(**doc).to_jsonable_dict() for doc in page_docs_query]
-
-    # Links to this very page and the last page you can get
-    links = {
-        "this_page": {
-            "href": url_for(".list_all_things", page=page, _external=True)
-        },
-        "last_page": {
-            "href": url_for(".list_all_things", page=last_page, _external=True)
-        },
-    }
-    # Add a 'prev' link if it's not on the first page:
-    if page > 1:
-        links["prev_page"] = {
-            "href": url_for(".list_all_things", page=page-1, _external=True)
-        }
-    # Add a 'next' link if it's not on the last page:
-    if page - 1 < number_of_all_things // page_size:
-        links["next_page"] = {
-            "href": url_for(".list_all_things", page=page+1, _external=True)
-        }
-
-    # Return the full response
-    return to_json(
-        {
-            "result": "success",
-            "msg": (f"Successfully retrieved page {page} of {last_page} "
-                    f"for the list of all {number_of_all_things} things"),
-            "things": things_in_this_page, 
-            "_page": page,
-            "_links": links,
-            "http_status_code": 200
-        }
-    ), 200
+    # Python frame inspection code to get the name of this very function
+    endpoint_name = "." + _getframe().f_code.co_name
+    # Read the page parameter
+    requested_page = request.args.get("page", 1)
+    # Get the paginator for our case (list of all Things in db.things)
+    # and use it to respond with the requested page
+    paginator = Paginator(endpoint_name=endpoint_name, model=Thing)
+    return paginator.paginate(requested_page=requested_page)
 
 
 
