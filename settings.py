@@ -6,7 +6,23 @@ MONGO_DATABASE_URI = 'mongodb://localhost:27017/rankor'
 
 
 # Response pagination
-NUMBER_OF_ITEMS_IN_EACH_RESPONSE_PAGE = 20
+NUMBER_ITEMS_IN_EACH_PAGE = {
+    "thing":        20,
+    "ranked_list":  3,
+    "scored_thing": 10,
+    "fight":        20
+}
+SORT_ITEMS_BY_FIELD = {
+    "thing":        ("name", "ascending"),
+    "ranked_list":  ("date_created", "descending"),
+    # ScoredThings are sorted by one of multiple existing score metrics. The
+    # chosen metric may differ from RankedList to RankedList. It's not a global
+    # setting, but one set differently for each RankedList. The default is
+    # rankor_score, but a RankedList's score_used_to_rank field can be set to
+    # another metric using the create_ranked_list endpoint at its conception or
+    # the edit_ranked_list endpoint later.
+    "fight":        ("date_fought", "descending")
+} 
 
 
 # Setting to let RankedList edit endpoint accept fights and thing_scores
