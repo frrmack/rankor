@@ -10,6 +10,10 @@ Get one RankedList         |   GET     /rankor/rankedlists/<ranked_list_id>/
 [Raw data of a RankedList] |   GET     /rankor/rankedlists/raw/<ranked_list_id>/
 """
 
+# Python inspection imports 
+# (to get the name of an endpoint from within)
+from sys import _getframe
+
 # Flask imports
 from flask import Blueprint, request
 
@@ -29,6 +33,10 @@ from rankor.models import (Thing,
                            Score, 
                            PyObjectId, 
                            PyObjectIdString)
+
+
+# Pagination imports
+from pagination import Paginator
 
 # Exception imports
 from werkzeug.exceptions import Forbidden
@@ -325,6 +333,41 @@ def delete_ALL_ranked_lists():
             "http_status_code": 200
         }
     ), 200
+
+
+
+# List all RankedLists    |   GET   /rankor/rankedlists/     
+@ranked_list_endpoints.route(
+    "/rankor/rankedlists/", 
+    methods=["GET"]
+)
+def list_all_ranked_lists():
+    """
+    GET request to list all RankedLists in the database.
+
+    Since this list can get long, the results are paginated.
+    Each page will list a set number of RankedLists, this page size is determined
+    in the api settings (in the root directory).
+
+    You can ask for a specific page, for example:
+    curl -i -X GET 'http://localhost:5000/rankor/rankedlists/?page=5'
+
+    If you don't give a page parameter, it will return page 1. The response will
+    also include the page number and the links to the following endpoint uris:
+    - this_page
+    - next_page     (if there is one)
+    - previous_page (if there is one)
+    - last_page
+    These links are there to help iterate over all results.
+    """
+    # Python frame inspection code to get the name of this very function
+    endpoint_name = "." + _getframe().f_code.co_name
+    # Read the page parameter
+    requested_page = request.args.get("page", 1)
+    # Get the paginator for our case (list of all RankedLists in db.ranked_lists)
+    # and use it to respond with the requested page
+    paginator = Paginator(endpoint_name=endpoint_name, model=RankedList)
+    return paginator.paginate(requested_page=requested_page)
 
 
 
