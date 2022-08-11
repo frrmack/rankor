@@ -266,13 +266,20 @@ def list_all_things():
     - last_page
     These links are there to help iterate over all results.
     """
-    # Python frame inspection code to get the name of this very function
-    endpoint_name = "." + _getframe().f_code.co_name
     # Read the page parameter
     requested_page = request.args.get("page", 1)
+    # Python frame inspection code to get the name of this very function
+    endpoint_name = "." + _getframe().f_code.co_name
+    # Count the total number of documents in the database for this list
+    num_all_docs_in_db = db.things.count_documents({})
     # Get the paginator for our case (list of all Things in db.things)
     # and use it to respond with the requested page
-    paginator = Paginator(endpoint_name=endpoint_name, model=Thing)
+    paginator = Paginator(
+        endpoint_name = endpoint_name, 
+        model = Thing,
+        query = db.things.find(),
+        num_all_docs_in_db=num_all_docs_in_db
+    )
     return paginator.paginate(requested_page=requested_page)
 
 

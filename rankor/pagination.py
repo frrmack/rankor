@@ -14,11 +14,11 @@ from werkzeug.exceptions import BadRequest, InternalServerError
 # Model type imports (for explicit argument typing)
 from pydantic import BaseModel
 
+# sorting directions and cursor type
+import pymongo
+
 # Encoder imports
 from rankor.json import to_jsonable_dict, to_json
-
-# Database access
-from rankor import db
 
 # Api settings for page sizes and sorting keys
 import settings
@@ -54,11 +54,16 @@ class Paginator(object):
         self, 
         endpoint_name: str, 
         model: BaseModel, 
-        collection_query: dict = {}
+        query: pymongo.cursor.Cursor,
+        num_all_docs_in_db: int
     ):
         self.endpoint = endpoint_name
         self.model = model
-        self.collection_query = collection_query
+        self.query = query
+        self.num_all_docs = num_all_docs_in_db
+
+        # self.model_str: how the model is referred to in text
+        # i.e. RankedList --> ranked_list
         def camel_case_to_snake_case(string):
             return ''.join(
                 [
@@ -67,12 +72,11 @@ class Paginator(object):
                     for char in string
                 ]
             ).lstrip('_')
-        # how the model is referred to in text, i.e. RankedList --> ranked_list
         self.model_str = camel_case_to_snake_case(model.__name__)
-        # connection to the database collection that houses docs of this model
-        self.db_collection = getattr(db, self.model_str+"s")
+
         # read page size and sorting key settings from the api settings file,
         # throw informative exceptions if settings are not valid
+        # First page size
         try:
             self.page_size = settings.NUMBER_ITEMS_IN_EACH_PAGE[self.model_str]
             if not isinstance(self.page_size, int): 
@@ -92,6 +96,7 @@ class Paginator(object):
                 f"The current setting violates this requirement. "
                 f"{str(error)}"
             )
+        # Now sorting field and sorting direction
         try:
             (
                 self.sorting_field, 
@@ -109,16 +114,14 @@ class Paginator(object):
                     f"is '{self.sorting_field}', which is not a "
                     f"valid field of the {model.__name__} model."
                 )
-            if sorting_direction == "ascending":
-                self.sort_reversed = False
-            elif sorting_direction == "descending":
-                self.sort_reversed = True
-            else:
+            # sorting direction uses pymongo.ASCENDING or pymongo.DESCENDING
+            if sorting_direction not in {"ascending", "descending"}:
                 raise ValueError(
                     f"The second element of the tuple, the sorting direction, "
                     f"is '{sorting_direction}', which is neither 'ascending' "
                     f"nor 'descending'."
                 )
+            self.sorting_direction = getattr(pymongo, sorting_direction.upper())
         except (ValueError, KeyError, IndexError, TypeError) as error:
             raise InternalServerError(
                 f"Entries in the SORT_ITEMS_BY_FIELD setting "
@@ -153,9 +156,8 @@ class Paginator(object):
             )
             
         # Get the counts to help paginate
-        num_all_docs = self.db_collection.count_documents(self.collection_query)
         num_docs_to_skip = self.page_size * (page - 1)
-        num_pages = last_page = (num_all_docs // self.page_size) + 1
+        num_pages = last_page = (self.num_all_docs // self.page_size) + 1
 
         # Let's make sure we don't get befuddled by a bad page parameter input
         if page < 1 or page > last_page:
@@ -174,21 +176,23 @@ class Paginator(object):
         #
         # For example, let's say we're listing all things (GET /rankor/things/),
         # the page size setting is 10 (each page has 10 things in it), sorting
-        # field setting is by name, and we need to respond with page 6. We will
-        # first retrieve all things from the database's things collection. We
+        # field setting is by "name", and we need to respond with page 6. We
+        # will retrieve all things from the database's things collection using
+        # the query we were given when the Paginator instance was created. We
         # will sort them by name, then skip the first 50 things (since they were
         # in the previous 5 pages), then use mongo's limit functionality to list
         # the 10 things that start from there (the 51st through 60th things).
         # This is page 6. We will also provide links to page 5 (previous_page),
         # page 7 (next_page), the very last page (last_page), and the url that
-        # returns the exact same response (this_page). The last one is mostly
-        # there to make it more convenient to keep track of which page you're
-        # on.
-        all_docs = self.db_collection.find(self.collection_query)
-        sorted_docs = all_docs.sort(self.sorting_field)
-        this_page_docs = sorted_docs.skip(num_docs_to_skip).limit(self.page_size)
+        # returns this exact response (this_page). That last one is there in
+        # case to you need to keep track of which page you're on.
+        sorted_docs = self.query.sort(
+            self.sorting_field, 
+            self.sorting_direction
+        )
+        page_docs = sorted_docs.skip(num_docs_to_skip).limit(self.page_size)
         items_in_this_page = [to_jsonable_dict(self.model(**doc)) 
-                              for doc in this_page_docs]
+                              for doc in page_docs]
         
         # Create the links to this very page and the last page you can get
         links = {
@@ -219,7 +223,7 @@ class Paginator(object):
             {
                 "result": "success",
                 "msg": (f"Successfully retrieved page {page} of {num_pages} "
-                        f"for the list of all {num_all_docs} "
+                        f"for the list of all {self.num_all_docs} "
                         f"{self.model_str}s"),
                 f"{self.model_str}s": items_in_this_page, 
                 "_page": page,

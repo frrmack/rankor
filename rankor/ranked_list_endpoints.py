@@ -364,9 +364,16 @@ def list_all_ranked_lists():
     endpoint_name = "." + _getframe().f_code.co_name
     # Read the page parameter
     requested_page = request.args.get("page", 1)
+    # Count the total number of documents in the database for this list
+    num_all_docs_in_db = db.ranked_lists.count_documents({})
     # Get the paginator for our case (list of all RankedLists in db.ranked_lists)
     # and use it to respond with the requested page
-    paginator = Paginator(endpoint_name=endpoint_name, model=RankedList)
+    paginator = Paginator(
+        endpoint_name = endpoint_name, 
+        model = RankedList,
+        query = db.ranked_lists.find(),
+        num_all_docs_in_db = num_all_docs_in_db
+    )
     return paginator.paginate(requested_page=requested_page)
 
 
