@@ -11,11 +11,14 @@ from flask import url_for
 # Error imports
 from werkzeug.exceptions import BadRequest, InternalServerError
 
-# Model type imports (for explicit argument typing)
+# Model typing import (for explicit argument typing)
 from pydantic import BaseModel
 
-# sorting directions and cursor type
+# Database cursor typing import (for explicit argument typing)
 import pymongo
+
+# Function typing import (for explicit argument typing)
+from typing import Callable
 
 # Encoder imports
 from rankor.json import to_jsonable_dict, to_json
@@ -55,12 +58,14 @@ class Paginator(object):
         endpoint_name: str, 
         model: BaseModel, 
         query: pymongo.cursor.Cursor,
-        num_all_docs_in_db: int
+        num_all_docs_in_db: int,
+        model_encoder: Callable = to_jsonable_dict
     ):
         self.endpoint = endpoint_name
         self.model = model
         self.query = query
         self.num_all_docs = num_all_docs_in_db
+        self.model_encoder = model_encoder
 
         # self.model_str: how the model is referred to in text
         # i.e. RankedList --> ranked_list
@@ -191,7 +196,7 @@ class Paginator(object):
             self.sorting_direction
         )
         page_docs = sorted_docs.skip(num_docs_to_skip).limit(self.page_size)
-        items_in_this_page = [to_jsonable_dict(self.model(**doc)) 
+        items_in_this_page = [self.model_encoder(self.model(**doc)) 
                               for doc in page_docs]
         
         # Create the links to this very page and the last page you can get

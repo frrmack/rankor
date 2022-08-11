@@ -60,11 +60,11 @@ ranked_list_endpoints = Blueprint('ranked_list_endpoints', __name__)
 # directly returning how a ranked_list is stored in the database. You can check
 # the last endpoint here, raw_data_of_a_ranked_list, to see how and why the
 # response cooked below is chosen as the standard ranked list representation.
-def ranked_list_response(ranked_list):
+def ranked_list_data_response(ranked_list):
     """
-    Creates a response with the useful information of a RankedList and links to
-    other (paginated) endpoints for the full list of things (ranked with scores)
-    and all the recorded fights within this RankedList. 
+    Creates a data representation with the useful information of a RankedList
+    and links to other (paginated) endpoints for the full list of things (ranked
+    with scores) and all the recorded fights within this RankedList. 
     """
     # Get the RankedList summary with practical information useful for a user
     ranked_list_representation = ranked_list.summary_dict()
@@ -107,8 +107,9 @@ def ranked_list_response(ranked_list):
 
     # The response dict includes all this
     return {
-        "data": ranked_list_representation,
-        "_links": links
+        "_kind": "ranked_list",
+        "_links": links,
+        "data": ranked_list_representation
     }
 
 
@@ -174,7 +175,7 @@ def create_a_new_ranked_list():
                 f"New ranked list created and "
                 f"given id {new_ranked_list.id}"
             ),
-            "ranked_list": ranked_list_response(new_ranked_list),
+            "ranked_list": ranked_list_data_response(new_ranked_list),
             "http_status_code": 200
         }
     ), 200
@@ -269,7 +270,7 @@ def edit_a_ranked_list(ranked_list_id):
         {
             "result": "success",
             "msg": f"Successfully edited ranked list with id {ranked_list_id}",
-            "ranked_list": ranked_list_response(edited_ranked_list),
+            "ranked_list": ranked_list_data_response(edited_ranked_list),
             "http_status_code": 200
         }
     ), 200
@@ -367,12 +368,13 @@ def list_all_ranked_lists():
     # Count the total number of documents in the database for this list
     num_all_docs_in_db = db.ranked_lists.count_documents({})
     # Get the paginator for our case (list of all RankedLists in db.ranked_lists)
-    # and use it to respond with the requested page
+    # and use it to create a response with the requested page
     paginator = Paginator(
         endpoint_name = endpoint_name, 
         model = RankedList,
         query = db.ranked_lists.find(),
-        num_all_docs_in_db = num_all_docs_in_db
+        num_all_docs_in_db = num_all_docs_in_db,
+        model_encoder = ranked_list_data_response
     )
     return paginator.paginate(requested_page=requested_page)
 
@@ -411,14 +413,14 @@ def get_one_ranked_list(ranked_list_id):
                 f"Successfully retrieved ranked list "
                 f"with id {ranked_list_id}"
             ),
-            "ranked_list": ranked_list_response(RankedList(**doc)),
+            "ranked_list": ranked_list_data_response(RankedList(**doc)),
             "http_status_code": 200
         }
     ), 200
 
     
     
-    ranked_list_response(RankedList(**doc)),200
+    ranked_list_data_response(RankedList(**doc)),200
 
 
 
