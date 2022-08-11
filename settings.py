@@ -43,14 +43,14 @@ NUMBER_ITEMS_IN_EACH_PAGE = {
 }
 SORT_ITEMS_BY_FIELD = {
     "thing":        ("name", "ascending"),
-    "ranked_list":  ("date_created", "descending"),
+    "ranked_list":  ("time_created", "descending"),
     # ScoredThings are sorted by one of multiple existing score metrics. The
     # chosen metric may differ from RankedList to RankedList. It's not a global
     # setting, but one set differently for each RankedList. The default is
     # rankor_score, but a RankedList's score_used_to_rank field can be set to
     # another metric using the create_ranked_list endpoint at its conception or
     # the edit_ranked_list endpoint later.
-    "fight":        ("date_fought", "descending")
+    "fight":        ("time_fought", "descending")
 } 
 # These settings
 
