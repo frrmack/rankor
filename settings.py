@@ -38,18 +38,13 @@ MONGO_DATABASE_URI = 'mongodb://localhost:27017/rankor'
 NUMBER_ITEMS_IN_EACH_PAGE = {
     "thing":        20,
     "ranked_list":  3,
-    "scored_thing": 10,
+    "ranked_thing": 10,
     "fight":        20
 }
 SORT_ITEMS_BY_FIELD = {
     "thing":        ("name", "ascending"),
     "ranked_list":  ("time_created", "descending"),
-    # ScoredThings in a RankedList are sorted by one of multiple existing score
-    # metrics. The chosen metric may differ from RankedList to RankedList. It's
-    # not a global setting, but one set differently for each RankedList. The
-    # default is rankor_score, but a RankedList's score_used_to_rank field can
-    # be set to another metric using the create_ranked_list endpoint at its
-    # conception or the edit_ranked_list endpoint later.
+    "ranked_thing": ("rank", "ascending"),
     "fight":        ("time_fought", "descending")
 } 
 # These settings are pretty straightforward. The endpoints that respond with
