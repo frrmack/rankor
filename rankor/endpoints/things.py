@@ -29,7 +29,7 @@ from rankor.json import to_json
 from rankor.models import Thing
 
 # Pagination imports
-from pagination import Paginator
+from pagination import QueryPaginator
 
 # Exception imports
 from rankor.errors import (ResourceNotFoundInDatabaseError,
@@ -274,7 +274,7 @@ def list_all_things():
     num_all_docs_in_db = db.things.count_documents({})
     # Get the paginator for our case (list of all Things in db.things)
     # and use it to respond with the requested page
-    paginator = Paginator(
+    paginator = QueryPaginator(
         endpoint_name = endpoint_name, 
         model = Thing,
         query = db.things.find(),

@@ -36,7 +36,7 @@ from rankor.models import (Thing,
 
 
 # Pagination imports
-from pagination import Paginator
+from pagination import QueryPaginator
 
 # Exception imports
 from werkzeug.exceptions import Forbidden
@@ -376,7 +376,7 @@ def list_all_ranked_lists():
     num_all_docs_in_db = db.ranked_lists.count_documents({})
     # Get the paginator for our case (list of all RankedLists in db.ranked_lists)
     # and use it to create a response with the requested page
-    paginator = Paginator(
+    paginator = QueryPaginator(
         endpoint_name = endpoint_name, 
         model = RankedList,
         query = db.ranked_lists.find(),
