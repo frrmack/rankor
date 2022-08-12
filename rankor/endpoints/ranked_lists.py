@@ -24,7 +24,7 @@ from pymongo.collection import ReturnDocument
 from datetime import datetime
 
 # Encoder imports
-from rankor.json import to_json
+from rankor.json import to_json, to_jsonable_dict
 
 # Rankor model imports
 from rankor.models import (Thing, 
@@ -74,15 +74,15 @@ def ranked_list_data_response(ranked_list: RankedList):
     # top_3_things & last_3_fights only have id strings for Things and Fights.
     # Retrieve their actual data to respond with. 
     # First the Things:
-    for thing_score_dict in ranked_list_data["top_3_things"]:
-        thing_id = thing_score_dict["thing"]
+    for ranked_thing in ranked_list_data["top_3_things"]:
+        thing_id = ranked_thing.thing_id
         thing_doc = db.things.find_one({"_id": PyObjectId(thing_id)})
         if thing_doc is None:
             raise ResourceNotFoundInDatabaseError(
                 resource_type = "thing (referred to in this ranked list)",
                 resource_id = thing_id
             )
-        thing_score_dict["thing"] = Thing(**thing_doc).to_jsonable_dict()
+        ranked_thing.thing = Thing(**thing_doc)
     # Now the Fights:
     last_3_fights_with_details = []
     for fight_id in ranked_list_data["last_3_fights"]:
@@ -111,7 +111,7 @@ def ranked_list_data_response(ranked_list: RankedList):
     return {
         "_kind": "ranked_list",
         "_links": links,
-        "data": ranked_list_data
+        "data": to_jsonable_dict(ranked_list_data)
     }
 
 
