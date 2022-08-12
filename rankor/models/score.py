@@ -3,10 +3,6 @@
 # MongoModel, but simply from the pydantic BaseModel
 from pydantic import BaseModel
 
-# This is used to help Pydantic handle the bson ObjectId field from mongodb
-# More info in the module itself
-from rankor.models.pyobjectid import PyObjectIdString
-
 # Api settings (for scoring priors)
 import settings
 
