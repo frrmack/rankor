@@ -46,44 +46,50 @@ app.register_blueprint(thing_endpoints)
 from rankor.endpoints.ranked_lists import ranked_list_endpoints
 app.register_blueprint(ranked_list_endpoints)
 
-#------------------------------------------------------------------------------
-# Thing endpoints: /rankor/things/
-#
+from rankor.endpoints.ranked_things import ranked_thing_endpoints
+app.register_blueprint(ranked_thing_endpoints)
+
+from rankor.endpoints.fights import fight_endpoints
+app.register_blueprint(fight_endpoints)
+
+
+# All specific endpoints of the rankor api are listed below.
+# ------------------------------------------------------------------------------
+# Thing endpoints: 
+# /rankor/things/
+
 # Create a new Thing    |   POST    /rankor/things/
 # Edit a Thing          |   PUT     /rankor/things/<thing_id>/
 # Delete a Thing        |   DELETE  /rankor/things/<thing_id>/
 # Delete ALL Things     |   DELETE  /rankor/things/delete-all/
 # List all Things       |   GET     /rankor/things/     
 # Get one Thing         |   GET     /rankor/things/<thing_id>/
-#------------------------------------------------------------------------------
-# RankedList endpoints: /rankor/rankedlists/
-#
+
+# ------------------------------------------------------------------------------
+# RankedList endpoints: 
+# /rankor/rankedlists/
+
 # Create a new RankedList   |   POST    /rankor/rankedlists/
 # Edit a RankedList         |   PUT     /rankor/rankedlists/<ranked_list_id>/
 # Delete a RankedList       |   DELETE  /rankor/rankedlists/<ranked_list_id>/
 # Delete ALL RankedLists    |   DELETE  /rankor/rankedlists/delete-all/
 # List all RankedLists      |   GET     /rankor/rankedlists/
 # Get one RankedList        |   GET     /rankor/rankedlists/<ranked_list_id>/
-#------------------------------------------------------------------------------
-# Ranks endpoint for a given RankedList: /rankor/rankedlists/<ranked_list_id>/ranks/
-#
-# Get the list of the ranked Things and their Scores in a RankedList 
-# GET     /rankor/rankedlists/<ranked_list_id>/ranks/
-#------------------------------------------------------------------------------
-# Fight endpoints for a given RankedList: /rankor/rankedlists/<ranked_list_id>/fights/
-#
-# Get a new Fight between two Things in a RankedList (fight matchmaking)
-# GET     /rankor/rankedlists/<ranked_list_id>/fights/new/
-#
-# Save the result of a Fight            
-# POST    /rankor/rankedlists/<ranked_list_id>/fights/
-#
-# Delete a Fight in a RankedList        
-# DELETE  /rankor/rankedlists/<ranked_list_id>/fights/<fight_id>
-#
-# Show all recorded Fights in a RankedList  
-# GET     /rankor/rankedlists/<ranked_list_id>/fights/
-#
-# Retrieve all Fights of a Thing in a RankedList 
-# GET     /rankor/rankedlists/<ranked_list_id>/fights/things/<thing_id>
-#------------------------------------------------------------------------------
+
+# ------------------------------------------------------------------------------
+# RankedThing endpoint for a given RankedList: 
+# /rankor/rankedlists/<ranked_list_id>/ranked_things/
+
+# List RankedThings  |  GET /rankor/rankedlists/<ranked_list_id>/ranked_things/
+
+# ------------------------------------------------------------------------------
+# Fight endpoints for a given RankedList: 
+# /rankor/rankedlists/<ranked_list_id>/fights/
+
+# Arrange a new Fight   | GET    /rankor/rankedlists/<ranked_list_id>/fights/new/
+# Save a Fight result   | POST   /rankor/rankedlists/<ranked_list_id>/fights/      
+# Delete a Fight        | DELETE /rankor/rankedlists/<ranked_list_id>/fights/<fight_id>
+# Get recorded Fights   | GET    /rankor/rankedlists/<ranked_list_id>/fights/
+# Get Fights of a Thing | GET    /rankor/rankedlists/<ranked_list_id>/fights/things/<thing_id>
+
+# ------------------------------------------------------------------------------
