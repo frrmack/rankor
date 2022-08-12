@@ -232,6 +232,7 @@ class Paginator(object):
                         f"{self.model_str}s"),
                 f"{self.model_str}s": items_in_this_page, 
                 "_page": page,
+                f"_num_{self.model_str}s_in_page": len(items_in_this_page),
                 "_links": links,
                 "http_status_code": 200
             }
