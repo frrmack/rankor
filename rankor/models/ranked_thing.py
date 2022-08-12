@@ -1,0 +1,40 @@
+# Model template import
+# Instances of this model are not stored in the database. They are put together
+# based on the thing to score mapping saved in RankedList documents in the
+# database. There is no ranked_things collection in the database. Therefore,
+# they do not have a database id, and they don't inherit from rankor's
+# MongoModel, but simply from the pydantic BaseModel
+from pydantic import BaseModel
+
+# Model and field imports
+# Score is the model that contains all the score information for a Thing.
+# PyObjectIdString is a field that contains the hex string of a bson object id.
+# It is used to store the id string of another model document (in this case, the
+# id of a Thing). There's more info in the pyobjectid module itself.
+from rankor.models import Score, PyObjectIdString
+
+
+class RankedThing(BaseModel):
+    """
+    A RankedThing instance represents where a Thing stands in terms of rankings
+    with respect to a RankedList.
+
+    As Things are compared in Fights within the context of a given RankedList,
+    their Scores are updated based on the Fight results. Every RankedList has a
+    dict that maps each Thing to its Score. These scores allow the Things to be
+    ranked, earning the RankedList its name. A Thing has only one Score per each
+    RankedList it participates in, and each RankedList has only one Score for
+    each Thing participating in it. When a RankedList is asked to provide
+    rankings, it uses this model to report on what the rank and score of each
+    Thing in it happens to be.
+
+    The RankedList.ranked_things property of a RankedList instance provides a
+    (sorted) list of RankedThing objects. This is how you see the full rankings.
+
+    Note that it doesn't keep the Thing itself, but its id. Any endpoint code
+    that needs to report RankedThings can pull the actual Thing data from the
+    database using these ids.
+    """
+    rank: int
+    thing: PyObjectIdString
+    score: Score
