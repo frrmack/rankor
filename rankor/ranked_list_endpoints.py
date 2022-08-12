@@ -58,9 +58,10 @@ ranked_list_endpoints = Blueprint('ranked_list_endpoints', __name__)
 # The following function is used to represent a ranked_list whenever an endpoint
 # needs to respond with one. It provides a much more useful response than
 # directly returning how a ranked_list is stored in the database. You can check
-# the last endpoint here, raw_data_of_a_ranked_list, to see how and why the
-# response cooked below is chosen as the standard ranked list data representation.
-def ranked_list_data_response(ranked_list):
+# the output of the last endpoint here, raw_data_of_a_ranked_list, to see how
+# and why the response cooked below is chosen as the standard ranked list data
+# representation.
+def ranked_list_data_response(ranked_list: RankedList):
     """
     Creates a data object with useful information about a RankedList pulled from
     multiple collections, and links to other (paginated) endpoints: a) full
@@ -126,6 +127,11 @@ def create_a_new_ranked_list():
 
     The only field you can define for a new RankedList is:
     name: str
+    score_used_to_rank: optional, one of the following strings:
+                        "rankor_score"
+                        "min_possible_score"
+                        "mu"
+                        if not given, it defaults to "rankor_score"
 
     Attach the contents of the new RankedList as data in JSON format.
     For example:
