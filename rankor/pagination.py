@@ -23,11 +23,14 @@ from typing import Callable
 # Encoder imports
 from rankor.json import to_jsonable_dict, to_json
 
+# Utility imports (helper functions)
+from utils import camel_case_to_snake_case
+
 # Api settings for page sizes and sorting keys
 import settings
 
 
-class Paginator(object):
+class BasePaginator(object):
     """
     A class that handles pagination for endpoints, which return a rather long
     list of items. 
@@ -55,38 +58,50 @@ class Paginator(object):
 
     def __init__(
         self, 
-        endpoint_name: str, 
-        model: BaseModel, 
-        query: pymongo.cursor.Cursor,
-        num_all_docs_in_db: int,
+        endpoint_name: str,
+        model: BaseModel,
         model_encoder: Callable = to_jsonable_dict
     ):
         self.endpoint = endpoint_name
         self.model = model
-        self.query = query
-        self.num_all_docs = num_all_docs_in_db
         self.model_encoder = model_encoder
-
         # self.model_str: how the model is referred to in text
         # i.e. RankedList --> ranked_list
-        def camel_case_to_snake_case(string):
-            return ''.join(
-                [
-                    '_' + char.lower() if char.isupper()
-                    else char 
-                    for char in string
-                ]
-            ).lstrip('_')
         self.model_str = camel_case_to_snake_case(model.__name__)
+        # pagination settings
+        (
+            self.page_size, 
+            self.sorting_field, 
+            self.sorting_direction
+        ) = self.read_and_validate_pagination_settings(model)
+        self.num_all_docs = None
 
-        # read page size and sorting key settings from the api settings file,
-        # throw informative exceptions if settings are not valid
-        # First page size
+
+    def get_page_items(self, page: int) -> list:
+        """
+        Each specialized Paginator that inherits from BasePaginator needs to
+        override this method to implement its specific way to retrieve and
+        process the items in the requested page.
+        """
+        raise NotImplementedError("""This is the BasePaginator, which is a
+                                  template for other specialized Paginators. It
+                                  does not have a specific pagination algorithm.
+                                  A subclass of this should be used to paginate
+                                  responses instead.""")
+
+
+    def read_and_validate_pagination_settings(self, model):
+        """
+        Reads page size and sorting key settings from the api settings file,
+        throws informative exceptions if settings are not valid.    
+        """
+        model_str = camel_case_to_snake_case(model.__name__)
+        # page size setting
         try:
-            self.page_size = settings.NUMBER_ITEMS_IN_EACH_PAGE[self.model_str]
-            if not isinstance(self.page_size, int): 
+            page_size = settings.NUMBER_ITEMS_IN_EACH_PAGE[model_str]
+            if not isinstance(page_size, int): 
                 raise ValueError(
-                    f"Page size for this case is '{self.page_size}', "
+                    f"Page size for this case is '{page_size}', "
                     f"which is not an integer."
                 )
         except (ValueError, KeyError, IndexError, TypeError) as error:
@@ -101,22 +116,22 @@ class Paginator(object):
                 f"The current setting violates this requirement. "
                 f"{str(error)}"
             )
-        # Now sorting field and sorting direction
+        # sorting field and sorting direction settings
         try:
             (
-                self.sorting_field, 
+                sorting_field, 
                 sorting_direction  
-            ) = settings.SORT_ITEMS_BY_FIELD[self.model_str]
-            if not isinstance(self.sorting_field, str): 
+            ) = settings.SORT_ITEMS_BY_FIELD[model_str]
+            if not isinstance(sorting_field, str): 
                 raise ValueError(
                     f"The first element of the tuple, the field, "
-                    f"is {repr(self.sorting_field)}, which is "
+                    f"is {repr(sorting_field)}, which is "
                     f"not a string."
                 )
-            if self.sorting_field not in model.__fields__.keys():
+            if sorting_field not in model.__fields__.keys():
                 raise ValueError(
                     f"The first element of the tuple, the field, "
-                    f"is '{self.sorting_field}', which is not a "
+                    f"is '{sorting_field}', which is not a "
                     f"valid field of the {model.__name__} model."
                 )
             # sorting direction uses pymongo.ASCENDING or pymongo.DESCENDING
@@ -126,7 +141,7 @@ class Paginator(object):
                     f"is '{sorting_direction}', which is neither 'ascending' "
                     f"nor 'descending'."
                 )
-            self.sorting_direction = getattr(pymongo, sorting_direction.upper())
+            sorting_direction = getattr(pymongo, sorting_direction.upper())
         except (ValueError, KeyError, IndexError, TypeError) as error:
             raise InternalServerError(
                 f"Entries in the SORT_ITEMS_BY_FIELD setting "
@@ -138,6 +153,7 @@ class Paginator(object):
                 f"'ascending' or 'descending'. The current setting "
                 f"violates this requirement. {str(error)}"
             )
+        return page_size, sorting_field, sorting_direction
 
 
     def paginate(self, requested_page=None):
@@ -160,8 +176,7 @@ class Paginator(object):
                 f"parameter needs to be an integer."
             )
             
-        # Get the counts to help paginate
-        num_docs_to_skip = self.page_size * (page - 1)
+        # Calculate number of total pages (which is also last page's page number)
         num_pages = last_page = (self.num_all_docs // self.page_size) + 1
 
         # Let's make sure we don't get befuddled by a bad page parameter input
@@ -173,31 +188,8 @@ class Paginator(object):
                 f"is between and including 1 to {last_page}."
             )
 
-        # We will retrieve all documents and sort them based on the relevant
-        # sorting criterion, then divide this list into pages that only include
-        # page_size items. Page sizes for each related endpoint, as well as how
-        # to sort the items are defined in the api settings (settings.py in
-        # rankor's root directory).
-        #
-        # For example, let's say we're listing all things (GET /rankor/things/),
-        # the page size setting is 10 (each page has 10 things in it), sorting
-        # field setting is by "name", and we need to respond with page 6. We
-        # will retrieve all things from the database's things collection using
-        # the query we were given when the Paginator instance was created. We
-        # will sort them by name, then skip the first 50 things (since they were
-        # in the previous 5 pages), then use mongo's limit functionality to list
-        # the 10 things that start from there (the 51st through 60th things).
-        # This is page 6. We will also provide links to page 5 (previous_page),
-        # page 7 (next_page), the very last page (last_page), and the url that
-        # returns this exact response (this_page). That last one is there in
-        # case to you need to keep track of which page you're on.
-        sorted_docs = self.query.sort(
-            self.sorting_field, 
-            self.sorting_direction
-        )
-        page_docs = sorted_docs.skip(num_docs_to_skip).limit(self.page_size)
-        items_in_this_page = [self.model_encoder(self.model(**doc)) 
-                              for doc in page_docs]
+        # Get the contents of the page
+        items_in_this_page = self.get_page_items(page)
         
         # Create the links to this very page and the last page you can get
         links = {
@@ -238,3 +230,188 @@ class Paginator(object):
             }
         ), 200
 
+
+
+class QueryPaginator(BasePaginator):
+    """
+    A class that handles pagination for endpoints, which return a rather long
+    list of items. 
+    
+    Examples of such endpoints are endpoints.things.list_all_things,
+    endpoints.ranked_lists.list_all_ranked_lists,
+    endpoints.fights.recorded_fights, and endpoints.full_ranked_list_of_things.
+    
+    Since such lists can get long, the results are partitioned into a set number
+    of pages. The page size (number of list items to include in each page), as 
+    well as what to sort the items by before partitioning into pages are 
+    determined in the api settings for each endpoint (settings.py in the root).
+
+    You can ask for a specific page, for example (in list_all_things):
+    curl -i -X GET 'http://localhost:5000/rankor/things/?page=3'
+
+    If you don't give a page parameter, it will return page 1. The response will
+    also include the page number and the links to the following endpoint uris:
+    - this_page
+    - next_page     (if there is one)
+    - previous_page (if there is one)
+    - last_page
+    These links are there to help iterate over all results.
+    """
+
+    def __init__(
+        self, 
+        endpoint_name: str,
+        model: BaseModel,
+        query: pymongo.cursor.Cursor,
+        num_all_docs_in_db: int,
+        model_encoder: Callable = to_jsonable_dict
+    ):
+        super(QueryPaginator, self).__init__(
+            endpoint_name=endpoint_name,
+            model=model,
+            model_encoder=model_encoder
+        )
+        self.query = query
+        self.num_all_docs = num_all_docs_in_db
+
+
+    def get_page_items(self, page):
+        """
+        We will retrieve all documents and sort them based on the relevant
+        sorting criterion, then divide this list into pages that only include
+        page_size items. Page sizes for each related endpoint, as well as how to
+        sort the items are defined in the api settings (settings.py in rankor's
+        root directory). 
+        
+        Sorting, skipping forward to the current page, and limiting the number
+        of items to page_size are all applied to the query cursor before reading
+        the page's documents from the database.
+        
+        For example, let's say we're listing all things (GET /rankor/things/),
+        the page size setting is 10 (each page has 10 things in it), sorting
+        field setting is by "name", and we need to respond with page 6. We will
+        query all things from the database's things collection (the query to do
+        this will be given when the Paginator instance was created). We will add
+        a step to sort by name field, then another to skip the first 50 things
+        (since they were in the previous 5 pages), then a limit step to list
+        only 10 things that start from there. Once we execute the command to
+        iterate over the cursor in a list comprehension, we will get a list of
+        51st through 60th Thing documents from the database. We will initiate a
+        Thing model instance with each of this documents, and finally, we will
+        use the model_encoder we're given to encode these Things. We return this
+        list of encoded Things as the page items for page 6.
+        
+        Later, in the paginate method, we will also provide links to page 5
+        (previous_page), page 7 (next_page), the very last page (last_page), and
+        the url that returns this exact response (this_page). That last one is
+        there in case to you need to keep track of which page you're on.
+        """
+        sorted_docs = self.query.sort(self.sorting_field, 
+                                      self.sorting_direction)
+        num_docs_to_skip = self.page_size * (page - 1)
+        page_docs = sorted_docs.skip(num_docs_to_skip).limit(self.page_size)
+        return [self.model_encoder(self.model(**doc)) for doc in page_docs]       
+
+
+
+
+
+class ListPaginator(object):
+    """
+    A class that handles pagination for endpoints, which return a rather long
+    list of items. 
+    
+    Examples of such endpoints are endpoints.things.list_all_things,
+    endpoints.ranked_lists.list_all_ranked_lists,
+    endpoints.fights.recorded_fights, and endpoints.full_ranked_list_of_things.
+    
+    Since such lists can get long, the results are partitioned into a set number
+    of pages. The page size (number of list items to include in each page), as 
+    well as what to sort the items by before partitioning into pages are 
+    determined in the api settings for each endpoint (settings.py in the root).
+
+    You can ask for a specific page, for example (in list_all_things):
+    curl -i -X GET 'http://localhost:5000/rankor/things/?page=3'
+
+    If you don't give a page parameter, it will return page 1. The response will
+    also include the page number and the links to the following endpoint uris:
+    - this_page
+    - next_page     (if there is one)
+    - previous_page (if there is one)
+    - last_page
+    These links are there to help iterate over all results.
+    """
+
+    def __init__(
+        self, 
+        endpoint_name: str,
+        model: BaseModel,
+        item_list: list,
+        item_list_already_sorted: bool = False,
+        model_encoder: Callable = to_jsonable_dict
+    ):
+        super(ListPaginator, self).__init__(
+            endpoint_name=endpoint_name,
+            model=model,
+            model_encoder=model_encoder
+        )
+        self.item_list = item_list
+        self.item_list_already_sorted = item_list_already_sorted
+        self.num_all_docs = len(item_list)
+        # Validate that item_list items are instances of the declared model
+        for item in item_list:
+            if not isinstance(item, model):
+                raise ValueError(f"The following item in the list given to "
+                                 f"ListPaginator is not an instance of "
+                                 f"{model.__name__}: {item}")
+
+
+    def get_page_items(self, page):
+        """
+        We will retrieve all documents and sort them based on the relevant
+        sorting criterion, then divide this list into pages that only include
+        page_size items. Page sizes for each related endpoint, as well as how to
+        sort the items are defined in the api settings (settings.py in rankor's
+        root directory). 
+        
+        Sorting, skipping forward to the current page, and limiting the number
+        of items to page_size are all applied to the query cursor before reading
+        the page's documents from the database.
+        
+        For example, let's say we're listing all things (GET /rankor/things/),
+        the page size setting is 10 (each page has 10 things in it), sorting
+        field setting is by "name", and we need to respond with page 6. We will
+        query all things from the database's things collection (the query to do
+        this will be given when the Paginator instance was created). We will add
+        a step to sort by name field, then another to skip the first 50 things
+        (since they were in the previous 5 pages), then a limit step to list
+        only 10 things that start from there. Once we execute the command to
+        iterate over the cursor in a list comprehension, we will get a list of
+        51st through 60th Thing documents from the database. We will initiate a
+        Thing model instance with each of this documents, and finally, we will
+        use the model_encoder we're given to encode these Things. We return this
+        list of encoded Things as the page items for page 6.
+        
+        Later, in the paginate method, we will also provide links to page 5
+        (previous_page), page 7 (next_page), the very last page (last_page), and
+        the url that returns this exact response (this_page). That last one is
+        there in case to you need to keep track of which page you're on.
+        """
+        if self.item_list_already_sorted:
+            sorted_item_list = self.item_list
+        else:
+            if self.sorting_direction == pymongo.ASCENDING:
+                sort_reversed = False
+            elif self.sorting_direction == pymongo.DESCENDING:
+                sort_reversed = True
+            else:
+                raise ValueError("Sorting direction is not set to either ascending "
+                                "or descending.")
+            sorted_item_list = sorted(
+                self.data_list,
+                key = lambda mdl: getattr(mdl, self.sorting_field),
+                reverse= sort_reversed
+            )
+        from_item = self.page_size * (page - 1)
+        to_item = from_item + self.page_size
+        return sorted_item_list[from_item:to_item]
