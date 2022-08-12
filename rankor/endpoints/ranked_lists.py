@@ -61,7 +61,7 @@ ranked_list_endpoints = Blueprint('ranked_list_endpoints', __name__)
 # the output of the last endpoint here, raw_data_of_a_ranked_list, to see how
 # and why the response cooked below is chosen as the standard ranked list data
 # representation.
-def ranked_list_data_response(ranked_list: RankedList):
+def ranked_list_data_response(ranked_list: RankedList) -> dict:
     """
     Creates a data object with useful information about a RankedList pulled from
     multiple collections, and links to other (paginated) endpoints: a) full
