@@ -40,10 +40,10 @@ app.url_rule_class = SlashInsistingRoutingRule
 
 
 # Import and register all endpoints
-from rankor.thing_endpoints import thing_endpoints
+from rankor.endpoints.things import thing_endpoints
 app.register_blueprint(thing_endpoints)
 
-from rankor.ranked_list_endpoints import ranked_list_endpoints
+from rankor.endpoints.ranked_lists import ranked_list_endpoints
 app.register_blueprint(ranked_list_endpoints)
 
 #------------------------------------------------------------------------------
