@@ -28,7 +28,7 @@ rankor.endpoints.ranked_things.ranked_thing_endpoints
 RankedThing endpoint for a given RankedList: 
 /rankor/rankedlists/<ranked_list_id>/ranked_things/
 
-List RankedThings  |  GET /rankor/rankedlists/<ranked_list_id>/ranked_things/
+List RankedThings  |  GET /rankor/rankedlists/<ranked_list_id>/ranked-things/
 ------------------------------------------------------------------------------
 rankor.endpoints.fights.fight_endpoints
 Fight endpoints for a given RankedList: 

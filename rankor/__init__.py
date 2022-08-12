@@ -78,9 +78,9 @@ app.register_blueprint(fight_endpoints)
 
 # ------------------------------------------------------------------------------
 # RankedThing endpoint for a given RankedList: 
-# /rankor/rankedlists/<ranked_list_id>/ranked_things/
+# /rankor/rankedlists/<ranked_list_id>/ranked-things/
 
-# List RankedThings  |  GET /rankor/rankedlists/<ranked_list_id>/ranked_things/
+# List RankedThings  |  GET /rankor/rankedlists/<ranked_list_id>/ranked-things/
 
 # ------------------------------------------------------------------------------
 # Fight endpoints for a given RankedList: 
