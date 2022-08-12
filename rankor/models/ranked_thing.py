@@ -1,3 +1,7 @@
+# Typing hint import
+# This allows us to define an optional field in a pydantic schema
+from typing import Optional
+
 # Model template import
 # Instances of this model are not stored in the database. They are put together
 # based on the thing to score mapping saved in RankedList documents in the
@@ -6,18 +10,23 @@
 # MongoModel, but simply from the pydantic BaseModel
 from pydantic import BaseModel
 
-# Model and field imports
+# Model imports
+# Thing is the model for what we are ranking
 # Score is the model that contains all the score information for a Thing.
+from rankor.models.thing import Thing
+from rankor.models.score import Score
+
+# Field import
 # PyObjectIdString is a field that contains the hex string of a bson object id.
 # It is used to store the id string of another model document (in this case, the
 # id of a Thing). There's more info in the pyobjectid module itself.
-from rankor.models import Score, PyObjectIdString
+from rankor.models.pyobjectid import PyObjectIdString
 
 
 class RankedThing(BaseModel):
     """
     A RankedThing instance represents where a Thing stands in terms of rankings
-    with respect to a RankedList.
+    within a RankedList.
 
     As Things are compared in Fights within the context of a given RankedList,
     their Scores are updated based on the Fight results. Every RankedList has a
@@ -31,10 +40,12 @@ class RankedThing(BaseModel):
     The RankedList.ranked_things property of a RankedList instance provides a
     (sorted) list of RankedThing objects. This is how you see the full rankings.
 
-    Note that it doesn't keep the Thing itself, but its id. Any endpoint code
-    that needs to report RankedThings can pull the actual Thing data from the
-    database using these ids.
+    Note that it can either hold just the id of a thing, or the entire Thing
+    itself, for different use cases. (It can also hold both or neither, but those are much rarer use cases) Any endpoint code that needs to report RankedThings can pull the
+    actual Thing data from the database using these ids.
     """
     rank: int
-    thing: PyObjectIdString
     score: Score
+    thing_id: Optional[PyObjectIdString]
+    thing: Optional[Thing]
+
