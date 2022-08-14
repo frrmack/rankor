@@ -15,30 +15,30 @@ Get one Thing         |   GET     /rankor/things/<thing_id>/
 ------------------------------------------------------------------------------
 rankor.endpoints.ranked_lists.ranked_list_endpoints
 RankedList endpoints: 
-/rankor/rankedlists/
+/rankor/ranked-lists/
 
-Create a new RankedList   |   POST    /rankor/rankedlists/
-Edit a RankedList         |   PUT     /rankor/rankedlists/<ranked_list_id>/
-Delete a RankedList       |   DELETE  /rankor/rankedlists/<ranked_list_id>/
-Delete ALL RankedLists    |   DELETE  /rankor/rankedlists/delete-all/
-List all RankedLists      |   GET     /rankor/rankedlists/
-Get one RankedList        |   GET     /rankor/rankedlists/<ranked_list_id>/
+Create a new RankedList   |   POST    /rankor/ranked-lists/
+Edit a RankedList         |   PUT     /rankor/ranked-lists/<ranked_list_id>/
+Delete a RankedList       |   DELETE  /rankor/ranked-lists/<ranked_list_id>/
+Delete ALL RankedLists    |   DELETE  /rankor/ranked-lists/delete-all/
+List all RankedLists      |   GET     /rankor/ranked-lists/
+Get one RankedList        |   GET     /rankor/ranked-lists/<ranked_list_id>/
 ------------------------------------------------------------------------------
 rankor.endpoints.ranked_things.ranked_thing_endpoints
 RankedThing endpoint for a given RankedList: 
-/rankor/rankedlists/<ranked_list_id>/ranked_things/
+/rankor/ranked-lists/<ranked_list_id>/ranked_things/
 
-List RankedThings  |  GET /rankor/rankedlists/<ranked_list_id>/ranked-things/
+List RankedThings  |  GET /rankor/ranked-lists/<ranked_list_id>/ranked-things/
 ------------------------------------------------------------------------------
 rankor.endpoints.fights.fight_endpoints
 Fight endpoints for a given RankedList: 
-/rankor/rankedlists/<ranked_list_id>/fights/
+/rankor/ranked-lists/<ranked_list_id>/fights/
 
-Arrange a new Fight   | GET    /rankor/rankedlists/<ranked_list_id>/fights/new/
-Save a Fight result   | POST   /rankor/rankedlists/<ranked_list_id>/fights/      
-Delete a Fight        | DELETE /rankor/rankedlists/<ranked_list_id>/fights/<fight_id>
-Get recorded Fights   | GET    /rankor/rankedlists/<ranked_list_id>/fights/
-Get Fights of a Thing | GET    /rankor/rankedlists/<ranked_list_id>/fights/things/<thing_id>
+Arrange a new Fight   | GET    /rankor/ranked-lists/<ranked_list_id>/fights/new/
+Save a Fight result   | POST   /rankor/ranked-lists/<ranked_list_id>/fights/      
+Delete a Fight        | DELETE /rankor/ranked-lists/<ranked_list_id>/fights/<fight_id>
+Get recorded Fights   | GET    /rankor/ranked-lists/<ranked_list_id>/fights/
+Get Fights of a Thing | GET    /rankor/ranked-lists/<ranked_list_id>/fights/things/<thing_id>
 ------------------------------------------------------------------------------
 """
 

@@ -1,13 +1,13 @@
 """
-RankedList endpoints: /rankor/rankedlists/
+RankedList endpoints: /rankor/ranked-lists/
 
-Create a new RankedList    |   POST    /rankor/rankedlists/
-Edit a RankedList          |   PUT     /rankor/rankedlists/<ranked_list_id>/
-Delete a RankedList        |   DELETE  /rankor/rankedlists/<ranked_list_id>/
-Delete ALL RankedLists     |   DELETE  /rankor/rankedlists/delete-all/
-List all RankedLists       |   GET     /rankor/rankedlists/
-Get one RankedList         |   GET     /rankor/rankedlists/<ranked_list_id>/
-[Raw data of a RankedList] |   GET     /rankor/rankedlists/raw/<ranked_list_id>/
+Create a new RankedList    |   POST    /rankor/ranked-lists/
+Edit a RankedList          |   PUT     /rankor/ranked-lists/<ranked_list_id>/
+Delete a RankedList        |   DELETE  /rankor/ranked-lists/<ranked_list_id>/
+Delete ALL RankedLists     |   DELETE  /rankor/ranked-lists/delete-all/
+List all RankedLists       |   GET     /rankor/ranked-lists/
+Get one RankedList         |   GET     /rankor/ranked-lists/<ranked_list_id>/
+[Raw data of a RankedList] |   GET     /rankor/ranked-lists/raw/<ranked_list_id>/
 """
 
 # Python inspection imports 
@@ -100,10 +100,10 @@ def ranked_list_data_response(ranked_list: RankedList) -> dict:
     # context of this RankedList.
     links = {
         "ranked_and_scored_things": {
-            "href": f"/rankor/rankedlists/{ranked_list.id}/ranks/"
+            "href": f"/rankor/ranked-lists/{ranked_list.id}/ranks/"
         },
         "recorded_fights": {
-            "href": f"/rankor/rankedlists/{ranked_list.id}/fights/"
+            "href": f"/rankor/ranked-lists/{ranked_list.id}/fights/"
         }
     }
 
@@ -116,9 +116,9 @@ def ranked_list_data_response(ranked_list: RankedList) -> dict:
 
 
 
-# Create a new RankedList   |   POST    /rankor/rankedlists/
+# Create a new RankedList   |   POST    /rankor/ranked-lists/
 @ranked_list_endpoints.route(
-    "/rankor/rankedlists/", 
+    "/rankor/ranked-lists/", 
     methods=["POST"]
 )
 def create_a_new_ranked_list():
@@ -137,7 +137,7 @@ def create_a_new_ranked_list():
     For example:
     curl -d '{"name": "My Favorite Movies"}' 
          -H "Content-Type: application/json" 
-         -X POST http://localhost:5000/rankor/rankedlists/
+         -X POST http://localhost:5000/rankor/ranked-lists/
     """
     # Retrieve the data from the request and record the timestamp of creation
     new_ranked_list_data = request.get_json()
@@ -191,9 +191,9 @@ def create_a_new_ranked_list():
 
 
 
-# Edit a RankedList         |   PUT     /rankor/rankedlists/<ranked_list_id>/
+# Edit a RankedList         |   PUT     /rankor/ranked-lists/<ranked_list_id>/
 @ranked_list_endpoints.route(
-    "/rankor/rankedlists/<ObjectId:ranked_list_id>/", 
+    "/rankor/ranked-lists/<ObjectId:ranked_list_id>/", 
     methods=["PUT"]
 )
 def edit_a_ranked_list(ranked_list_id):
@@ -284,9 +284,9 @@ def edit_a_ranked_list(ranked_list_id):
 
 
 
-# Delete a RankedList       |   DELETE  /rankor/rankedlists/<ranked_list_id>/
+# Delete a RankedList       |   DELETE  /rankor/ranked-lists/<ranked_list_id>/
 @ranked_list_endpoints.route(
-    "/rankor/rankedlists/<ObjectId:ranked_list_id>/", 
+    "/rankor/ranked-lists/<ObjectId:ranked_list_id>/", 
     methods=["DELETE"]
 )
 def delete_a_ranked_list(ranked_list_id):
@@ -294,7 +294,7 @@ def delete_a_ranked_list(ranked_list_id):
     DELETE request to remove a RankedList from the database
 
     Example:
-    curl -i -X DELETE 'http://localhost:5000/rankor/rankedlists/12345678901234567890ffff/'   
+    curl -i -X DELETE 'http://localhost:5000/rankor/ranked-lists/12345678901234567890ffff/'   
     """
     deleted_doc = db.ranked_lists.find_one_and_delete(
         {"_id": ranked_list_id}
@@ -319,9 +319,9 @@ def delete_a_ranked_list(ranked_list_id):
 
 
 
-# Delete ALL RankedLists    |   DELETE  /rankor/rankedlists/delete-all/
+# Delete ALL RankedLists    |   DELETE  /rankor/ranked-lists/delete-all/
 @ranked_list_endpoints.route(
-    "/rankor/rankedlists/delete-all/", 
+    "/rankor/ranked-lists/delete-all/", 
     methods=["DELETE"]
 )
 def delete_ALL_ranked_lists():
@@ -330,7 +330,7 @@ def delete_ALL_ranked_lists():
     This nuclear bomb purges the entire ranked_lists collection in the database
     It's basically an endpoint to reset back to factory settings to start over
 
-    Example: curl -i -X DELETE 'http://localhost:5000/rankor/rankedlists/delete-all/'   
+    Example: curl -i -X DELETE 'http://localhost:5000/rankor/ranked-lists/delete-all/'   
     """
     deletion_info = db.ranked_lists.delete_many({})
     # Success: Respond with the number of deleted documents
@@ -344,9 +344,9 @@ def delete_ALL_ranked_lists():
 
 
 
-# List all RankedLists    |   GET   /rankor/rankedlists/     
+# List all RankedLists    |   GET   /rankor/ranked-lists/     
 @ranked_list_endpoints.route(
-    "/rankor/rankedlists/", 
+    "/rankor/ranked-lists/", 
     methods=["GET"]
 )
 def list_all_ranked_lists():
@@ -358,7 +358,7 @@ def list_all_ranked_lists():
     in the api settings (in the root directory).
 
     You can ask for a specific page, for example:
-    curl -i -X GET 'http://localhost:5000/rankor/rankedlists/?page=5'
+    curl -i -X GET 'http://localhost:5000/rankor/ranked-lists/?page=5'
 
     If you don't give a page parameter, it will return page 1. The response will
     also include the page number and the links to the following endpoint uris:
@@ -387,9 +387,9 @@ def list_all_ranked_lists():
 
 
 
-# Get one RankedList        |   GET     /rankor/rankedlists/<ranked_list_id>/
+# Get one RankedList        |   GET     /rankor/ranked-lists/<ranked_list_id>/
 @ranked_list_endpoints.route(
-    "/rankor/rankedlists/<ObjectId:ranked_list_id>/", 
+    "/rankor/ranked-lists/<ObjectId:ranked_list_id>/", 
     methods=["GET"]
 )
 def get_one_ranked_list(ranked_list_id): 
@@ -403,7 +403,7 @@ def get_one_ranked_list(ranked_list_id):
     the context of this RankedList.
 
     For example: 
-    curl -i -X GET 'http://localhost:5000/rankor/rankedlists/raw/a4325678901234567890bcd5/'
+    curl -i -X GET 'http://localhost:5000/rankor/ranked-lists/raw/a4325678901234567890bcd5/'
     """
     # Retrieve the RankedList document with this id from the database or raise 
     # an HTTP 404 if you can't find it
@@ -431,9 +431,9 @@ def get_one_ranked_list(ranked_list_id):
 
 
 
-# [Raw data of a RankedList] |   GET  /rankor/rankedlists/raw/<ranked_list_id>/
+# [Raw data of a RankedList] |   GET  /rankor/ranked-lists/raw/<ranked_list_id>/
 @ranked_list_endpoints.route(
-    "/rankor/rankedlists/raw/<ObjectId:ranked_list_id>/", 
+    "/rankor/ranked-lists/raw/<ObjectId:ranked_list_id>/", 
     methods=["GET"]
 )
 def raw_data_of_a_ranked_list(ranked_list_id): 
@@ -457,7 +457,7 @@ def raw_data_of_a_ranked_list(ranked_list_id):
     potentially for a few behind-the-scenes use cases.
 
     For example: curl -i -X GET
-    'http://localhost:5000/rankor/rankedlists/raw/a4325678901234567890bcd5/'
+    'http://localhost:5000/rankor/ranked-lists/raw/a4325678901234567890bcd5/'
     """
     # Retrieve the document with this id from the database and respond
     # with it, or raise an HTTP 404 if you can't find it

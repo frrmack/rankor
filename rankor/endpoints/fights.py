@@ -1,12 +1,12 @@
 """
 Fight endpoints for a given RankedList: 
-/rankor/rankedlists/<ranked_list_id>/fights/
+/rankor/ranked-lists/<ranked_list_id>/fights/
 
-Arrange a new Fight   | GET    /rankor/rankedlists/<ranked_list_id>/fights/new/
-Save a Fight result   | POST   /rankor/rankedlists/<ranked_list_id>/fights/      
-Delete a Fight        | DELETE /rankor/rankedlists/<ranked_list_id>/fights/<fight_id>
-Get recorded Fights   | GET    /rankor/rankedlists/<ranked_list_id>/fights/
-Get Fights of a Thing | GET    /rankor/rankedlists/<ranked_list_id>/fights/things/<thing_id>
+Arrange a new Fight   | GET    /rankor/ranked-lists/<ranked_list_id>/fights/new/
+Save a Fight result   | POST   /rankor/ranked-lists/<ranked_list_id>/fights/      
+Delete a Fight        | DELETE /rankor/ranked-lists/<ranked_list_id>/fights/<fight_id>
+Get recorded Fights   | GET    /rankor/ranked-lists/<ranked_list_id>/fights/
+Get Fights of a Thing | GET    /rankor/ranked-lists/<ranked_list_id>/fights/things/<thing_id>
 ------------------------------------------------------------------------------
 """
 
