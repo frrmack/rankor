@@ -1,8 +1,8 @@
 """
 RankedThing endpoint for a given RankedList: 
-/rankor/rankedlists/<ranked_list_id>/ranked_things/
+/rankor/ranked-lists/<ranked_list_id>/ranked_things/
 
-List RankedThings  |  GET /rankor/rankedlists/<ranked_list_id>/ranked-things/
+List RankedThings  |  GET /rankor/ranked-lists/<ranked_list_id>/ranked-things/
 """
 
 # Python inspection imports 
@@ -45,9 +45,31 @@ from rankor import db
 ranked_thing_endpoints = Blueprint('ranked_thing_endpoints', __name__)
 
 
-# List RankedThings  |  GET /rankor/rankedlists/<ranked_list_id>/ranked_things/
+
+# processor function to fill the RankedThings response with Thing data from db
+def pull_actual_things_from_database(id_based_ranked_thing_list):
+    """
+    Turns a list of RankedThings that have the 'thing_id' field into a list of
+    RankedThings that have actual Things in their 'thing' field.
+    """
+    for ranked_thing in id_based_ranked_thing_list:
+        thing_doc = db.things.find_one(
+            {"_id": PyObjectId(ranked_thing.thing_id)}
+        )
+        if thing_doc is None:
+            raise ResourceNotFoundInDatabaseError(
+                resource_type = "thing (referred to in this ranked list)",
+                resource_id = ranked_thing.thing_id
+            )
+        ranked_thing.thing = Thing(**thing_doc)
+        ranked_thing.thing_id = None
+    return id_based_ranked_thing_list
+
+
+
+# List RankedThings  |  GET /rankor/ranked-lists/<ranked_list_id>/ranked_things/
 @ranked_thing_endpoints.route(
-    "/rankor/rankedlists/<ObjectId:ranked_list_id>/ranked-things/", 
+    "/rankor/ranked-lists/<ObjectId:ranked_list_id>/ranked-things/", 
     methods=["GET"]
 )
 def list_ranked_things(ranked_list_id):
@@ -71,9 +93,13 @@ def list_ranked_things(ranked_list_id):
 
     For example: 
     curl -i 
-         -X GET 'http://localhost:5000/rankor/rankedlists/a4325678901234567890bcd5/ranked-things/'
+         -X GET 'http://localhost:5000/rankor/ranked-lists/a4325678901234567890bcd5/ranked-things/'
 
     """
+   # Python frame inspection code to get the name of this very function
+    endpoint_name = "." + _getframe().f_code.co_name
+    # Read the page parameter
+    requested_page = request.args.get("page", 1)
     # Get the RankedList
     doc = db.ranked_lists.find_one({"_id": ranked_list_id})
     if doc is None:
@@ -81,40 +107,17 @@ def list_ranked_things(ranked_list_id):
             resource_type = "ranked list",
             resource_id = ranked_list_id
         )
+
     # Get the full list of RankedThings in this RankedList
     ranked_things = RankedList(**doc).ranked_things
-    # Instead of returning RankedThings with only Thing ids, use those ids to
-    # pull the full data of each Thing
-    for ranked_thing in ranked_things:
-        thing_doc = db.things.find_one(
-            {"_id": PyObjectId(ranked_thing.thing_id)}
-        )
-        if thing_doc is None:
-            raise ResourceNotFoundInDatabaseError(
-                resource_type = "thing (referred to in this ranked list)",
-                resource_id = ranked_thing.thing_id
-            )
-        ranked_thing.thing = Thing(**thing_doc)
-        ranked_thing.thing_id = None
 
-    return to_json(
-        {
-            "result": "success",
-            "msg": (
-                f"Successfully retrieved full list of ranked things "
-                f"in the ranked list with id {ranked_list_id}"
-            ),
-            "ranked_things": ranked_things,
-            "http_status_code": 200
-        }
-    ), 200
-
-
-
-    # paginator = Paginator(
-    #     endpoint_name = endpoint_name, 
-    #     model = RankedThing,
-    #     query = db.ranked_lists.find_one({{"_id": ranked_list_id}}),
-    #     num_all_docs_in_db = num_all_ranked_things_in_ranked_list
-    # )
-    # return paginator.paginate(requested_page=requested_page)
+    # Paginate the ranked_things list
+    paginator = ListPaginator(
+        endpoint_name = endpoint_name,
+        model = RankedThing,
+        item_list = ranked_things,
+        item_list_already_sorted = True,
+        final_page_list_processor = pull_actual_things_from_database,
+        url_for_kwargs = {"ranked_list_id": ranked_list_id}
+    )
+    return paginator.paginate(requested_page=requested_page)
