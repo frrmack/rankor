@@ -9,6 +9,8 @@ and necessary for a robust api.
 # Import the main models from their respective files, so the rest of rankor can
 # import them directly from rankor.models (Note that models.ranked_thing imports
 # Thing and Score, models.ranked_list imports Score and RankedThing)
+from rankor.models.jsonable_model import JsonableModel
+from rankor.models.mongo_model import MongoModel
 from rankor.models.thing import Thing
 from rankor.models.fight import Fight
 from rankor.models.score import Score
