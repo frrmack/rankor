@@ -32,27 +32,34 @@ import settings
 
 class BasePaginator(object):
     """
-    A class that handles pagination for endpoints, which return a rather long
-    list of items. 
+    A template class for paginators, which handle pagination for endpoints that
+    return a rather long list of items. 
     
     Examples of such endpoints are endpoints.things.list_all_things,
     endpoints.ranked_lists.list_all_ranked_lists,
     endpoints.fights.recorded_fights, and endpoints.full_ranked_list_of_things.
     
     Since such lists can get long, the results are partitioned into a set number
-    of pages. The page size (number of list items to include in each page), as 
-    well as what to sort the items by before partitioning into pages are 
+    of pages. The page size (number of list items to include in each page), as
+    well as what to sort the items by before partitioning into pages are
     determined in the api settings for each endpoint (settings.py in the root).
 
-    You can ask for a specific page, for example (in list_all_things):
-    curl -i -X GET 'http://localhost:5000/rankor/things/?page=3'
+    This is a base template for specialized paginators to build upon. It
+    provides shared initialization code, setting validations, common pagination
+    code such as creating the navigation links and packaging of the page
+    response.
 
-    If you don't give a page parameter, it will return page 1. The response will
-    also include the page number and the links to the following endpoint uris:
-    - this_page
-    - next_page     (if there is one)
-    - previous_page (if there is one)
-    - last_page
+    It provides a common template:
+    You can ask for a specific page, for example (in list_all_things): 
+    curl -X GET 'http://localhost:5000/rankor/things/?page=3'
+
+    If you don't give a page parameter, the endpoint will return page 1. 
+    The response will also include the page number and the links to the 
+    following endpoint uris: 
+    - this_page 
+    - next_page     (if there is one) 
+    - previous_page (if there is one) 
+    - last_page 
     These links are there to help iterate over all results.
     """
 
@@ -247,20 +254,19 @@ class BasePaginator(object):
 
 class QueryPaginator(BasePaginator):
     """
-    A class that handles pagination for endpoints, which return a rather long
-    list of items. 
+    A class that handles pagination for endpoints, which return a list of items
+    retrieved from a single database query.
     
-    Examples of such endpoints are endpoints.things.list_all_things,
-    endpoints.ranked_lists.list_all_ranked_lists,
-    endpoints.fights.recorded_fights, and endpoints.full_ranked_list_of_things.
-    
-    Since such lists can get long, the results are partitioned into a set number
-    of pages. The page size (number of list items to include in each page), as 
-    well as what to sort the items by before partitioning into pages are 
-    determined in the api settings for each endpoint (settings.py in the root).
+    Examples of such endpoints:
+    - endpoints.things.list_all_things
+    - endpoints.ranked_lists.list_all_ranked_lists
+
+    It takes two specialized arguments beyond standard BasePaginator args:
+    - query:                a db query that retrieves a list of documents
+    - num_all_docs_in_db:   size of the query (how many docs it retrieves)  
 
     You can ask for a specific page, for example (in list_all_things):
-    curl -i -X GET 'http://localhost:5000/rankor/things/?page=3'
+    curl -X GET 'http://localhost:5000/rankor/things/?page=3'
 
     If you don't give a page parameter, it will return page 1. The response will
     also include the page number and the links to the following endpoint uris:
@@ -333,27 +339,33 @@ class QueryPaginator(BasePaginator):
 
 class ListPaginator(BasePaginator):
     """
-    A class that handles pagination for endpoints, which return a rather long
-    list of items. 
+    A class that handles pagination for endpoints, which takes an existing list
+    of items and paginates said link.
     
-    Examples of such endpoints are endpoints.things.list_all_things,
-    endpoints.ranked_lists.list_all_ranked_lists,
-    endpoints.fights.recorded_fights, and endpoints.full_ranked_list_of_things.
-    
-    Since such lists can get long, the results are partitioned into a set number
-    of pages. The page size (number of list items to include in each page), as 
-    well as what to sort the items by before partitioning into pages are 
-    determined in the api settings for each endpoint (settings.py in the root).
+    Examples of such endpoints:
+    - endpoints.fights.recorded_fights
+    - endpoints.ranked_things.list_ranked_things
 
-    You can ask for a specific page, for example (in list_all_things):
-    curl -i -X GET 'http://localhost:5000/rankor/things/?page=3'
+    A use case for this paginator is when we have a list of document ids and we 
+    want to respond with a list of the actual documents these ids refer to. To 
+    respond fast and in short chunks, we partition the id list into pages, and 
+    only read the full documents for one page at a time. In this use case, the 
+    pulling of the documents using ids can be done utilizing the 
+    final_page_list_processor argument.
+
+    It takes two specialized arguments beyond standard BasePaginator args: -
+    - item_list:                the list we are paginating
+    - item_list_aready_sorted:  self explanatory bool (on if list needs sorting)
+
+     You can ask for a specific page, for example (in list_ranked_things):
+    curl -X GET 'http://localhost:5000/rankor/ranked-lists/<id>/ranked-things?page=3'
 
     If you don't give a page parameter, it will return page 1. The response will
-    also include the page number and the links to the following endpoint uris:
-    - this_page
-    - next_page     (if there is one)
-    - previous_page (if there is one)
-    - last_page
+    also include the page number and the links to the following endpoint uris: 
+    - this_page 
+    - next_page     (if there is one) 
+    - previous_page (if there is one) 
+    - last_page 
     These links are there to help iterate over all results.
     """
 
@@ -385,29 +397,22 @@ class ListPaginator(BasePaginator):
 
     def get_page_items(self, page):
         """
-        We will retrieve all documents and sort them based on the relevant
-        sorting criterion, then divide this list into pages that only include
-        page_size items. Page sizes for each related endpoint, as well as how to
-        sort the items are defined in the api settings (settings.py in rankor's
-        root directory). 
+        We will sort the list if not already sorted, then figure out a slicing
+        index corresponding to the requested page. 
         
-        Sorting, skipping forward to the current page, and limiting the number
-        of items to page_size are all applied to the query cursor before reading
-        the page's documents from the database.
-        
-        For example, let's say we're listing all things (GET /rankor/things/),
-        the page size setting is 10 (each page has 10 things in it), sorting
-        field setting is by "name", and we need to respond with page 6. We will
-        query all things from the database's things collection (the query to do
-        this will be given when the Paginator instance was created). We will add
-        a step to sort by name field, then another to skip the first 50 things
-        (since they were in the previous 5 pages), then a limit step to list
-        only 10 things that start from there. Once we execute the command to
-        iterate over the cursor in a list comprehension, we will get a list of
-        51st through 60th Thing documents from the database. We will initiate a
-        Thing model instance with each of this documents, and finally, we will
-        use the model_encoder we're given to encode these Things. We return this
-        list of encoded Things as the page items for page 6.
+        For example, let's say we're listing all RankedThings of a RankedList
+        (GET /rankor/ranked-lists/<ranked-list-id>/ranked-things/?page=6), the
+        page size setting is 10 (each page has 10 RankedThings in it), sorting
+        field setting is (somewhat obviously) "rank", and we need to respond
+        with page 6. An endpoint code will already have pulled the specific
+        RankedList, and it will have provided us with the list
+        RankedList.ranked_things. We will sort the list if not already sorted
+        then figure out the indices of the list that denote our page. In this
+        case they are [51:61], since the 6th page has the 51st to 61st ranks. We
+        will slice the list to this sublist of ten. Finally, we will apply a
+        final_page_list_processor, which reads the Thing id in each list element
+        and reads the full Thing from the database to replace it in each of the
+        ten RankedThings. This is what we return.
         
         Later, in the paginate method, we will also provide links to page 5
         (previous_page), page 7 (next_page), the very last page (last_page), and
