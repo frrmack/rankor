@@ -8,8 +8,12 @@ are also used throughout rankor's code. The functions here provide standalone
 encoders that can be used on any object, including those models.
 """
 
+# Encoder imports
 import json
 from pydantic.json import pydantic_encoder
+
+# Model imports
+from rankor.models import JsonableModel
 
 
 def to_json(obj, **kwargs):
@@ -35,13 +39,16 @@ def to_json(obj, **kwargs):
     This function also defines rankor's default json pretty-print format with
     the indent and sort_keys keywords
     """
-    return json.dumps(
-        obj,
-        default=pydantic_encoder,
-        indent=2,
-        sort_keys=True,
-        **kwargs
-    )
+    if isinstance(obj, JsonableModel): 
+        return obj.to_json()
+    else:
+        return json.dumps(
+            obj,
+            default=pydantic_encoder,
+            indent=2,
+            sort_keys=True,
+            **kwargs
+        )
 
 
 def to_jsonable_dict(obj, **kwargs):
@@ -54,7 +61,7 @@ def to_jsonable_dict(obj, **kwargs):
     dict which will be encoded to json in its entirety. 
 
     While re-parsing a json dumped by to_json() into a dict again is slightly
-    ridiculous, pydantic.json.pydantic_encoder, json.JSONEncoder and json.dumps
+    ridiculous, pydantic.json.pydantic_encoder, json.JSONEncoder, and json.dumps
     are written in a way that this functionality is a bit difficult to ensure
     without writing a custom json encoder from scratch or using an existing
     external one (such as fastapi.encoders.jsonable_encoder). It's simpler and
