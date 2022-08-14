@@ -426,7 +426,7 @@ class ListPaginator(BasePaginator):
                 raise ValueError("Sorting direction is not set to either ascending "
                                 "or descending.")
             sorted_item_list = sorted(
-                self.data_list,
+                self.item_list,
                 key = lambda mdl: getattr(mdl, self.sorting_field),
                 reverse= sort_reversed
             )
