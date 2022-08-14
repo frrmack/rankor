@@ -170,8 +170,8 @@ class BasePaginator(object):
 
     def paginate(self, requested_page=None):
         """
-        Retrieve the list of items from the database, sort them, divide them
-        into pages, and respond with the requested page.
+        Gets the items for the requested page; crafts and returns a response
+        with them.
         """
         
         # The default page in absence of a specific request is the first one
