@@ -60,11 +60,15 @@ class BasePaginator(object):
         self, 
         endpoint_name: str,
         model: BaseModel,
-        model_encoder: Callable = to_jsonable_dict
+        model_encoder: Callable = to_jsonable_dict,
+        url_for_kwargs: dict = {}
     ):
         self.endpoint = endpoint_name
         self.model = model
         self.model_encoder = model_encoder
+        self.url_for_kwargs = url_for_kwargs
+        # Make sure we have the _external=True kwarg in url_for()
+        self.url_for_kwargs.update({"_external": True})
         # self.model_str: how the model is referred to in text
         # i.e. RankedList --> ranked_list
         self.model_str = camel_case_to_snake_case(model.__name__)
@@ -114,7 +118,7 @@ class BasePaginator(object):
                 f"model to include in each page of a response "
                 f"when a list of such model instances are requested. "
                 f"The current setting violates this requirement. "
-                f"{str(error)}"
+                f"{type(error).__name__}: {str(error)}"
             )
         # sorting field and sorting direction settings
         try:
@@ -151,7 +155,8 @@ class BasePaginator(object):
                 f"with two elements. The first is the name of "
                 f"a field of the model, and the latter is either "
                 f"'ascending' or 'descending'. The current setting "
-                f"violates this requirement. {str(error)}"
+                f"violates this requirement. "
+                f"{type(error).__name__}: {str(error)}"
             )
         return page_size, sorting_field, sorting_direction
 
@@ -194,24 +199,32 @@ class BasePaginator(object):
         # Create the links to this very page and the last page you can get
         links = {
             "this_page": {
-                "href": url_for(self.endpoint, page=page, _external=True),
+                "href": url_for(self.endpoint, 
+                                **self.url_for_kwargs,
+                                page=page),
                 "page": page
             },
             "last_page": {
-                "href": url_for(self.endpoint, page=last_page, _external=True),
+                "href": url_for(self.endpoint, 
+                                **self.url_for_kwargs,
+                                page=last_page),
                 "page": last_page
             }
         }
         # Add a link to the page before this one if this isn't the first page:
         if page > 1:
             links["previous_page"] = {
-                "href": url_for(self.endpoint, page=page-1, _external=True),
+                "href": url_for(self.endpoint, 
+                                **self.url_for_kwargs,
+                                page=page-1),
                 "page": page - 1
             }
         # Add a link to the page after this one if this isn't the last page:
         if page < last_page:
             links["next_page"] = {
-                "href": url_for(self.endpoint, page=page+1, _external=True),
+                "href": url_for(self.endpoint, 
+                                **self.url_for_kwargs,
+                                page=page+1),
                 "page": page + 1
             }
 
@@ -264,12 +277,14 @@ class QueryPaginator(BasePaginator):
         model: BaseModel,
         query: pymongo.cursor.Cursor,
         num_all_docs_in_db: int,
-        model_encoder: Callable = to_jsonable_dict
+        model_encoder: Callable = to_jsonable_dict,
+        url_for_kwargs: dict = {}
     ):
         super(QueryPaginator, self).__init__(
             endpoint_name=endpoint_name,
             model=model,
-            model_encoder=model_encoder
+            model_encoder=model_encoder,
+            url_for_kwargs=url_for_kwargs
         )
         self.query = query
         self.num_all_docs = num_all_docs_in_db
@@ -316,7 +331,7 @@ class QueryPaginator(BasePaginator):
 
 
 
-class ListPaginator(object):
+class ListPaginator(BasePaginator):
     """
     A class that handles pagination for endpoints, which return a rather long
     list of items. 
@@ -348,15 +363,17 @@ class ListPaginator(object):
         model: BaseModel,
         item_list: list,
         item_list_already_sorted: bool = False,
-        model_encoder: Callable = to_jsonable_dict
+        final_page_list_processor: Callable = None,
+        url_for_kwargs: dict = {}
     ):
         super(ListPaginator, self).__init__(
             endpoint_name=endpoint_name,
             model=model,
-            model_encoder=model_encoder
+            url_for_kwargs=url_for_kwargs
         )
         self.item_list = item_list
         self.item_list_already_sorted = item_list_already_sorted
+        self.final_page_list_processor = final_page_list_processor
         self.num_all_docs = len(item_list)
         # Validate that item_list items are instances of the declared model
         for item in item_list:
@@ -397,6 +414,7 @@ class ListPaginator(object):
         the url that returns this exact response (this_page). That last one is
         there in case to you need to keep track of which page you're on.
         """
+        # Sort the list if not already sorted
         if self.item_list_already_sorted:
             sorted_item_list = self.item_list
         else:
@@ -412,6 +430,12 @@ class ListPaginator(object):
                 key = lambda mdl: getattr(mdl, self.sorting_field),
                 reverse= sort_reversed
             )
+        # Slice the list to just get this page
         from_item = self.page_size * (page - 1)
         to_item = from_item + self.page_size
-        return sorted_item_list[from_item:to_item]
+        final_page_list = sorted_item_list[from_item:to_item]
+        # Apply final processor function (such as database reads into each item)
+        # if there is one given
+        if self.final_page_list_processor is not None:
+            final_page_list = self.final_page_list_processor(final_page_list)
+        return final_page_list
