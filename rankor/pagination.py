@@ -24,7 +24,7 @@ from typing import Callable
 from rankor.json import to_jsonable_dict, to_json
 
 # Utility imports (helper functions)
-from utils import camel_case_to_snake_case
+from utils import model_name_to_instance_name
 
 # Api settings for page sizes and sorting keys
 import settings
@@ -78,7 +78,7 @@ class BasePaginator(object):
         self.url_for_kwargs.update({"_external": True})
         # self.model_str: how the model is referred to in text
         # i.e. RankedList --> ranked_list
-        self.model_str = camel_case_to_snake_case(model.__name__)
+        self.model_str = model_name_to_instance_name(model.__name__)
         # pagination settings
         (
             self.page_size, 
@@ -106,7 +106,7 @@ class BasePaginator(object):
         Reads page size and sorting key settings from the api settings file,
         throws informative exceptions if settings are not valid.    
         """
-        model_str = camel_case_to_snake_case(model.__name__)
+        model_str = model_name_to_instance_name(model.__name__)
         # page size setting
         try:
             page_size = settings.NUMBER_ITEMS_IN_EACH_PAGE[model_str]
