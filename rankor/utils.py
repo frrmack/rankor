@@ -35,20 +35,22 @@ def model_name_to_casual_mention(model_name):
 
 
 
-def list_is_sorted(checked_list, sorting_key=None, reversed=False):
+def list_is_sorted(checked_list, key=lambda x: x, reverse=False):
     """
     Checks if a list is sorted or not, returns True or False
+    Complexity is O(n) in the worst case scenario: a sorted list
     """
-    if sorting_key is None:
-        def sorting_key(item):
-            return item
-
-    def compare_items(i):
-        if reversed:
-            return sorting_key(checked_list[i]) >= sorting_key(checked_list[i+1])
+    def elements_out_of_order(prev_index, elem):
+        if reverse:
+            return key(checked_list[prev_index]) < key(elem)
         else:
-            return sorting_key(checked_list[i]) <= sorting_key(checked_list[i+1])
+            return key(checked_list[prev_index]) > key(elem) 
 
-    last_index = len(checked_list) - 1
-    return all( compare_items(i) for i in range(last_index) )
-
+    for prev_index, elem in enumerate(checked_list[1:]):
+        # prev_index is the index of the previous element
+        # in the first iteration, prev_index is 0, elem is checked_list[1]
+        # in the second iteration, prev_index is 1, elem is checked_list[2]
+        # etc.        
+        if elements_out_of_order(prev_index, elem): 
+            return False
+    return True

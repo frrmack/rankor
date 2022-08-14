@@ -355,7 +355,7 @@ class ListPaginator(BasePaginator):
 
     It takes two specialized arguments beyond standard BasePaginator args: -
     - item_list:                the list we are paginating
-    - item_list_aready_sorted:  self explanatory bool (on if list needs sorting)
+    - item_list_aready_sorted:  optional bool on if list needs sorting
 
      You can ask for a specific page, for example (in list_ranked_things):
     curl -X GET 'http://localhost:5000/rankor/ranked-lists/<id>/ranked-things?page=3'
