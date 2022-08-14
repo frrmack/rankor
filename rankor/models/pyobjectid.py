@@ -1,11 +1,15 @@
 """
 Custom pydantic field data types PyObjectId and PyObjectIdString.
 
-These data types help pydantic handle and validate the bson ObjectId field
-assigned by mongodb -- it ensures both correct validation by pydantic and
-correct string encoding into json. To understand why we are defining a
-PyObjectId for pydantic to handle mongodb's bson object ids, check out the
-following link:
+These data types help pydantic handle and validate the bson ObjectId type.
+Mongodb uses this type for the unique identifiers of stored documents. Mongo
+automatically assigns an "_id" field with an ObjectId to a document at first
+write
+
+Using this data type in model fields ensures both correct validation by pydantic
+and correct string encoding into json. To further understand why we are defining
+a PyObjectId for pydantic to handle mongodb's bson object ids, you can check out
+the discussion in the following link:
 https://stackoverflow.com/questions/59503461/how-to-parse-objectid-in-a-pydantic-model
 
 If you're wondering why we are using the alias="_id" part when we are defining
@@ -56,11 +60,11 @@ class PyObjectId(BsonObjectId, BsonObjectIdValidator):
 
 class PyObjectIdString(str, BsonObjectIdValidator):
     """
-    Custom pydantic field type for strings of bson object ids. The object
-    ids themselves are binary objects, and should be referred to as PyObjectId.
-    This class is used to denote fields that contain the hex value string of a
-    bson object id. This is used for fields that contain a string reference
-    to the id of a different document.
+    Custom pydantic field type for strings of bson object ids. The object ids
+    themselves are binary objects, and should be referred to as PyObjectId. This
+    class is used to denote fields that contain the hex string of a bson object
+    id. This is used for fields that contain a string reference to the id of a
+    different document.
     """
     pass
 
