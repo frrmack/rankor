@@ -6,9 +6,9 @@ from typing import Optional
 # Instances of this model are not stored in the database. They are put together
 # based on the thing to score mapping saved in RankedList documents in the
 # database. There is no ranked_things collection in the database. Therefore,
-# they do not have a database id, and they don't inherit from rankor's
-# MongoModel, but simply from the pydantic BaseModel
-from pydantic import BaseModel
+# they do not have a database id, and they don't inherit from MongoModel, but 
+# simply from JsonableModel.
+from rankor.models.jsonable_model import JsonableModel
 
 # Model imports
 # Thing is the model for what we are ranking
@@ -23,7 +23,7 @@ from rankor.models.score import Score
 from rankor.models.pyobjectid import PyObjectIdString
 
 
-class RankedThing(BaseModel):
+class RankedThing(JsonableModel):
     """
     A RankedThing instance represents where a Thing stands in terms of rankings
     within a RankedList.

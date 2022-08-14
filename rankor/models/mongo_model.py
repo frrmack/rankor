@@ -1,11 +1,13 @@
-# Pydantic provides data validation and creates a schema using typing,
-# which is Python's own runtime support for type hints. This is good
-# and necessary for a robust api. 
-from pydantic import BaseModel, Field
+# Pydantic provides data validation and creates a schema using typing, which is
+# Python's own runtime support for type hints. This is good and necessary for a
+# robust api. Here we are importing Field to design a custom pydantic Field for
+# the id.
+from pydantic import Field
 from typing import Optional
 
-# JSON encoding
-import json
+# Jsonable is the granddaddy of all rankor models, it provides the necessary
+# json encoding methods.
+from rankor.models.jsonable_model import JsonableModel
 
 # This is used to help Pydantic handle the bson ObjectId field from mongodb.
 # You can find more discussion and examples around how to handle this issue
@@ -14,7 +16,7 @@ import json
 from rankor.models.pyobjectid import PyObjectId
 
 
-class MongoModel(BaseModel):
+class MongoModel(JsonableModel):
     """
     Parent class for most Rankor models to inherit. It handles the bson object
     id stuff assigned by mongodb as an optional id field with an alias "_id".
@@ -41,75 +43,56 @@ class MongoModel(BaseModel):
     already has an id with the alias "_id"), it will stay on, and will still be
     validated as the correct ObjectId type. 
     
-    The to_json, to_jsonable_dict and to_bsonable_dict methods are just for
-    convenience to ensure correct serialization with these strict typing
-    schemas. For example, bson supports native ObjectId and datetime types, so
-    to_bsonable_dict method returns a dict representation with those types, but
-    to_jsonable_dict method converts an ObjectId into an str of its hex string
-    value, and it converts a datetime object into an ISO8601 string. Both
-    to_jsonable_dict and to_bsonable_dict methods return dicts with the relevant
-    json or bson encodings, and to_json returns an actual json string of the
-    jsonable_dict. 
+    The to_bsonable_dict() method is a counterpart to
+    JsonableModel.to_jsonable_dict(). Just as to_jsonable_dict() creates a dict
+    represenation of the model ready to be converted into json,
+    to_bsonable_dict() creates a dict representation of the model ready to be
+    converted to a bson document to store in the mongodb. This ensure correct
+    serialization with these strict typing schemas. For example, bson supports
+    native ObjectId and datetime types, so to_bsonable_dict method returns a
+    dict representation with those types, but to_jsonable_dict method converts
+    an ObjectId into an str of its hex string value, and it converts a datetime
+    object into an ISO8601 string. In addition, to_bsonable_dict() also handles
+    the id field on both the pydantic model and mongodb bson document sides.
     """
+
     id: Optional[PyObjectId] = Field(None, alias="_id")
 
 
-    def to_json(self):
+    def to_bsonable_dict(self, *args, **kwargs):
         """
-        A simple wrapper around BaseModel.json() with a few keyword arguments
-        already set as the default json serialization behavior of MongoModel. It
-        uses pydantic's json encoder, it looks at pydantic.json.ENCODERS_BY_TYPE
-        to figure out how to encode non-standard types. 
+        Returns a python dict representation of the model, which includes
+        complex python types that pymongo's bson conversion can handle.
         
-        It excludes fields that are None from the json result by default (this
-        includes optional fields that aren't set), and pretty-print-ifies the
-        json with sorted keys and indents for readability.
-        """
-        return self.json(exclude_none=True, indent=2, sort_keys=True)
+        This is in contrast to (inherited) JsonableModel.to_jsonable_dict(),
+        which converts such complex data types into json-friendly basic types.
+        The json encoding relies on pydantic's encoder, and the bson conversion
+        is handled by pymongo. The data types used in these two cases, differ,
+        though. For example, pymongo accepts native ObjectId and datetime
+        types (which it encodes as bson types oid and date), so
+        to_bsonable_dict() returns a dict representation with those python
+        types, whereas to_jsonable_dict() encodes an 'ObjectId' as its hex
+        string ('str'), and it encodes a 'datetime' object as an ISO8601
+        timestamp string ('str').
 
-
-    def to_jsonable_dict(self):
-        """
-        Encodes complex classes in relevant serialization types just as the
-        to_json() method (such as converting datetime objects to isoformat
-        timestamp strings, for example), but returns a dict representation with
-        these json-able contents instead of a json string. This is handy when
-        you need the encoding but want to keep a dict, for example when you need
-        to include it in another dict which will be encoded to json in its
-        entirety. It excludes fields set to None (this includes Optional fields
-        that were never set).
+        It's a simple wrapper around the dict() method. It has by_alias set to
+        True, which is very important, as we want the 'id' field of a MongoModel
+        to be recorded by its alias '_id' in a bson document to be written to
+        mongodb. "_id" is the special bson object field name that mongodb uses
+        as the identifier of a document in the database. There is more info and
+        links on this in rankor/models/pyobjectid.py, but basically we don't
+        directly call the model's field '_id' to avoid pydantic treating it as a
+        private field and hiding it. We get around this by calling it 'id' and
+        using the alias '_id' for it. 
         
-        While re-parsing a json dumped from a dict by BaseModel.json is slightly
-        ridiculous, pydantic.json.pydantic_encoder, pydantic.BaseModel.json, and
-        pydantic.BaseModel.dict are written in a way that this functionality is
-        a bit difficult to ensure without writing a custom json encoder or using
-        an existing external one (such as fastapi.encoders.jsonable_encoder),
-        and it's simpler and more straightforward to just do this instead. The
-        performance difference is absolutely negligible for rankor's use cases. 
-        
-        This lacking feature (a jsonable encoder returning a dict) has actually
-        been proposed for pydantic, and it's favored by Samuel Colvin
-        (pydantic's author). You can read more about it here:
-        https://github.com/samuelcolvin/pydantic/issues/951#issuecomment-552463606
-        """
-        return json.loads(self.to_json())
+        Like JsonableModel.to_jsonable_dict, this also excludes fields that are
+        set to None from the model's representation, since it inherits
+        JsonableModel's dict() method, which has exclude_none keyword set to
+        True by default. This returns a dict, not a bson, but it's a dict with
+        the desired data types for conversion to bson. Pymongo will convert it
+        to bson before writing it to the mongodb database.
 
-
-    def to_bsonable_dict(self):
+        More info on pymongo's bson encoding:
+        https://pymongo.readthedocs.io/en/stable/api/bson/index.html#module-bson
         """
-        A simple wrapper around BaseModel.dict(). It has by_alias set to True,
-        which is very important, as we want the 'id' field of a MongoModel to be
-        recorded by its alias '_id' in a bson document to be written to mongodb.
-        There is more info on this in rankor/models/pyobjectid.py, but basically
-        we are avoiding calling the field '_id' directly to avoid pydantic
-        treating it as a private field. We get around this by calling it 'id'
-        and using the alias '_id' for it. 
-        
-        Like to_jsonable_dict, this also excludes fields that are set to None
-        from the model's representation (this includes optional fields that are
-        not set). This returns a dict, not a bson, but it's a dict with the
-        desired data types for conversion to bson. Pymongo will convert it to
-        bson before writing it to the mongodb database.
-        """
-        return self.dict(by_alias=True, exclude_none=True)
-
+        return self.dict(*args, by_alias=True, **kwargs)

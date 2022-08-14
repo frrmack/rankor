@@ -1,13 +1,16 @@
-# Instances of this model are stored in RankedList instances, rather than in
-# their own mongodb collections. Therefore, they do not inherit from rankor's
-# MongoModel, but simply from the pydantic BaseModel
-from pydantic import BaseModel
+# Model template import
+# Instances of this model are not stored in the database. They are put together
+# based on the thing to score mapping saved in RankedList documents in the
+# database. There is no ranked_things collection in the database. Therefore,
+# they do not have a database id, and they don't inherit from MongoModel, but 
+# simply from JsonableModel.
+from rankor.models.jsonable_model import JsonableModel
 
 # Api settings (for scoring priors)
 import settings
 
 
-class Score(BaseModel):
+class Score(JsonableModel):
     """
     A Score instance represents the score of a Thing in a specific RankedList.
     As Things are compared in Fights within the context of a given RankedList,
