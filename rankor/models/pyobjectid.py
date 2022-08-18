@@ -4,7 +4,7 @@ Custom pydantic field data types PyObjectId and PyObjectIdString.
 These data types help pydantic handle and validate the bson ObjectId type.
 Mongodb uses this type for the unique identifiers of stored documents. Mongo
 automatically assigns an "_id" field with an ObjectId to a document at first
-write
+write.
 
 Using this data type in model fields ensures both correct validation by pydantic
 and correct string encoding into json. To further understand why we are defining
