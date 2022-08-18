@@ -3,7 +3,7 @@ The logic to update Things' Scores in a RankedList based on Fight results.
 
 It relies on Microsoft's Trueskill algorithm, which is a Bayesian rating system.
 It is a step on the path of development from Elo to Glicko algorithms in chess
-to leaderboard rankings for online multiplayer games.
+to leaderboard rankings and matchmaking in online multiplayer video games.
 
 Elo rating system was developed for rating chess players. It pioneered the model
 where:
@@ -78,9 +78,11 @@ https://tomrocksmaths.com/2021/07/16/elo-and-glicko-standardised-rating-systems/
 https://www.englishchess.org.uk/wp-content/uploads/2012/04/The_Glicko_system_for_beginners1.pdf
 http://www.glicko.net/glicko/glicko2.pdf
 
-Microsoft developed TrueSkill for Halo 3 leaderbards in 2006, then updated it
-and developed TrueSkill 2 for Gears of War and Halo 5. TrueSkill is a Bayesian
-algorithm, and just like Glicko, it reports two numbers:
+Microsoft developed TrueSkill for Halo 3 (and other) leaderboards in 2004 as a
+follow up to the initial skill-based matchmaking algorithm in Halo 2. Then they
+developed TrueSkill 2 as an update to it for Gears of War and Halo 5. TrueSkill
+and TrueSkill 2 are Bayesian systems, and just like Glicko, they report two
+numbers:
 
 - mu:       The current skill estimate of the player
 - sigma:    The degree of uncertainty in our estimate
@@ -133,11 +135,12 @@ estimate mu and sigma) in rankor.models.score, but here is a quick copy paste:
     ----------------------------------------------------------------------------
     Rankor uses the TrueSkill Bayesian inference algorithm to calculate ranking
     scores for Things based on Fight results. A Score has the mu and sigma
-    values of the TrueSkill Rating. TrueSkill uses a Gaussian posterior for
-    estimating the strength of a Thing (for ranking purposes). mu is the mean of
-    this posterior, it's our current best guess for a Thing's strength. sigma is
-    its standard deviation. The higher the sigma, the less sure we are that the
-    Thing's strength is indeed very near mu. 
+    values of the TrueSkill rating. TrueSkill uses a Gaussian posterior for
+    estimating the underlying 'strength' of a Thing (for ranking purposes). mu
+    is the mean of this posterior, it's our current best guess for a Thing's
+    strength. sigma is the standard deviation of this posterior, it represents
+    our uncertainty around our best guess. The higher the sigma, the less sure
+    we are that the Thing's strength is indeed very near mu. 
     
     - We know with 99% confidence that the Thing's strength is within the range
       of (mu - 3*sigma) and (mu + 3*sigma)
@@ -216,7 +219,6 @@ estimate mu and sigma) in rankor.models.score, but here is a quick copy paste:
     their underlying 'true' score). rankor_score is only what this rankor api
     suggests as a good ranking score design.
     --------------------------------------------------------------------------
-
 """
 
 

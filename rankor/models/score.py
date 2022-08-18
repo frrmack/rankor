@@ -22,11 +22,12 @@ class Score(JsonableModel):
 
     Rankor uses the TrueSkill Bayesian inference algorithm to calculate ranking
     scores for Things based on Fight results. A Score has the mu and sigma
-    values of the TrueSkill Rating. TrueSkill uses a Gaussian posterior for
-    estimating the strength of a Thing (for ranking purposes). mu is the mean of
-    this posterior, it's our current best guess for a Thing's strength. sigma is
-    its standard deviation. The higher the sigma, the less sure we are that the
-    Thing's strength is indeed very near mu. 
+    values of the TrueSkill rating. TrueSkill uses a Gaussian posterior for
+    estimating the underlying 'strength' of a Thing (for ranking purposes). mu
+    is the mean of this posterior, it's our current best guess for a Thing's
+    strength. sigma is the standard deviation of this posterior, it represents
+    our uncertainty around our best guess. The higher the sigma, the less sure
+    we are that the Thing's strength is indeed very near mu. 
     
     - We know with 99% confidence that the Thing's strength is within the range
       of (mu - 3*sigma) and (mu + 3*sigma)
@@ -39,16 +40,16 @@ class Score(JsonableModel):
 
     It also reports a min_possible_score, which is the equivalent of a TrueSkill
     score that Microsoft uses for ranking users based on their skill in
-    competitive games. They also use this for matchmaking. The min_possible_score
-    is (mu - 3 * sigma). We are 99% sure that the Thing's strength is at least
-    this min_possible_score. It can definitely be higher. It also could actually
-    be lower than this but that's a very low probability. So the
-    'min_possible_score' name is technically misleading, but accurate enough in
-    practice. Why is Microsoft using this? As players play more (or Things fight
-    more), the uncertainty around their skill level goes down, they have smaller
-    sigmas. For players / Things that didn't fight a lot yet, min_possible_score
-    will be low due to high sigma values. That's desired. If a
-    min_possible_score is high, you know that it's really high due to
+    competitive games. They also use this for matchmaking. The
+    min_possible_score is (mu - 3 * sigma). We are 99% sure that the Thing's
+    strength is at least this min_possible_score. It can definitely be higher.
+    It also could actually be lower than this but that's a very low probability.
+    So the 'min_possible_score' name is technically misleading, but accurate
+    enough in practice. Why is Microsoft using this? As players play more (or
+    Things fight more), the uncertainty around their skill level goes down, they
+    have smaller sigmas. For players / Things that didn't fight a lot yet,
+    min_possible_score will be low due to high sigma values. That's desired. If
+    a min_possible_score is high, you know that it's really high due to
     information from their fights, and not just because of a small number of
     data points. Think about it like this: On Amazon, would you buy a product
     that has 12000 reviews with an average of 4.1 stars, or another one that has
