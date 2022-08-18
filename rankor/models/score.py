@@ -26,12 +26,20 @@ class Score(JsonableModel):
     estimating the strength of a Thing (for ranking purposes). mu is the mean of
     this posterior, it's our current best guess for a Thing's strength. sigma is
     its standard deviation. The higher the sigma, the less sure we are that the
-    Thing's strength is indeed very near mu. We know with 99% confidence that
-    the Thing's strength is within the range of (mu - 3*sigma) and 
+    Thing's strength is indeed very near mu. 
     
+    - We know with 99% confidence that the Thing's strength is within the range
+      of (mu - 3*sigma) and (mu + 3*sigma)
+
+    - We know with 95% confidence that the Thing's strength is within the range
+      of (mu - 2*sigma) and (mu + 2*sigma)      
+
+    - We know with 68% confidence that the Thing's strength is within the range
+      of (mu - sigma) and (mu + sigma)
+
     It also reports a min_possible_score, which is the equivalent of a TrueSkill
     score that Microsoft uses for ranking users based on their skill in
-    competitive games. They also use this for matchmaking.The min_possible_score
+    competitive games. They also use this for matchmaking. The min_possible_score
     is (mu - 3 * sigma). We are 99% sure that the Thing's strength is at least
     this min_possible_score. It can definitely be higher. It also could actually
     be lower than this but that's a very low probability. So the
