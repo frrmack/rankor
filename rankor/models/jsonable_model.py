@@ -65,7 +65,13 @@ class JsonableModel(BaseModel):
         pretty-print-ifies the json with sorted keys and indents for
         readability.
         """
-        return self.json(*args, indent=2, sort_keys=True, **kwargs)
+        return self.json(
+            *args, 
+            exclude=None,
+            indent=2, 
+            sort_keys=True, 
+            **kwargs
+        )
 
 
     def to_jsonable_dict(self, *args, **kwargs):
