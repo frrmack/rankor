@@ -116,7 +116,6 @@ def list_ranked_things(ranked_list_id):
         endpoint_name = endpoint_name,
         model = RankedThing,
         item_list = ranked_things,
-        item_list_already_sorted = True,
         final_page_list_processor = pull_actual_things_from_database,
         url_for_kwargs = {"ranked_list_id": ranked_list_id}
     )

@@ -24,7 +24,7 @@ from typing import Callable
 from rankor.json import to_jsonable_dict, to_json
 
 # Utility imports (helper functions)
-from utils import model_name_to_instance_name
+from utils import model_name_to_instance_name, list_is_sorted
 
 # Api settings for page sizes and sorting keys
 import settings
@@ -327,10 +327,13 @@ class QueryPaginator(BasePaginator):
         the url that returns this exact response (this_page). That last one is
         there in case to you need to keep track of which page you're on.
         """
+        # Sort
         sorted_docs = self.query.sort(self.sorting_field, 
                                       self.sorting_direction)
+        # Slice
         num_docs_to_skip = self.page_size * (page - 1)
         page_docs = sorted_docs.skip(num_docs_to_skip).limit(self.page_size)
+        # Respond
         return [self.model_encoder(self.model(**doc)) for doc in page_docs]       
 
 
@@ -353,9 +356,8 @@ class ListPaginator(BasePaginator):
     pulling of the documents using ids can be done utilizing the 
     final_page_list_processor argument.
 
-    It takes two specialized arguments beyond standard BasePaginator args: -
+    It takes one specialized argument beyond standard BasePaginator args: -
     - item_list:                the list we are paginating
-    - item_list_aready_sorted:  optional bool on if list needs sorting
 
      You can ask for a specific page, for example (in list_ranked_things):
     curl -X GET 'http://localhost:5000/rankor/ranked-lists/<id>/ranked-things?page=3'
@@ -374,7 +376,6 @@ class ListPaginator(BasePaginator):
         endpoint_name: str,
         model: BaseModel,
         item_list: list,
-        item_list_already_sorted: bool = False,
         final_page_list_processor: Callable = None,
         url_for_kwargs: dict = {}
     ):
@@ -384,7 +385,6 @@ class ListPaginator(BasePaginator):
             url_for_kwargs=url_for_kwargs
         )
         self.item_list = item_list
-        self.item_list_already_sorted = item_list_already_sorted
         self.final_page_list_processor = final_page_list_processor
         self.num_all_docs = len(item_list)
         # Validate that item_list items are instances of the declared model
@@ -395,10 +395,58 @@ class ListPaginator(BasePaginator):
                                  f"{model.__name__}: {item}")
 
 
+    @property
+    def sorted_item_list(self):
+        """
+        Returns a sorted version of the provided item list.
+        
+        Pagination needs to partition a sorted list into pages, we need to make
+        sure that our list is indeed sorted.
+
+        We can just go ahead and tell python to sort it anyway, that's the
+        sensible approach to make sure it's sorted. However, if it is already
+        sorted, quicksort will take O(n^2) instead of O(nlogn), so this checks
+        if it's already sorted with an O(n) operation first to avoid that.
+        
+        In almost all practical rankor use cases, this won't matter as n won't
+        be nearly large enough for this to make any difference, and we could
+        just go ahead and sort it without checking, but technically it could
+        matter if a list gets REALLY long. You can safely consider this
+        unecessary overengineering "just in case".
+        """
+        # Define the sorting direction and sorting key first
+        is_sorting_reversed = {
+            pymongo.ASCENDING: False,
+            pymongo.DESCENDING: True,
+        }
+        try:
+            sort_reversed = is_sorting_reversed[self.sorting_direction]
+        except KeyError:
+            raise ValueError("Sorting direction is not set to either ascending "
+                            "or descending.")
+        def sorting_key(model):
+            return getattr(model, self.sorting_field)
+        # Now either directly return the list if already sorted,
+        # or return a sorted version if it isn't
+        if list_is_sorted(
+            self.item_list, 
+            key = sorting_key, 
+            reverse =sort_reversed
+        ):
+            return self.item_list
+        else:
+            return sorted(
+                self.item_list,
+                key = sorting_key,
+                reverse= sort_reversed
+            )
+
+
     def get_page_items(self, page):
         """
-        We will sort the list if not already sorted, then figure out a slicing
-        index corresponding to the requested page. 
+        Sorts the list if not already sorted (via the sorted_item_list
+        property), then figures out a slicing index corresponding to the
+        requested page. 
         
         For example, let's say we're listing all RankedThings of a RankedList
         (GET /rankor/ranked-lists/<ranked-list-id>/ranked-things/?page=6), the
@@ -419,26 +467,9 @@ class ListPaginator(BasePaginator):
         the url that returns this exact response (this_page). That last one is
         there in case to you need to keep track of which page you're on.
         """
-        # Sort the list if not already sorted
-        if self.item_list_already_sorted:
-            sorted_item_list = self.item_list
-        else:
-            if self.sorting_direction == pymongo.ASCENDING:
-                sort_reversed = False
-            elif self.sorting_direction == pymongo.DESCENDING:
-                sort_reversed = True
-            else:
-                raise ValueError("Sorting direction is not set to either ascending "
-                                "or descending.")
-            sorted_item_list = sorted(
-                self.item_list,
-                key = lambda mdl: getattr(mdl, self.sorting_field),
-                reverse= sort_reversed
-            )
-        # Slice the list to just get this page
         from_item = self.page_size * (page - 1)
         to_item = from_item + self.page_size
-        final_page_list = sorted_item_list[from_item:to_item]
+        final_page_list = self.sorted_item_list[from_item:to_item]
         # Apply final processor function (such as database reads into each item)
         # if there is one given
         if self.final_page_list_processor is not None:
