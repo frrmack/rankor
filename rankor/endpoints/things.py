@@ -278,7 +278,7 @@ def list_all_things():
         endpoint_name = endpoint_name, 
         model = Thing,
         query = db.things.find(),
-        num_all_docs_in_db=num_all_docs_in_db
+        num_all_docs_in_db = num_all_docs_in_db
     )
     return paginator.paginate(requested_page=requested_page)
 
