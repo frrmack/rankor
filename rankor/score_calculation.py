@@ -105,6 +105,7 @@ each player to the team.
 
 https://www.microsoft.com/en-us/research/project/trueskill-ranking-system/)
 https://www.microsoft.com/en-us/research/publication/trueskill-2-improved-bayesian-skill-rating-system/
+https://www.peachpit.com/articles/article.aspx?p=443596
 
 Of course, while these algorithms were developed for chess and Halo players,
 they are general rating systems, and are not limited to rating players of
@@ -168,7 +169,7 @@ estimate mu and sigma) in rankor.models.score, but here is a quick copy paste:
     that has 12000 reviews with an average of 4.1 stars, or another one that has
     5 reviews with an average of 4.2 stars? With the first one, you feel a lot
     more certain of the average star rating due to the large number of reviews.
-    This is aking to a Thing that has been in many Fights and therefore has a
+    This is akin to a Thing that has been in many Fights and therefore has a
     low sigma. The latter is like a Thing that only has been in a few Fights.
     The former would have a min_possible_score that actually is close to 4.1 (if
     we are using stars as our score unit), whereas the min_possible_score of the
@@ -177,13 +178,13 @@ estimate mu and sigma) in rankor.models.score, but here is a quick copy paste:
     has chosen to value this a lot. It ranks people based on the 99% certainty
     about their minimum skill level. This also creates the desired experience
     that a new player is ranked low at the beginning (due to high sigma), they
-    they rise up the ranks
+    then rise up the ranks as they play and the uncertainty goes down.
     
     While Rankor provides the min_possible_score value usually used with
     TrueSkill rankings, it also reports its own approach to reducing mu and
     sigma to a single score to sort by for ranking. This is because the ranking
     it wants to achieve is a different problem than leaderboards for multiplayer
-    games or the experience design for a new player in both matchmaking and
+    games or the experience design for a player in both matchmaking and
     rising up the ranks. Rankor calculates a rankor_score, and recommends using
     this for ranking. The rankor_score is (mu-sigma). The same idea of valuing
     high data, low sigma idea is still considered, but instead of the 99%
@@ -210,7 +211,7 @@ estimate mu and sigma) in rankor.models.score, but here is a quick copy paste:
     This means we have to worry less about a 12000 reviews 4.1 stars vs 5
     reviews 4.2 stars situation, the review numbers of products would be
     comparable in this analogy. This gives us the chance to use a value closer
-    to mu (our best guess), therefore while rankor still adjusts by going ine
+    to mu (our best guess), therefore while rankor still adjusts by going one
     stdev below the mean, it is less cautious than Microsoft due to the
     different nature of the problem and matchmaking.
 
