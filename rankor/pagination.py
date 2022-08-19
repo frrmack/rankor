@@ -409,18 +409,22 @@ class ListPaginator(BasePaginator):
         Returns a sorted version of the provided item list.
         
         Pagination needs to partition a sorted list into pages, we need to make
-        sure that our list is indeed sorted.
+        sure that our list is indeed sorted. This method does that.
 
-        We can just go ahead and tell python to sort it anyway, that's the
-        sensible approach to make sure it's sorted. However, if it is already
-        sorted, quicksort will take O(n^2) instead of O(nlogn), so this checks
-        if it's already sorted with an O(n) operation first to avoid that.
+        We can just go ahead and tell python to sort it regardless of if it may
+        already be sorted or not, that's the sensible approach to make sure it's
+        sorted. However, if it is already sorted, quicksort may end up closer to
+        O(n^2) (if an early item is chosen as a pivot) instead of O(nlogn), so
+        this checks if it's already sorted with an O(n) operation first to avoid
+        that.
         
-        In almost all practical rankor use cases, this won't matter as n won't
-        be nearly large enough for this to make any difference, and we could
-        just go ahead and sort it without checking, but technically it could
-        matter if a list gets REALLY long. You can safely consider this
-        unecessary overengineering "just in case".
+        In almost all practical rankor use cases, this won't matter as python's
+        implementation won't directly fall into this extremely unlucky pivot
+        selection by taking the first element, and n won't be nearly large
+        enough for this to make any difference anyway. We could just go ahead
+        and sort it without checking, but technically it could matter if a list
+        gets REALLY long. You can safely consider the 'is it already sorted?'
+        check unecessary overengineering "just in case".
         """
         # Define the sorting direction and sorting key first
         is_sorting_reversed = {
@@ -439,14 +443,14 @@ class ListPaginator(BasePaginator):
         if list_is_sorted(
             self.item_list, 
             key = sorting_key, 
-            reverse =sort_reversed
+            reverse = sort_reversed
         ):
             return self.item_list
         else:
             return sorted(
                 self.item_list,
                 key = sorting_key,
-                reverse= sort_reversed
+                reverse = sort_reversed
             )
 
 
