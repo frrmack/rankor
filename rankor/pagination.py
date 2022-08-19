@@ -68,11 +68,13 @@ class BasePaginator(object):
         endpoint_name: str,
         model: BaseModel,
         model_encoder: Callable = to_jsonable_dict,
+        final_page_list_processor: Callable = None,
         url_for_kwargs: dict = {}
     ):
         self.endpoint = endpoint_name
         self.model = model
         self.model_encoder = model_encoder
+        self.final_page_list_processor = final_page_list_processor
         self.url_for_kwargs = url_for_kwargs
         # Make sure we have the _external=True kwarg in url_for()
         self.url_for_kwargs.update({"_external": True})
@@ -202,7 +204,12 @@ class BasePaginator(object):
 
         # Get the contents of the page
         items_in_this_page = self.get_page_items(page)
-        
+
+        # Apply final processor function (such as database reads to update each
+        # item) if there is one given
+        if self.final_page_list_processor is not None:
+            items_in_this_page = self.final_page_list_processor(items_in_this_page)
+
         # Create the links to this very page and the last page you can get
         links = {
             "this_page": {
@@ -338,8 +345,6 @@ class QueryPaginator(BasePaginator):
 
 
 
-
-
 class ListPaginator(BasePaginator):
     """
     A class that handles pagination for endpoints, which takes an existing list
@@ -382,10 +387,10 @@ class ListPaginator(BasePaginator):
         super(ListPaginator, self).__init__(
             endpoint_name=endpoint_name,
             model=model,
+            final_page_list_processor=final_page_list_processor,
             url_for_kwargs=url_for_kwargs
         )
         self.item_list = item_list
-        self.final_page_list_processor = final_page_list_processor
         self.num_all_docs = len(item_list)
         # Validate that item_list items are instances of the declared model
         for item in item_list:
@@ -469,9 +474,4 @@ class ListPaginator(BasePaginator):
         """
         from_item = self.page_size * (page - 1)
         to_item = from_item + self.page_size
-        final_page_list = self.sorted_item_list[from_item:to_item]
-        # Apply final processor function (such as database reads into each item)
-        # if there is one given
-        if self.final_page_list_processor is not None:
-            final_page_list = self.final_page_list_processor(final_page_list)
-        return final_page_list
+        return self.sorted_item_list[from_item:to_item]
