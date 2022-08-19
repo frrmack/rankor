@@ -67,7 +67,7 @@ class JsonableModel(BaseModel):
         """
         return self.json(
             *args, 
-            exclude=None,
+            exclude_none=True,
             indent=2, 
             sort_keys=True, 
             **kwargs
