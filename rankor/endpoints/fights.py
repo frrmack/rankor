@@ -44,7 +44,7 @@ fight_endpoints = Blueprint('fight_endpoints', __name__)
 
 
 # processor function to fill the RankedThings response with Thing data from db
-def fight_ids_to_full_fight_data(fight_ids):
+def fight_ids_to_full_fight_data(fight_ids, thing_id_to_filter_for = None):
     """
     Takes a list of Fight ids, pulls the data for each Fight from the database,
     and returns a list of actual Fight instances.
@@ -58,6 +58,12 @@ def fight_ids_to_full_fight_data(fight_ids):
                 resource_id = fight_id
             )
         fights.append(Fight(**fight_doc))
+
+    if thing_id_to_filter_for is not None:
+        def thing_filter(fight):
+            return thing_id_to_filter_for in fight.fighting_things
+        fights = filter(thing_filter, fights)
+
     return fights
 
 
@@ -80,7 +86,8 @@ def get_recorded_fights(ranked_list_id):
     always set the page size setting for Fights to a very large number and
     effectively disable pagination by shoving everything into a single page).
 
-    For example: curl -i 
+    For example: 
+    curl -i 
          -X GET
          'http://localhost:5000/rankor/ranked-lists/a4325678901234567890bcd5/ranked-things/'
 
@@ -99,6 +106,64 @@ def get_recorded_fights(ranked_list_id):
 
     # Get the full list of Fight ids in this RankedList
     fight_ids = RankedList(**doc).fights
+
+    # Paginate the fights list
+    paginator = ListPaginator(
+        endpoint_name = endpoint_name,
+        model = Fight,
+        item_list = fight_ids,
+        final_page_list_processor = fight_ids_to_full_fight_data,
+        url_for_kwargs = {"ranked_list_id": ranked_list_id}
+    )
+    return paginator.paginate(requested_page=requested_page)
+
+
+
+# Get Fights of a Thing | GET    /rankor/ranked-lists/<ranked_list_id>/fights/things/<thing_id>
+@fight_endpoints.route(
+    ("/rankor/ranked-lists/<ObjectId:ranked_list_id>/fights/"
+     "things/<ObjectId:thing_id>"), 
+    methods=["GET"]
+)
+def get_fights_of_a_thing(ranked_list_id, thing_id):
+    """
+    GET request to list all Fights that a specific Thing has fought for a given
+    RankedList.
+
+    Like get_recorded_fights, this endpoint returns a sorted list of Fights,
+    paginated according to the api settings (settings.py in the root). The only
+    difference is that while get_recorded_fights provides all the fights in a
+    RankedList, this one limits its scope to the fights that a specific Thing
+    has fought (within the context of this RankedList, not all of its Fights in
+    all RankedLists).
+
+    For example: 
+    curl -i 
+         -X GET
+         'http://localhost:5000/rankor/ranked-lists/a4325678901234567890bcd5/ranked-things/'
+
+    """
+   # Python frame inspection code to get the name of this very function
+    endpoint_name = "." + _getframe().f_code.co_name
+    # Read the page parameter
+    requested_page = request.args.get("page", 1)
+    # Get the RankedList
+    doc = db.ranked_lists.find_one({"_id": ranked_list_id})
+    if doc is None:
+        raise ResourceNotFoundInDatabaseError(
+            resource_type = "ranked list",
+            resource_id = ranked_list_id
+        )
+
+    # Get the full list of Fight ids in this RankedList
+    fight_ids = RankedList(**doc).fights
+
+    # Prepare the final page list processor to also filter for our thing
+    def filtered_fight_ids_to_fight_data(fight):
+        return fight_ids_to_full_fight_data(
+            fight,
+            thing_id_to_filter_for = thing_id
+        )
 
     # Paginate the fights list
     paginator = ListPaginator(
