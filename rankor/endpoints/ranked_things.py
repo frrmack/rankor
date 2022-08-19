@@ -81,15 +81,19 @@ def list_ranked_things(ranked_list_id):
     RankedThing model instance. This list is what makes a RankedList "ranked"
     and a "list".
 
-    Normally, list endpoints are are paginated. However, this endpoint requires
+    Like all other list endpoints, this too is paginated. This endpoint requires
     reading the RankedList's Score for each Thing, then sorting them all based
     on these scores. Therefore, the entire sorted list of RankedThings is
-    already in memory, pagination does not cut out on database read speeds or
-    processing time, the overhead stays the same. A large number of Things may
-    still slow the response down, but this will be negligible compared to other
-    list endpoints unless we are talking about a huge number of Things.
-    Therefore, this endpoint doesn't use pagination at this point. In the
-    future, this can implement a ListPaginator, but it is a lower priority.
+    already in memory. One might think that since the whole thing is already in
+    memory, pagination does not cut out on database read speeds or processing
+    time and the overhead stays the same. However, what we already have in
+    memory is a list of RankedThings that only have the id data for each Thing,
+    and not the full data of the Things themselves. This means that we need to
+    read all that data from the database, which may take a while if the list is
+    long. Therefore we use a ListPaginator to partition the list into pages, and
+    we only read the Thing data from the database for the items in the requested
+    page rather than the whole list. This helps rankor stay nimble regardless of
+    the number of Things we're dealing with.
 
     For example: 
     curl -i 

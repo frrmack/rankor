@@ -45,9 +45,12 @@ class BasePaginator(object):
     determined in the api settings for each endpoint (settings.py in the root).
 
     This is a base template for specialized paginators to build upon. It
-    provides shared initialization code, setting validations, common pagination
-    code such as creating the navigation links and packaging of the page
-    response.
+    provides shared initialization code, setting validation checks, common 
+    pagination code such as creating the navigation links and packaging of 
+    the page response. From this jumping point, different Paginators specialize 
+    in handling different types of data. For example, QueryPaginator takes a 
+    database query for a list of items and paginates that, while ListPaginator 
+    handles an already existing list in memory.
 
     It provides a common template:
     You can ask for a specific page, for example (in list_all_things): 
