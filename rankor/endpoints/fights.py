@@ -6,7 +6,7 @@ Arrange a new Fight   | GET    /rankor/ranked-lists/<ranked_list_id>/fights/new/
 Save a Fight result   | POST   /rankor/ranked-lists/<ranked_list_id>/fights/      
 Delete a Fight        | DELETE /rankor/ranked-lists/<ranked_list_id>/fights/<fight_id>
 Get recorded Fights   | GET    /rankor/ranked-lists/<ranked_list_id>/fights/
-Get Fights of a Thing | GET    /rankor/ranked-lists/<ranked_list_id>/fights/things/<thing_id>
+Get Fights of a Thing | GET    /rankor/ranked-lists/<ranked_list_id>/fights/of-a-thing/<thing_id>
 ------------------------------------------------------------------------------
 """
 
@@ -68,6 +68,44 @@ def fight_ids_to_full_fight_data(fight_ids, thing_id_to_filter_for = None):
 
 
 
+# Delete a Fight        | DELETE /rankor/ranked-lists/<ranked_list_id>/fights/<fight_id>
+@fight_endpoints.route(
+    "/rankor/ranked-lists/<ObjectId:ranked_list_id>/fights/<ObjectId:fight_id>", 
+    methods=["DELETE"]
+)
+def delete_a_fight(ranked_list_id, fight_id):
+    """
+    DELETE request to remove a Fight from a RankedList and the database
+
+    Example:
+    curl -i -X DELETE 'http://localhost:5000/rankor/ranked-lists/a4325678901234567890bcd5/fights/12345678901234567890abcd/'   
+    """
+    # Update the RankedList in the database to remove ("pull" in mongo lingo)
+    # this Fight from its fights field
+    og_ranked_list = db.ranked_lists.update(
+        { '_id': ranked_list_id },
+        { '$pull': {'fights': fight_id} }
+    )
+    # Kill the Fight document with this id in the database.
+    deleted_fight_doc = db.fights.find_one_and_delete({"_id": fight_id})
+    # If unsuccessful, abort and send an HTTP 404 error
+    if deleted_fight_doc is None:
+        raise ResourceNotFoundInDatabaseError(
+            resource_type="fight",
+            resource_id=fight_id
+        )
+    # Success: Respond with the deleted Thing document that's 
+    # no longer in the database 
+    return to_json(
+        {
+            "result": "success",
+            "msg": f"deleted fight with id {fight_id} of the ranked list with id {ranked_list_id}.",
+            "fight": deleted_fight_doc,
+            "http_status_code": 200
+        },
+    ), 200
+
+
 # Get recorded Fights   | GET    /rankor/ranked-lists/<ranked_list_id>/fights/
 @fight_endpoints.route(
     "/rankor/ranked-lists/<ObjectId:ranked_list_id>/fights/", 
@@ -89,7 +127,7 @@ def get_recorded_fights(ranked_list_id):
     For example: 
     curl -i 
          -X GET
-         'http://localhost:5000/rankor/ranked-lists/a4325678901234567890bcd5/ranked-things/'
+         'http://localhost:5000/rankor/ranked-lists/a4325678901234567890bcd5/fights/'
 
     """
    # Python frame inspection code to get the name of this very function
@@ -119,10 +157,10 @@ def get_recorded_fights(ranked_list_id):
 
 
 
-# Get Fights of a Thing | GET    /rankor/ranked-lists/<ranked_list_id>/fights/things/<thing_id>
+# Get Fights of a Thing | GET    /rankor/ranked-lists/<ranked_list_id>/fights/of-a-thing/<thing_id>
 @fight_endpoints.route(
     ("/rankor/ranked-lists/<ObjectId:ranked_list_id>/fights/"
-     "things/<ObjectId:thing_id>"), 
+     "of-a-thing/<ObjectId:thing_id>"), 
     methods=["GET"]
 )
 def get_fights_of_a_thing(ranked_list_id, thing_id):
@@ -140,7 +178,7 @@ def get_fights_of_a_thing(ranked_list_id, thing_id):
     For example: 
     curl -i 
          -X GET
-         'http://localhost:5000/rankor/ranked-lists/a4325678901234567890bcd5/ranked-things/'
+         'http://localhost:5000/rankor/ranked-lists/a4325678901234567890bcd5/fights/of-a-thing/12345678901234567890abcd/'
 
     """
    # Python frame inspection code to get the name of this very function
