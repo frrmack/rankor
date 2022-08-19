@@ -17,9 +17,6 @@ from sys import _getframe
 # Flask imports
 from flask import Blueprint, request
 
-# Pymongo query imports
-from pymongo.collection import ReturnDocument
-
 # Python datetime import for timestamps
 from datetime import datetime
 
@@ -28,16 +25,14 @@ from rankor.json import to_json
 
 # Rankor model imports
 from rankor.models import (Fight, 
-                           RankedList)
+                           RankedList,
+                           PyObjectId)
 
 # Pagination imports
 from pagination import ListPaginator
 
 # Exception imports
 from rankor.errors import ResourceNotFoundInDatabaseError
-
-# Api settings import
-import settings
 
 # Database interface import
 from rankor import db
@@ -46,3 +41,71 @@ from rankor import db
 # The blueprint with all the RankedThing endpoints
 # This will be registered to the Flask app
 fight_endpoints = Blueprint('fight_endpoints', __name__)
+
+
+# processor function to fill the RankedThings response with Thing data from db
+def fight_ids_to_full_fight_data(fight_ids):
+    """
+    Takes a list of Fight ids, pulls the data for each Fight from the database,
+    and returns a list of actual Fight instances.
+    """
+    fights = []
+    for fight_id in fight_ids:
+        fight_doc = db.fights.find_one({"_id": PyObjectId(fight_id)})
+        if fight_doc is None:
+            raise ResourceNotFoundInDatabaseError(
+                resource_type = "fight (referred to in this ranked list)",
+                resource_id = fight_id
+            )
+        fights.append(Fight(**fight_doc))
+    return fights
+
+
+
+# Get recorded Fights   | GET    /rankor/ranked-lists/<ranked_list_id>/fights/
+@fight_endpoints.route(
+    "/rankor/ranked-lists/<ObjectId:ranked_list_id>/fights/", 
+    methods=["GET"]
+)
+def get_recorded_fights(ranked_list_id):
+    """
+    GET request to list all Fights fought for a given RankedList.
+
+    This is a sorted list of Fights, paginated according to the api settings
+    (settings.py in the root). While we read the entire list of fights from a
+    RankedList and sort it in memory (if necessary), that list only contains
+    Fight ids. We still need to read the Fight data for each of those from the
+    database, so this endpoint is paginated like all other list endpoints to
+    stay nimble. (Of course, like with any other paginated endpoint, one can
+    always set the page size setting for Fights to a very large number and
+    effectively disable pagination by shoving everything into a single page).
+
+    For example: curl -i 
+         -X GET
+         'http://localhost:5000/rankor/ranked-lists/a4325678901234567890bcd5/ranked-things/'
+
+    """
+   # Python frame inspection code to get the name of this very function
+    endpoint_name = "." + _getframe().f_code.co_name
+    # Read the page parameter
+    requested_page = request.args.get("page", 1)
+    # Get the RankedList
+    doc = db.ranked_lists.find_one({"_id": ranked_list_id})
+    if doc is None:
+        raise ResourceNotFoundInDatabaseError(
+            resource_type = "ranked list",
+            resource_id = ranked_list_id
+        )
+
+    # Get the full list of Fight ids in this RankedList
+    fight_ids = RankedList(**doc).fights
+
+    # Paginate the fights list
+    paginator = ListPaginator(
+        endpoint_name = endpoint_name,
+        model = Fight,
+        item_list = fight_ids,
+        final_page_list_processor = fight_ids_to_full_fight_data,
+        url_for_kwargs = {"ranked_list_id": ranked_list_id}
+    )
+    return paginator.paginate(requested_page=requested_page)
