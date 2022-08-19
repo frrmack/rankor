@@ -33,9 +33,6 @@ from pagination import ListPaginator
 # Exception imports
 from rankor.errors import ResourceNotFoundInDatabaseError
 
-# Api settings import
-import settings
-
 # Database interface import
 from rankor import db
 

@@ -35,9 +35,6 @@ from pagination import QueryPaginator
 from rankor.errors import (ResourceNotFoundInDatabaseError,
                            SameNameResourceAlreadyExistsError)
 
-# Api settings import
-import settings
-
 # Database interface import
 from rankor import db
 
