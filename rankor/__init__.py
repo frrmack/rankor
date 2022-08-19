@@ -1,3 +1,54 @@
+"""
+Rankor api is a Flask app to create ranked lists of things on the basis of
+fights. Fights are pairwise comparisons of things within the specific context of
+a ranked list.
+
+All specific endpoints of the rankor api are listed below.
+------------------------------------------------------------------------------
+
+Thing endpoints: 
+/rankor/things/
+
+Create a new Thing    |   POST    /rankor/things/
+Edit a Thing          |   PUT     /rankor/things/<thing_id>/
+Delete a Thing        |   DELETE  /rankor/things/<thing_id>/
+Delete ALL Things     |   DELETE  /rankor/things/delete-all/
+List all Things       |   GET     /rankor/things/     
+Get one Thing         |   GET     /rankor/things/<thing_id>/
+
+------------------------------------------------------------------------------
+
+RankedList endpoints: 
+/rankor/ranked-lists/
+
+Create a new RankedList   |   POST    /rankor/ranked-lists/
+Edit a RankedList         |   PUT     /rankor/ranked-lists/<ranked_list_id>/
+Delete a RankedList       |   DELETE  /rankor/ranked-lists/<ranked_list_id>/
+Delete ALL RankedLists    |   DELETE  /rankor/ranked-lists/delete-all/
+List all RankedLists      |   GET     /rankor/ranked-lists/
+Get one RankedList        |   GET     /rankor/ranked-lists/<ranked_list_id>/
+
+------------------------------------------------------------------------------
+
+RankedThing endpoint for a given RankedList: 
+/rankor/ranked-lists/<ranked_list_id>/ranked-things/
+
+List RankedThings  |  GET /rankor/ranked-lists/<ranked_list_id>/ranked-things/
+
+------------------------------------------------------------------------------
+
+Fight endpoints for a given RankedList: 
+/rankor/ranked-lists/<ranked_list_id>/fights/
+
+Arrange a new Fight   | GET    /rankor/ranked-lists/<ranked_list_id>/fights/new/
+Save a Fight result   | POST   /rankor/ranked-lists/<ranked_list_id>/fights/      
+Delete a Fight        | DELETE /rankor/ranked-lists/<ranked_list_id>/fights/<fight_id>
+Get recorded Fights   | GET    /rankor/ranked-lists/<ranked_list_id>/fights/
+Get Fights of a Thing | GET    /rankor/ranked-lists/<ranked_list_id>/fights/of-a-thing/<thing_id>
+
+------------------------------------------------------------------------------
+"""
+
 # Flask
 from flask import Flask
 
@@ -52,44 +103,3 @@ app.register_blueprint(ranked_thing_endpoints)
 from rankor.endpoints.fights import fight_endpoints
 app.register_blueprint(fight_endpoints)
 
-
-# All specific endpoints of the rankor api are listed below.
-# ------------------------------------------------------------------------------
-# Thing endpoints: 
-# /rankor/things/
-
-# Create a new Thing    |   POST    /rankor/things/
-# Edit a Thing          |   PUT     /rankor/things/<thing_id>/
-# Delete a Thing        |   DELETE  /rankor/things/<thing_id>/
-# Delete ALL Things     |   DELETE  /rankor/things/delete-all/
-# List all Things       |   GET     /rankor/things/     
-# Get one Thing         |   GET     /rankor/things/<thing_id>/
-
-# ------------------------------------------------------------------------------
-# RankedList endpoints: 
-# /rankor/ranked-lists/
-
-# Create a new RankedList   |   POST    /rankor/ranked-lists/
-# Edit a RankedList         |   PUT     /rankor/ranked-lists/<ranked_list_id>/
-# Delete a RankedList       |   DELETE  /rankor/ranked-lists/<ranked_list_id>/
-# Delete ALL RankedLists    |   DELETE  /rankor/ranked-lists/delete-all/
-# List all RankedLists      |   GET     /rankor/ranked-lists/
-# Get one RankedList        |   GET     /rankor/ranked-lists/<ranked_list_id>/
-
-# ------------------------------------------------------------------------------
-# RankedThing endpoint for a given RankedList: 
-# /rankor/ranked-lists/<ranked_list_id>/ranked-things/
-
-# List RankedThings  |  GET /rankor/ranked-lists/<ranked_list_id>/ranked-things/
-
-# ------------------------------------------------------------------------------
-# Fight endpoints for a given RankedList: 
-# /rankor/ranked-lists/<ranked_list_id>/fights/
-
-# Arrange a new Fight   | GET    /rankor/ranked-lists/<ranked_list_id>/fights/new/
-# Save a Fight result   | POST   /rankor/ranked-lists/<ranked_list_id>/fights/      
-# Delete a Fight        | DELETE /rankor/ranked-lists/<ranked_list_id>/fights/<fight_id>
-# Get recorded Fights   | GET    /rankor/ranked-lists/<ranked_list_id>/fights/
-# Get Fights of a Thing | GET    /rankor/ranked-lists/<ranked_list_id>/fights/things/<thing_id>
-
-# ------------------------------------------------------------------------------
