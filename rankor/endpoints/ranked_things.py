@@ -12,15 +12,6 @@ from sys import _getframe
 # Flask imports
 from flask import Blueprint, request
 
-# Pymongo query imports
-from pymongo.collection import ReturnDocument
-
-# Python datetime import for timestamps
-from datetime import datetime
-
-# Encoder imports
-from rankor.json import to_json
-
 # Rankor model imports
 from rankor.models import (RankedThing,
                            RankedList,
