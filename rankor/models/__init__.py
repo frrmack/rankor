@@ -54,7 +54,6 @@ if __name__ == '__main__':
                                                     "12345678901234567890ffff"
                                                    ],
                                  result = "FIRST_THING_WINS",
-                                 winner = "12345678901234567890abcd",
                                  ranked_list= "aaaaabbbbbcccccdddddefef",
                                  _id = "5647382910aaaa0192837465"
                                 )
