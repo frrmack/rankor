@@ -26,7 +26,8 @@ from rankor.json import to_json
 # Rankor model imports
 from rankor.models import (Fight, 
                            RankedList,
-                           PyObjectId)
+                           PyObjectId,
+                           PyObjectIdString)
 
 # Pagination imports
 from pagination import ListPaginator
@@ -68,6 +69,70 @@ def fight_ids_to_full_fight_data(fight_ids, thing_id_to_filter_for = None):
 
 
 
+# Save a Fight result   | POST   /rankor/ranked-lists/<ranked_list_id>/fights/      
+@fight_endpoints.route(
+    "/rankor/ranked-lists/<ObjectId:ranked_list_id>/fights/", 
+    methods=["POST"]
+)
+def save_a_fight_result(ranked_list_id):
+    """
+    POST request to directly add a Fight (with a result) to the database in its
+    own collection and to the RankedList it belongs to.
+
+    Fields to provide for a saved Fight are:
+    ranked_list:        The id string (PyObjectIdString)
+                        of the RankedList the Fight belongs to 
+    fighting_things:    A list of two id strings (PyObjectIdString), 
+                        the ids of the fighting Things
+    result:             one of these three strings (str): 
+                        'FIRST_THING_WINS', 'SECOND_THING_WINS', 'DRAW'
+
+    Attach the contents of the new Thing as data in JSON format.
+    Example:
+    curl -d '{"name": "Terminator", 
+              "image_url": "https://m.media-amazon.com/images/I/61qCgQZyhOL._AC_SY879_.jpg", 
+              "other_data": {"director": "James Cameron", "year": 1982}
+             }' 
+         -H "Content-Type: application/json" 
+         -X POST http://localhost:5000/rankor/things/
+    """
+    # Retrieve the data from the request and record the timestamp
+    new_fight_data = request.get_json()
+    new_fight_data["time_fought"] = datetime.utcnow()
+
+    # Create the new Fight instance, which also validates its data using pydantic,
+    # inserts it into the database, and retrieves the _id that mongodb automatically 
+    # assigned it. 
+    new_fight = Fight(**new_fight_data)
+    insert_result = db.fights.insert_one(new_fight.to_bsonable_dict())
+    new_fight.id = insert_result.inserted_id
+
+    # Save the new Fight's id to the beginning of the fights list of the RankedList 
+    og_ranked_list = db.ranked_lists.find_one_and_update(
+        { '_id': ranked_list_id },
+        { 
+            '$push': {
+                'fights': {
+                    '$each': [PyObjectIdString(new_fight.id)],
+                    '$position': 0
+                }
+            }
+        } 
+    )    
+
+    # Success: respond in json with the recorded Fight
+    return to_json(
+        {
+            "result": "success",
+            "msg": (f"Fight is given id {new_fight.id} and recorded to "
+                    f"RankedList with id {ranked_list_id}."),
+            "fight": new_fight,
+            "http_status_code": 200
+        },
+    ), 200
+
+
+
 # Delete a Fight        | DELETE /rankor/ranked-lists/<ranked_list_id>/fights/<fight_id>
 @fight_endpoints.route(
     "/rankor/ranked-lists/<ObjectId:ranked_list_id>/fights/<ObjectId:fight_id>", 
@@ -82,7 +147,7 @@ def delete_a_fight(ranked_list_id, fight_id):
     """
     # Update the RankedList in the database to remove ("pull" in mongo lingo)
     # this Fight from its fights field
-    og_ranked_list = db.ranked_lists.update(
+    og_ranked_list = db.ranked_lists.find_one_and_update(
         { '_id': ranked_list_id },
         { '$pull': {'fights': fight_id} }
     )
