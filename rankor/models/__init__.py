@@ -12,7 +12,7 @@ and necessary for a robust api.
 from rankor.models.jsonable_model import JsonableModel
 from rankor.models.mongo_model import MongoModel
 from rankor.models.thing import Thing
-from rankor.models.fight import Fight
+from rankor.models.fight import Fight, ProposedFight
 from rankor.models.score import Score
 from rankor.models.ranked_thing import RankedThing
 from rankor.models.ranked_list import RankedList
