@@ -44,13 +44,30 @@ NUMBER_ITEMS_IN_EACH_PAGE = {
 SORT_ITEMS_BY_FIELD = {
     "thing":        ("name", "ascending"),
     "ranked_list":  ("time_created", "descending"),
-    "ranked_thing": ("rank", "ascending"),            # change not recommended
-    "fight":        ("time_fought", "descending")     # change not recommended
+    "ranked_thing": ("rank", "ascending"),            
+    "fight":        ("time_fought", "descending") # changing this slows it down
 } 
 # These settings are pretty straightforward. The endpoints that respond with
 # lists (which may get long) paginate those lists, and deliver them in chunks.
 # These settings determine a) how many of each should be put in a single page,
 # and b) which field to sort them by before dividing them into pages.
+#
+# RankedThings should really be sorted by rank to make sense. If you want them
+# to be ranked by a different score metric, you should change that separately
+# for each RankedList, using their score_used_to_rank field. You can use the
+# edit_a_ranked_list endpoint for that, or just specify a different score metric
+# when you are creating the ranked list the first time.
+# 
+# Changing the field for Fights will slow down the list_recorded_fights
+# endpoint. This is because RankedLists keep fight ids sorted for (time_fought,
+# descending), which means latest fight is at the top. In this default case,
+# pagination can be done on the Fight id list and only the data for the page
+# Fights will be read from the database. If you want a different sorting field,
+# all the Fight data for all ids will need to be read first and then the whole
+# thing needs to be sorted. This defeats the purpose of pagination and loses the
+# fast and nimble response afforded by only reading data for the page items.
+# Therefore it is not recommended to change the sorting field setting for Fights
+# unless absolutely necessary.
 
 
 
