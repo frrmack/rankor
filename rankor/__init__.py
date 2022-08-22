@@ -40,9 +40,9 @@ List RankedThings  |  GET /rankor/ranked-lists/<ranked_list_id>/ranked-things/
 Fight endpoints for a given RankedList: 
 /rankor/ranked-lists/<ranked_list_id>/fights/
 
-Arrange a new Fight   | GET    /rankor/ranked-lists/<ranked_list_id>/fights/new/
-Save a Fight result   | POST   /rankor/ranked-lists/<ranked_list_id>/fights/      
-Delete a Fight        | DELETE /rankor/ranked-lists/<ranked_list_id>/fights/<fight_id>/
+Arrange a new Fight    | GET    /rankor/ranked-lists/<ranked_list_id>/fights/new/
+Save a Fight result    | POST   /rankor/ranked-lists/<ranked_list_id>/fights/      
+Delete a Fight         | DELETE /rankor/ranked-lists/<ranked_list_id>/fights/<fight_id>/
 List recorded Fights   | GET    /rankor/ranked-lists/<ranked_list_id>/fights/
 List Fights of a Thing | GET    /rankor/ranked-lists/<ranked_list_id>/fights/of-a-thing/<thing_id>/
 
