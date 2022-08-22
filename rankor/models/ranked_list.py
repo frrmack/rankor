@@ -7,9 +7,9 @@ from datetime import datetime
 from rankor.models.mongo_model import MongoModel
 
 # Model imports 
-# Score is a rankor model to package ranking score info for a Thing RankedThing
-# is a rankor model that contains the rank, score, and id of a Thing within a
-# RankedList
+# Score is a rankor model to package ranking score information for a Thing.
+# RankedThing is a rankor model that contains the rank, score, and id of a Thing
+# within a RankedList.
 from rankor.models.score import Score
 from rankor.models.ranked_thing import RankedThing
 
