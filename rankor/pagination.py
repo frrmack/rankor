@@ -11,14 +11,14 @@ from flask import url_for
 # Error imports
 from werkzeug.exceptions import BadRequest, InternalServerError
 
-# Model typing import (for explicit argument typing)
-from pydantic import BaseModel
-
 # Database cursor typing import (for explicit argument typing)
 import pymongo
 
 # Function typing import (for explicit argument typing)
 from typing import Callable
+
+# Model typing import (for explicit argument typing and validation)
+from rankor.models import JsonableModel
 
 # Encoder imports
 from rankor.json import to_jsonable_dict, to_json
@@ -69,7 +69,7 @@ class BasePaginator(object):
     def __init__(
         self, 
         endpoint_name: str,
-        model: BaseModel,
+        model: JsonableModel,
         model_encoder: Callable = to_jsonable_dict,
         final_page_list_processor: Callable = None,
         url_for_kwargs: dict = {}
@@ -79,7 +79,8 @@ class BasePaginator(object):
         self.model_encoder = model_encoder
         self.final_page_list_processor = final_page_list_processor
         self.url_for_kwargs = url_for_kwargs
-        # Make sure we have the _external=True kwarg in url_for()
+        # Make sure we have _external=True in url_for() kwargs,
+        # so that it returns an absolute url instead of a relative one
         self.url_for_kwargs.update({"_external": True})
         # self.model_str: how the model is referred to in text
         # i.e. RankedList --> ranked_list
@@ -290,7 +291,7 @@ class QueryPaginator(BasePaginator):
     def __init__(
         self, 
         endpoint_name: str,
-        model: BaseModel,
+        model: JsonableModel,
         query: pymongo.cursor.Cursor,
         num_all_docs_in_db: int,
         model_encoder: Callable = to_jsonable_dict,
@@ -382,7 +383,7 @@ class ListPaginator(BasePaginator):
     def __init__(
         self, 
         endpoint_name: str,
-        model: BaseModel,
+        model: JsonableModel,
         item_list: list,
         final_page_list_processor: Callable = None,
         url_for_kwargs: dict = {}
@@ -395,12 +396,12 @@ class ListPaginator(BasePaginator):
         )
         self.item_list = item_list
         self.num_all_docs = len(item_list)
-        # Validate that item_list items are instances of the declared model
-        for item in item_list:
-            if not isinstance(item, model):
-                raise ValueError(f"The following item in the list given to "
-                                 f"ListPaginator is not an instance of "
-                                 f"{model.__name__}: {item}")
+        # # Validate that item_list items are instances of the declared model
+        # for item in item_list:
+        #     if not isinstance(item, model):
+        #         raise ValueError(f"The following item in the list given to "
+        #                          f"ListPaginator is not an instance of "
+        #                          f"{model.__name__}: {item}")
 
 
     @property
@@ -438,6 +439,7 @@ class ListPaginator(BasePaginator):
                             "or descending.")
         def sorting_key(model):
             return getattr(model, self.sorting_field)
+                
         # Now either directly return the list if already sorted,
         # or return a sorted version if it isn't
         if list_is_sorted(
