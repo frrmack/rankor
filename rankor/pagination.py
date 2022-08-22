@@ -7,6 +7,7 @@ responses into multiple pages.
 
 # Flask imports
 from flask import url_for
+from models.pyobjectid import PyObjectIdString
 
 # Error imports
 from werkzeug.exceptions import BadRequest, InternalServerError
@@ -396,6 +397,21 @@ class ListPaginator(BasePaginator):
         )
         self.item_list = item_list
         self.num_all_docs = len(item_list)
+        # Validate that item_list items are instances of the declared model
+        # or id strings
+        for item in item_list:
+            try:
+                PyObjectIdString.validate(item)
+            except ValueError:
+                item_is_id_string = False
+            else:
+                item_is_id_string = True
+            if not isinstance(item, model) and \
+                not item_is_id_string:
+                raise ValueError(f"The following item in the list given to "
+                                 f"ListPaginator is not an instance of "
+                                 f"{model.__name__} or an id string: {item}. "
+                                 f"It is a {type(item).__name__}.")
 
 
     @property
