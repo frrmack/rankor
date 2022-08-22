@@ -38,6 +38,9 @@ from rankor.errors import ResourceNotFoundInDatabaseError
 # Database interface import
 from rankor import db
 
+# Api settings import
+import settings
+
 
 # The blueprint with all the RankedThing endpoints
 # This will be registered to the Flask app
@@ -45,11 +48,15 @@ fight_endpoints = Blueprint('fight_endpoints', __name__)
 
 
 # processor function to fill the RankedThings response with Thing data from db
-def fight_ids_to_full_fight_data(fight_ids, thing_id_to_filter_for = None):
+def fight_ids_to_full_fight_data(
+    fight_ids: list, 
+    thing_id_to_filter_for: PyObjectIdString = None
+):
     """
     Takes a list of Fight ids, pulls the data for each Fight from the database,
     and returns a list of actual Fight instances.
     """
+    # retrieve all fight data for these fight ids
     fights = []
     for fight_id in fight_ids:
         fight_doc = db.fights.find_one({"_id": PyObjectId(fight_id)})
@@ -60,10 +67,16 @@ def fight_ids_to_full_fight_data(fight_ids, thing_id_to_filter_for = None):
             )
         fights.append(Fight(**fight_doc))
 
+    # filter out just our thing's fights if needed
     if thing_id_to_filter_for is not None:
         def thing_filter(fight):
-            return thing_id_to_filter_for in fight.fighting_things
-        fights = filter(thing_filter, fights)
+            return (
+                PyObjectIdString(thing_id_to_filter_for) 
+                in fight.fighting_things
+            )
+        fights = list( 
+            filter(thing_filter, fights) 
+        )
 
     return fights
 
@@ -133,9 +146,9 @@ def save_a_fight_result(ranked_list_id):
 
 
 
-# Delete a Fight        | DELETE /rankor/ranked-lists/<ranked_list_id>/fights/<fight_id>
+# Delete a Fight        | DELETE /rankor/ranked-lists/<ranked_list_id>/fights/<fight_id>/
 @fight_endpoints.route(
-    "/rankor/ranked-lists/<ObjectId:ranked_list_id>/fights/<ObjectId:fight_id>", 
+    "/rankor/ranked-lists/<ObjectId:ranked_list_id>/fights/<ObjectId:fight_id>/", 
     methods=["DELETE"]
 )
 def delete_a_fight(ranked_list_id, fight_id):
@@ -210,22 +223,36 @@ def list_recorded_fights(ranked_list_id):
     # Get the full list of Fight ids in this RankedList
     fight_ids = RankedList(**doc).fights
 
+    # Special case: if the sorting field of fights is not the default 'latest
+    # fight at the top', we have to pull all the fight data so the paginator can
+    # sort on the non-default field determined by the settings. Doing this
+    # defeats the agility purpose of pagination, as we can no longer avoid
+    # reading ALL the data rather than just what's on one page. Therefore it is
+    # not recommended to change this setting, as described in the settings file
+    # itself.
+    if settings.SORT_ITEMS_BY_FIELD["fight"] == ("time_fought", "descending"):
+        item_list = fight_ids
+        final_page_list_processor = fight_ids_to_full_fight_data
+    else:
+        item_list = fight_ids_to_full_fight_data(fight_ids)
+        final_page_list_processor = None
+
     # Paginate the fights list
     paginator = ListPaginator(
         endpoint_name = endpoint_name,
         model = Fight,
-        item_list = fight_ids,
-        final_page_list_processor = fight_ids_to_full_fight_data,
+        item_list = item_list,
+        final_page_list_processor = final_page_list_processor,
         url_for_kwargs = {"ranked_list_id": ranked_list_id}
     )
     return paginator.paginate(requested_page=requested_page)
 
 
 
-# List Fights of a Thing | GET    /rankor/ranked-lists/<ranked_list_id>/fights/of-a-thing/<thing_id>
+# List Fights of a Thing | GET    /rankor/ranked-lists/<ranked_list_id>/fights/of-a-thing/<thing_id>/
 @fight_endpoints.route(
     ("/rankor/ranked-lists/<ObjectId:ranked_list_id>/fights/"
-     "of-a-thing/<ObjectId:thing_id>"), 
+     "of-a-thing/<ObjectId:thing_id>/"), 
     methods=["GET"]
 )
 def list_fights_of_a_thing(ranked_list_id, thing_id):
@@ -261,19 +288,21 @@ def list_fights_of_a_thing(ranked_list_id, thing_id):
     # Get the full list of Fight ids in this RankedList
     fight_ids = RankedList(**doc).fights
 
-    # Prepare the final page list processor to also filter for our thing
-    def filtered_fight_ids_to_fight_data(fight):
-        return fight_ids_to_full_fight_data(
-            fight,
-            thing_id_to_filter_for = thing_id
-        )
+    # Retrieve the fight data so that we can see which things are involved in
+    # each fight and filter out the ones where our thing has fought.
+    fights_of_our_thing = fight_ids_to_full_fight_data(
+        fight_ids,
+        thing_id_to_filter_for = thing_id
+    )
 
     # Paginate the fights list
     paginator = ListPaginator(
         endpoint_name = endpoint_name,
         model = Fight,
-        item_list = fight_ids,
-        final_page_list_processor = fight_ids_to_full_fight_data,
-        url_for_kwargs = {"ranked_list_id": ranked_list_id}
+        item_list = fights_of_our_thing,
+        url_for_kwargs = {
+            "ranked_list_id": ranked_list_id,
+            "thing_id": thing_id
+        }
     )
     return paginator.paginate(requested_page=requested_page)
