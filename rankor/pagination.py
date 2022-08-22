@@ -17,7 +17,7 @@ import pymongo
 # Function typing import (for explicit argument typing)
 from typing import Callable
 
-# Model typing import (for explicit argument typing and validation)
+# Model typing import (for explicit argument typing)
 from rankor.models import JsonableModel
 
 # Encoder imports
@@ -74,7 +74,7 @@ class BasePaginator(object):
         final_page_list_processor: Callable = None,
         url_for_kwargs: dict = {}
     ):
-        self.endpoint = endpoint_name
+        self.endpoint_name = endpoint_name
         self.model = model
         self.model_encoder = model_encoder
         self.final_page_list_processor = final_page_list_processor
@@ -92,19 +92,6 @@ class BasePaginator(object):
             self.sorting_direction
         ) = self.read_and_validate_pagination_settings(model)
         self.num_all_docs = None
-
-
-    def get_page_items(self, page: int) -> list:
-        """
-        Each specialized Paginator that inherits from BasePaginator needs to
-        override this method to implement its specific way to retrieve and
-        process the items in the requested page.
-        """
-        raise NotImplementedError("""This is the BasePaginator, which is a
-                                  template for other specialized Paginators. It
-                                  does not have a specific pagination algorithm.
-                                  A subclass of this should be used to paginate
-                                  responses instead.""")
 
 
     def read_and_validate_pagination_settings(self, model):
@@ -217,13 +204,13 @@ class BasePaginator(object):
         # Create the links to this very page and the last page you can get
         links = {
             "this_page": {
-                "href": url_for(self.endpoint, 
+                "href": url_for(self.endpoint_name, 
                                 **self.url_for_kwargs,
                                 page=page),
                 "page": page
             },
             "last_page": {
-                "href": url_for(self.endpoint, 
+                "href": url_for(self.endpoint_name, 
                                 **self.url_for_kwargs,
                                 page=last_page),
                 "page": last_page
@@ -232,7 +219,7 @@ class BasePaginator(object):
         # Add a link to the page before this one if this isn't the first page:
         if page > 1:
             links["previous_page"] = {
-                "href": url_for(self.endpoint, 
+                "href": url_for(self.endpoint_name, 
                                 **self.url_for_kwargs,
                                 page=page-1),
                 "page": page - 1
@@ -240,7 +227,7 @@ class BasePaginator(object):
         # Add a link to the page after this one if this isn't the last page:
         if page < last_page:
             links["next_page"] = {
-                "href": url_for(self.endpoint, 
+                "href": url_for(self.endpoint_name, 
                                 **self.url_for_kwargs,
                                 page=page+1),
                 "page": page + 1
@@ -260,6 +247,19 @@ class BasePaginator(object):
                 "http_status_code": 200
             }
         ), 200
+
+
+    def get_page_items(self, page: int) -> list:
+        """
+        Each specialized Paginator that inherits from BasePaginator needs to
+        override this method to implement its specific way to retrieve and
+        process the items in the requested page.
+        """
+        raise NotImplementedError("""This is the BasePaginator, which is a
+                                  template for other specialized Paginators. It
+                                  does not have a specific pagination algorithm.
+                                  A subclass of this should be used to paginate
+                                  responses instead.""")
 
 
 
@@ -436,24 +436,34 @@ class ListPaginator(BasePaginator):
             sort_reversed = is_sorting_reversed[self.sorting_direction]
         except KeyError:
             raise ValueError("Sorting direction is not set to either ascending "
-                            "or descending.")
+                            f"or descending in settings for {self.model_str}.")
         def sorting_key(model):
             return getattr(model, self.sorting_field)
                 
         # Now either directly return the list if already sorted,
         # or return a sorted version if it isn't
-        if list_is_sorted(
-            self.item_list, 
-            key = sorting_key, 
-            reverse = sort_reversed
-        ):
-            return self.item_list
-        else:
-            return sorted(
-                self.item_list,
-                key = sorting_key,
+        try:
+            if list_is_sorted(
+                self.item_list, 
+                key = sorting_key, 
                 reverse = sort_reversed
-            )
+            ):
+                return self.item_list
+            else:
+                return sorted(
+                    self.item_list,
+                    key = sorting_key,
+                    reverse = sort_reversed
+                )
+        except AttributeError:
+            # if the items do not have the sorting field, this means that the
+            # items are not instances of the model, but another data type (such
+            # as the ids of model documents in the database). Since we do not
+            # have access to that information in that case (and pulling it from
+            # the db would need to be done for the whole list, defeating the
+            # goal of pagination to be fast and nimble), we can't sort by field,
+            # we will therefore just return the list as is
+            return self.item_list
 
 
     def get_page_items(self, page):

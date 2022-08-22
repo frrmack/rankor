@@ -4,9 +4,9 @@ Fight endpoints for a given RankedList:
 
 Arrange a new Fight   | GET    /rankor/ranked-lists/<ranked_list_id>/fights/new/
 Save a Fight result   | POST   /rankor/ranked-lists/<ranked_list_id>/fights/      
-Delete a Fight        | DELETE /rankor/ranked-lists/<ranked_list_id>/fights/<fight_id>
-Get recorded Fights   | GET    /rankor/ranked-lists/<ranked_list_id>/fights/
-Get Fights of a Thing | GET    /rankor/ranked-lists/<ranked_list_id>/fights/of-a-thing/<thing_id>
+Delete a Fight        | DELETE /rankor/ranked-lists/<ranked_list_id>/fights/<fight_id>/
+List recorded Fights   | GET    /rankor/ranked-lists/<ranked_list_id>/fights/
+List Fights of a Thing | GET    /rankor/ranked-lists/<ranked_list_id>/fights/of-a-thing/<thing_id>/
 ------------------------------------------------------------------------------
 """
 
@@ -171,12 +171,12 @@ def delete_a_fight(ranked_list_id, fight_id):
     ), 200
 
 
-# Get recorded Fights   | GET    /rankor/ranked-lists/<ranked_list_id>/fights/
+# List recorded Fights   | GET    /rankor/ranked-lists/<ranked_list_id>/fights/
 @fight_endpoints.route(
     "/rankor/ranked-lists/<ObjectId:ranked_list_id>/fights/", 
     methods=["GET"]
 )
-def get_recorded_fights(ranked_list_id):
+def list_recorded_fights(ranked_list_id):
     """
     GET request to list all Fights fought for a given RankedList.
 
@@ -222,13 +222,13 @@ def get_recorded_fights(ranked_list_id):
 
 
 
-# Get Fights of a Thing | GET    /rankor/ranked-lists/<ranked_list_id>/fights/of-a-thing/<thing_id>
+# List Fights of a Thing | GET    /rankor/ranked-lists/<ranked_list_id>/fights/of-a-thing/<thing_id>
 @fight_endpoints.route(
     ("/rankor/ranked-lists/<ObjectId:ranked_list_id>/fights/"
      "of-a-thing/<ObjectId:thing_id>"), 
     methods=["GET"]
 )
-def get_fights_of_a_thing(ranked_list_id, thing_id):
+def list_fights_of_a_thing(ranked_list_id, thing_id):
     """
     GET request to list all Fights that a specific Thing has fought for a given
     RankedList.

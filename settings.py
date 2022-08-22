@@ -44,8 +44,8 @@ NUMBER_ITEMS_IN_EACH_PAGE = {
 SORT_ITEMS_BY_FIELD = {
     "thing":        ("name", "ascending"),
     "ranked_list":  ("time_created", "descending"),
-    "ranked_thing": ("rank", "ascending"),
-    "fight":        ("time_fought", "descending")
+    "ranked_thing": ("rank", "ascending"),            # change not recommended
+    "fight":        ("time_fought", "descending")     # change not recommended
 } 
 # These settings are pretty straightforward. The endpoints that respond with
 # lists (which may get long) paginate those lists, and deliver them in chunks.
