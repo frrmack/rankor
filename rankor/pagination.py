@@ -396,12 +396,6 @@ class ListPaginator(BasePaginator):
         )
         self.item_list = item_list
         self.num_all_docs = len(item_list)
-        # # Validate that item_list items are instances of the declared model
-        # for item in item_list:
-        #     if not isinstance(item, model):
-        #         raise ValueError(f"The following item in the list given to "
-        #                          f"ListPaginator is not an instance of "
-        #                          f"{model.__name__}: {item}")
 
 
     @property
