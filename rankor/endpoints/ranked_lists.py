@@ -15,7 +15,7 @@ Get one RankedList         |   GET     /rankor/ranked-lists/<ranked_list_id>/
 from sys import _getframe
 
 # Flask imports
-from flask import Blueprint, request
+from flask import Blueprint, request, url_for
 
 # Pymongo query imports
 from pymongo.collection import ReturnDocument
@@ -100,10 +100,14 @@ def ranked_list_data_response(ranked_list: RankedList) -> dict:
     # context of this RankedList.
     links = {
         "ranked_and_scored_things": {
-            "href": f"/rankor/ranked-lists/{ranked_list.id}/ranks/"
+            "href": url_for("ranked_thing_endpoints.list_ranked_things", 
+                            ranked_list_id=ranked_list.id,
+                            _external=True) 
         },
         "recorded_fights": {
-            "href": f"/rankor/ranked-lists/{ranked_list.id}/fights/"
+            "href": url_for("fight_endpoints.list_recorded_fights", 
+                            ranked_list_id=ranked_list.id,
+                            _external=True) 
         }
     }
 
