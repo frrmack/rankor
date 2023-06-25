@@ -1,8 +1,8 @@
 ![RANKOR](https://raw.githubusercontent.com/frrmack/rankor/master/logo/rankor_logo_white.png)
 
-A web app for ranking things by comparing pairs of them.
+A lightweight API for comparing things to rank them. Its most likely use is as a backend for a web app.
 
-It's fun to let them fight for your love; it's also a lot more accurate, efficient, and satisfying than trying to directly make a ranked list or a tier list.
+It's fun to let things (movies, books, pies, characters, etc.) fight for your love. It's also a significantly more accurate, efficient, and satisfying way than trying to directly make a ranked or tier list of them.
 
 
 -- Irmak
