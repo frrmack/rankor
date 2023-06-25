@@ -16,6 +16,7 @@ setup(
         "gunicorn==20.1.0",
         "pydantic == 1.9.1",
         "trueskill == 0.4.5",
-        "python-dotenv==0.20.0"
+        "python-dotenv==0.20.0",
+        "pytest==7.4.0"
     ]
 )
