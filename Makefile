@@ -22,8 +22,7 @@ clean:
 
 
 test:
-	python3 -m tests.run_all_tests
-	@echo "All tests passed successfully."
+	python3 -m pytest
 
 
 rundev:
