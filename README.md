@@ -9,7 +9,7 @@ It's fun to let things (movies, books, pies, characters, etc.) fight for your lo
 
 ## Virtual environment setup
 
-Make a virtual environment. This source code was written using `pyenv` and `pyenv-virtualenvwrapper`. You can also use them, or use your own virtual environment tool. The python version I installed with `pyenv` and used to develop this code is `3.10.4`. Below are instructions to do it the way I did it.
+Make a virtual environment. This source code was written using `pyenv` and `pyenv-virtualenvwrapper`. You can also use them, or use your own virtual environment tool. The python version I installed with `pyenv` and used to develop this code is `3.11.4`. Below are instructions to do it the way I did it.
 
 
 Setup instructions for `pyenv` and `pyenv-virtualenvwrapper` if you don't have them are [here](https://gist.github.com/eliangcs/43a51f5c95dd9b848ddc). 
