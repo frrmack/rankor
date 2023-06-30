@@ -19,7 +19,7 @@ from rankor.models import (RankedThing,
                            PyObjectId)
 
 # Pagination imports
-from pagination import ListPaginator
+from rankor.pagination import ListPaginator
 
 # Exception imports
 from rankor.errors import ResourceNotFoundInDatabaseError

@@ -36,7 +36,7 @@ from rankor.models import (Thing,
 
 
 # Pagination imports
-from pagination import QueryPaginator
+from rankor.pagination import QueryPaginator
 
 # Exception imports
 from werkzeug.exceptions import Forbidden

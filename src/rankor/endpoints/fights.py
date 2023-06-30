@@ -30,7 +30,7 @@ from rankor.models import (Fight,
                            PyObjectIdString)
 
 # Pagination imports
-from pagination import ListPaginator
+from rankor.pagination import ListPaginator
 
 # Exception imports
 from rankor.errors import ResourceNotFoundInDatabaseError

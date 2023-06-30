@@ -29,7 +29,7 @@ from rankor.json import to_json
 from rankor.models import Thing
 
 # Pagination imports
-from pagination import QueryPaginator
+from rankor.pagination import QueryPaginator
 
 # Exception imports
 from rankor.errors import (ResourceNotFoundInDatabaseError,

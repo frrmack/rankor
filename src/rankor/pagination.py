@@ -7,7 +7,7 @@ responses into multiple pages.
 
 # Flask imports
 from flask import url_for
-from models.pyobjectid import PyObjectIdString
+from rankor.models.pyobjectid import PyObjectIdString
 
 # Error imports
 from werkzeug.exceptions import BadRequest, InternalServerError
@@ -25,7 +25,7 @@ from rankor.models import JsonableModel
 from rankor.json import to_jsonable_dict, to_json
 
 # Utility imports (helper functions)
-from utils import model_name_to_instance_name, list_is_sorted
+from rankor.utils import model_name_to_instance_name, list_is_sorted
 
 # Api settings for page sizes and sorting keys
 import settings

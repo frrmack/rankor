@@ -11,7 +11,7 @@ all:
 
 
 install:
-	python -m pip install -e .
+	python3 -m pip install .
 
 
 clean:
@@ -22,12 +22,12 @@ clean:
 
 
 test:
-	python -m tests.run_all_tests
+	python3 -m tests.run_all_tests
 	@echo "All tests passed successfully."
 
 
 rundev:
-	FLASK_DEBUG=true FLASK_APP=rankor flask run
+	FLASK_DEBUG=true FLASK_APP=src.rankor flask run
 
 
 run:
