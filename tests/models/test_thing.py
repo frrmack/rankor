@@ -82,17 +82,3 @@ def test_json_encoding():
     assert aliens.to_json() == expected_json, f"Json encoding failed {type(aliens.to_json())}"
 
 
-def run_all_thing_tests():
-    test_initialization()
-    test_initialization_without_id()
-    test_validation_error_on_missing_field()
-    test_validation_error_on_incorrect_field_type()
-    test_validation_error_on_invalid_bson_id()
-    test_dict_encoding_for_bson_conversion()
-    test_json_encoding()
-
-
-
-if __name__ == '__main__':
-
-    run_all_thing_tests()
