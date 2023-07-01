@@ -6,9 +6,12 @@ import requests
 # Rankor imports: api server in a parallel thread for testing
 from rankor.server import RankorServerThread
 
+# Configuration imports
+import settings
 
 
-# Test data
+
+# Test data fixtures
 @pytest.fixture(scope="function")
 def movie_data():
     return [
@@ -102,3 +105,9 @@ def things_endpoint(api_url_scheme):
 def delete_all_things_endpoint(api_url_scheme):
     return api_url_scheme + '/rankor/things/delete-all'
 
+
+
+# Config fixtures
+@pytest.fixture()
+def things_page_size():
+    return settings.NUMBER_ITEMS_IN_EACH_PAGE["thing"]
