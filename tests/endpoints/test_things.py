@@ -147,6 +147,30 @@ class TestThingsEndpoint:
                                           "types for those fields' values.")
 
 
+    def test_get_a_thing(self, server, things_endpoint, movie_data):
+        # insert a single thing to then retrieve
+        single_movie = movie_data[0]
+        response = requests.post(things_endpoint, json=single_movie)
+        assert response.status_code == 200
+        print(response.json())
+        movie_id = response.json()["thing"]["id"]
+        time_created = response.json()["thing"]["time_created"]
+        # not get it back
+        endpoint = f"{things_endpoint}{movie_id}"
+        response = requests.get(endpoint)
+        response_data = response.json()
+        print(response_data)
+        assert response_data["http_status_code"] == 200
+        assert response_data["result"] == "success"
+        assert response_data["thing"]["name"] == single_movie['name']
+        assert response_data["thing"]["image_url"] == single_movie['image_url']
+        assert response_data["thing"]["other_data"] == single_movie['other_data']
+        thing_id = response_data["thing"]["id"]
+        assert response_data["msg"] == f"Successfully retrieved thing with id {thing_id}"
+        assert response_data["thing"]["time_created"] == time_created
+        assert False
+
+
     def test_edit_a_thing(self, server, things_endpoint, movie_data):
         # insert a movie (to then edit)
         single_movie = movie_data[0]
@@ -182,11 +206,26 @@ class TestThingsEndpoint:
         assert "time_edited" in response_data["thing"]
 
 
+    def test_delete_a_thing(self, server, things_endpoint, movie_data):
+        # insert a movie (to then delete)
+        single_movie = movie_data[0]
+        response = requests.post(things_endpoint, json=single_movie)
+        assert response.status_code == 200
+        movie_id = response.json()["thing"]["id"]
+        time_created = response.json()["thing"]["time_created"]
+        # now delete it
+        endpoint = f"{things_endpoint}{movie_id}"
+        response = requests.delete(endpoint)
+        assert response.status_code == 200
+        response_data = response.json()
+        assert response_data["http_status_code"] == 200
+        assert response_data["result"] == "success"
+        assert response_data["msg"] == f"thing with id {movie_id} deleted."
+        assert response_data["thing"].pop("id") == movie_id
+        assert response_data["thing"].pop("time_created") == time_created
+        assert response_data["thing"] == single_movie
 
-
-
-
-
+    
 
 
     def test_list_all_things_response(self, server, things_endpoint):

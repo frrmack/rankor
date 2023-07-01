@@ -103,6 +103,57 @@ def create_a_new_thing():
 
 
 
+# Get one Thing    |   GET   /rankor/things/<thing_id>/
+@thing_endpoints.route(
+    "/rankor/things/<ObjectId:thing_id>/", 
+    methods=["GET"]
+)
+def get_one_thing(thing_id): 
+    """
+    GET request to retrieve the data for a single Thing using its id
+
+    For example:
+    curl -i -X GET 'http://localhost:5000/rankor/things/12345678901234567890abcd/'
+    """
+    # Retrieve the Thing document with this id from the database and respond
+    # with it. If the database can't find such a document in there, respond
+    # with an informative HTTP 404
+    #
+    # Why are we not just returning thing_doc directly instead of creating
+    # a Thing instance with it, which we then re-serialize to JSON? Because
+    # 1) The Thing doc in the database is stored as a bson. When pymongo
+    # retrieves it for us, it converts that into a native python dict. What we
+    # want to return is a json. We want to use the to_json encoder of the Thing
+    # class, which serializes certain things always in the same way for all Thing
+    # instances (for example, it encodes _id fields with as a string representing
+    # the 24 character hex value of the bson object id assigned by mongodb, and it 
+    # encodes all datetime stamps using ISO8601 strings)
+    # 2) Creating this instance runs all the pydantic typing validation code,
+    # ensuring much more robust, well defined, reliable api behavior. We want
+    # to create Thing instances whenever data goes into or out of the database
+    # to ensure robustness through data validation. If there is something wrong
+    # with the data formats anywhere, the system will fail at these validation
+    # checkpoints rather than somewhere random in the middle of the code when
+    # the data is actually used.
+    thing_doc = db.things.find_one({"_id": thing_id})
+    # If failure: 404 Not Found Error
+    if thing_doc is None:
+        raise ResourceNotFoundInDatabaseError(
+            resource_type="thing",
+            resource_id=thing_id
+        )
+    # Success: respond with the thing 
+    return to_json(
+        {
+            "result": "success",
+            "msg": f"Successfully retrieved thing with id {thing_id}",
+            "thing": Thing(**thing_doc),
+            "http_status_code": 200
+        }
+    ), 200
+
+
+
 # Edit a Thing    |   PUT   /rankor/things/<thing_id>/
 @thing_endpoints.route(
     "/rankor/things/<ObjectId:thing_id>/", 
@@ -219,11 +270,12 @@ def delete_a_thing(thing_id):
 
     # Success: Respond with the deleted Thing document that's 
     # no longer in the database 
+    print(deleted_thing_doc)
     return to_json(
         {
             "result": "success",
             "msg": f"thing with id {thing_id} deleted.",
-            "thing": deleted_thing_doc,
+            "thing": Thing(**deleted_thing_doc),
             "http_status_code": 200
         },
     ), 200
@@ -296,54 +348,3 @@ def list_all_things():
         num_all_docs_in_db = num_all_docs_in_db
     )
     return paginator.paginate(requested_page=requested_page)
-
-
-
-# Get one Thing    |   GET   /rankor/things/<thing_id>/
-@thing_endpoints.route(
-    "/rankor/things/<ObjectId:thing_id>/", 
-    methods=["GET"]
-)
-def get_one_thing(thing_id): 
-    """
-    GET request to retrieve the data for a single Thing using its id
-
-    For example:
-    curl -i -X GET 'http://localhost:5000/rankor/things/12345678901234567890abcd/'
-    """
-    # Retrieve the Thing document with this id from the database and respond
-    # with it. If the database can't find such a document in there, respond
-    # with an informative HTTP 404
-    #
-    # Why are we not just returning thing_doc directly instead of creating
-    # a Thing instance with it, which we then re-serialize to JSON? Because
-    # 1) The Thing doc in the database is stored as a bson. When pymongo
-    # retrieves it for us, it converts that into a native python dict. What we
-    # want to return is a json. We want to use the to_json encoder of the Thing
-    # class, which serializes certain things always in the same way for all Thing
-    # instances (for example, it encodes _id fields with as a string representing
-    # the 24 character hex value of the bson object id assigned by mongodb, and it 
-    # encodes all datetime stamps using ISO8601 strings)
-    # 2) Creating this instance runs all the pydantic typing validation code,
-    # ensuring much more robust, well defined, reliable api behavior. We want
-    # to create Thing instances whenever data goes into or out of the database
-    # to ensure robustness through data validation. If there is something wrong
-    # with the data formats anywhere, the system will fail at these validation
-    # checkpoints rather than somewhere random in the middle of the code when
-    # the data is actually used.
-    thing_doc = db.things.find_one({"_id": thing_id})
-    # If failure: 404 Not Found Error
-    if thing_doc is None:
-        raise ResourceNotFoundInDatabaseError(
-            resource_type="thing",
-            resource_id=thing_id
-        )
-    # Success: respond with the thing 
-    return to_json(
-        {
-            "result": "success",
-            "msg": f"Successfully retrieved thing with id {thing_id}",
-            "thing": Thing(**thing_doc),
-            "http_status_code": 200
-        }
-    ), 200

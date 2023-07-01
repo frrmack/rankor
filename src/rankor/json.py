@@ -7,14 +7,29 @@ rankor models are built) has its own to_json and to_jsonable_dict methods, which
 are also used throughout rankor's code. The functions here provide standalone
 encoders that can be used on any object, including those models.
 """
+# Data type imports
+import datetime
 
 # Encoder imports
 import json
-from pydantic.json import pydantic_encoder
+from pydantic.json import pydantic_encoder, ENCODERS_BY_TYPE
+# ENCODERS_BY_TYPE is pydantic's encoder directory (we want to tell pydantic how
+# we want datetime objects to be encoded)
 
 # Model imports
 from rankor.models import JsonableModel
 
+
+# Update the encoding directory to make sure datetime objects
+# are serialized as timestamps without miliseconds
+def isoformat_up_to_seconds(obj):
+    return obj.isoformat(timespec="seconds")
+
+ENCODERS_BY_TYPE[datetime.datetime] = isoformat_up_to_seconds
+
+
+
+# JSON encoding functions
 
 def to_json(obj, **kwargs):
     """
@@ -29,6 +44,8 @@ def to_json(obj, **kwargs):
     pydantic.json.ENCODERS_BY_TYPE dict has the key-value pair 
     {datetime.datetime: isoformat} where isoformat is a function defined as
     def isoformat(o): return o.isoformat()
+    Here we update this ENCODERS_BY_TYPE dict with our own slightly different 
+    function, which reports a timestamp without miliseconds.
 
     When we define PyObjectId and PyObjectIdString in rankor.models.pyobjectid,
     we also update this ENCODERS_BY_TYPE, telling it how to encode BsonObjectId
