@@ -161,44 +161,52 @@ def get_one_thing(thing_id):
 )
 def edit_a_thing(thing_id):
     """
-    PUT request to update the data of a Thing that already exists in the database.
+    PUT request to update the data of a Thing that already exists in the
+    database.
 
-    You can make partial updates like adding an optional field (like category in this
-    example below) or change the value of a single field, change the values of multiple
-    fields, etc. You can also fully replace the entire data of the Thing.
+    You can make partial updates like adding an optional field (like category in
+    this example below) or change the value of a single field, change the values
+    of multiple fields, etc. You can also fully replace the entire data of the
+    Thing.
 
-    Example (change the name from 'Terminator' to 'The Terminator' and add a category field):
+    Example (change the name from 'Terminator' to 'The Terminator' and add a
+    category field): 
+
     curl -d '{"name": "The Terminator", 
               "category": "Action Movies",
              }' 
-         -H "Content-Type: application/json" 
-         -X PUT http://localhost:5000/rankor/things/12345678901234567890abcd/       
+         -H "Content-Type: application/json" -X PUT
+         http://localhost:5000/rankor/things/12345678901234567890abcd/       
 
-    If you would like to use the safest approach to avoid any unforeseen inconsistencies
-    due to user error when using this endpoint with partial field updates, the most robust
-    way is always to retrieve the Thing first with a GET request to /rankor/things/<thing_id>,
-    update its data and send this updated version with a PUT request to store these updates
-    in the database.
+    If you would like to use the safest approach to avoid any unforeseen
+    inconsistencies due to user error when using this endpoint with partial
+    field updates, the most robust way is always to retrieve the Thing first
+    with a GET request to /rankor/things/<thing_id>, update its data and send
+    this updated version with a PUT request to store these updates in the
+    database.
 
-    Be vigilant about updating a single subfield within the "other_data" field of a Thing. 
-    If you provide an "other_data" field to this endpoint, it will overwrite the whole 
-    "other_data" field of the Thing you are editing. For example, if you have 
-    {"id": 555,
-     "name": Alien,
-     "other_data": {"director": "Orson Welles", "year": 1979}
-    }
+    Be vigilant about updating a single subfield within the "other_data" field
+    of a Thing. If you provide an "other_data" field to this endpoint, it will
+    overwrite the whole "other_data" field of the Thing you are editing. For
+    example, if you have 
+    {
+        "id": 99ab5f14c8757d1f89bb4bf1,
+        "name": Alien, 
+        "other_data": {"director": "Orson Welles", "year": 1979}
+    } 
     and want to change the director from "Orson Welles" to "Ridley Scott", 
 
     curl -d '{"other_data": {"director": "Ridley Scott"}}' 
-         -H "Content-Type: application/json" 
-         -X PUT http://localhost:5000/rankor/things/555/       
+         -H "Content-Type: application/json" -X PUT
+         http://localhost:5000/rankor/things/99ab5f14c8757d1f89bb4bf1/       
 
-    then the "year" subfield will disappear, as you just overwrote the whole "other_data" 
-    field with one that only has a "director" subfield. While this behavior takes away the 
-    power to modify subfields easily, it avoids complicating the interface for deleting 
-    subfields. If you only want to change one subfield, for example, you need to retrieve 
-    the data of the Thing with a GET request, read the full "other_data" field, modify it, 
-    and use a PUT request to edit it with your updated full "other_data field.
+    then the "year" subfield will disappear, as you just overwrote the whole
+    "other_data" field with one that only has a "director" subfield. While this
+    behavior takes away the power to modify subfields easily, it avoids
+    complicating the interface for deleting subfields. If you only want to
+    change one subfield, for example, you need to retrieve the data of the Thing
+    with a GET request, read the full "other_data" field, modify it, and use a
+    PUT request to edit it with your updated full "other_data field.
     """
     # Retrieve the request data. 
     update_data = request.get_json()

@@ -18,7 +18,8 @@ def test_get_a_thing(server, things_endpoint, movie_data):
     assert response_data["thing"]["image_url"] == single_movie['image_url']
     assert response_data["thing"]["other_data"] == single_movie['other_data']
     thing_id = response_data["thing"]["id"]
-    assert response_data["msg"] == f"Successfully retrieved thing with id {thing_id}"
+    assert response_data["msg"] == (f"Successfully retrieved thing "
+                                    f"with id {thing_id}")
     assert response_data["thing"]["time_created"] == time_created
 
 

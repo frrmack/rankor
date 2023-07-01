@@ -73,27 +73,32 @@ def test_listing_with_pagination(server,
     response_data = response.json()
     assert response_data["http_status_code"] == 200
     assert response_data["result"] == "success"
-    assert response_data["msg"] == (f"Successfully retrieved page 1 of {num_pages} "
-                                    f"for the list of all {num_movies} things")
+    assert response_data["msg"] == (f"Successfully retrieved page 1 "
+                                    f"of {num_pages} for the "
+                                    f"list of all {num_movies} things")
     assert response_data["_page"] == 1
     assert response_data["_num_things_in_page"] == things_page_size
     assert response_data["_links"]["last_page"]["page"] == num_pages
     # flip through all pages, make sure everything is in order
-    while response_data["_page"] != response_data["_links"]["last_page"]["page"]:
+    last_page = response_data["_links"]["last_page"]["page"]
+    while response_data["_page"] != last_page:
         next_page_url = response_data["_links"]["next_page"]["href"]
         next_page = response_data["_links"]["next_page"]["page"]
         response = requests.get(next_page_url)
         response_data = response.json()
         assert response_data["http_status_code"] == 200
         assert response_data["result"] == "success"
-        assert response_data["msg"] == (f"Successfully retrieved page {next_page} of {num_pages} "
-                                        f"for the list of all {num_movies} things")
+        assert response_data["msg"] == (f"Successfully retrieved page "
+                                        f"{next_page} of {num_pages} "
+                                        f"for the list of all {num_movies} "
+                                        f"things")
         assert response_data["_page"] == next_page
         if "next_page" in response_data["_links"]:
             assert response_data["_num_things_in_page"] == things_page_size
             assert len(response_data["things"]) == things_page_size
         else:
-            assert response_data["_num_things_in_page"] == num_movies % things_page_size
-            assert len(response_data["things"]) == num_movies % things_page_size
+            last_page_size = num_movies % things_page_size
+            assert response_data["_num_things_in_page"] == last_page_size
+            assert len(response_data["things"]) == last_page_size
 
 
