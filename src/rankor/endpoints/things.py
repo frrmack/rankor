@@ -76,11 +76,11 @@ def create_a_new_thing():
     # Check the database to ensure that there isn't another Thing with the exact 
     # same name, raise an error if it does
     if "name" in new_thing_data:
-        same_name_thing = db.things.find_one({"name": new_thing_data["name"]})
-        if same_name_thing:
+        same_name_thing_doc = db.things.find_one({"name": new_thing_data["name"]})
+        if same_name_thing_doc:
             raise SameNameResourceAlreadyExistsError(
                 resource_type="thing",
-                same_name_resource=same_name_thing
+                same_name_resource=Thing(**same_name_thing_doc)
             )
 
     # Create the new Thing instance, which also validates its data using pydantic,
