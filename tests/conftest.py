@@ -6,7 +6,7 @@ import requests
 from rankor.server import RankorServerThread
 
 # Test data
-@pytest.fixture(scope="session")
+@pytest.fixture(scope="function")
 def movie_data():
     return [
         {"name": "Alien",
