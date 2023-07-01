@@ -2,8 +2,11 @@
 import pytest
 import requests
 
+
 # Rankor imports: api server in a parallel thread for testing
 from rankor.server import RankorServerThread
+
+
 
 # Test data
 @pytest.fixture(scope="function")
@@ -40,7 +43,8 @@ def movie_data():
     ]
 
 
-# Test server setup
+
+# Test server setup fixtures
 @pytest.fixture(scope="session")
 def server_ip():
     return '127.0.0.1'
@@ -58,6 +62,15 @@ def api_url_scheme(server_ip, server_port):
 
 @pytest.fixture(scope="function")
 def server(server_ip, server_port, api_url_scheme):
+    """ 
+    Run an api development server in a parallel thread so that tests can send
+    requests to it and evaluate the responses.
+
+    This fixture is function scoped. It's requested by each test separately.
+    This means that each test will start up with a fresh server instance and
+    tear it down at the end, rather than all tests sharing one server instance.
+    This is cleaner and ensures statelessness.
+    """
     # Start the server
     server = RankorServerThread(ip=server_ip, port=server_port)
     server.start()  
@@ -79,4 +92,13 @@ def server(server_ip, server_port, api_url_scheme):
     assert not server.is_alive()
 
 
+
+# Endpoint fixtures
+@pytest.fixture()
+def things_endpoint(api_url_scheme):
+    return api_url_scheme + '/rankor/things/'
+
+@pytest.fixture(autouse=True)
+def delete_all_things_endpoint(api_url_scheme):
+    return api_url_scheme + '/rankor/things/delete-all'
 
