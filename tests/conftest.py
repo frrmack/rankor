@@ -5,23 +5,58 @@ import requests
 # Rankor imports: api server in a parallel thread for testing
 from rankor.server import RankorServerThread
 
+# Test data
+@pytest.fixture(scope="session")
+def movie_data():
+    return [
+        {"name": "Alien",
+        "image_url": "https://m.media-amazon.com/images/I/81TpGaKY3ML._AC_UY436_QL65_.jpg",
+        "other_data": {"director":"James Cameron", "year":1979},
+        },
+        {"name": "The Terminator",
+        "image_url": "https://m.media-amazon.com/images/I/61qCgQZyhOL._AC_SY879_.jpg",
+        "other_data": {"director":"James Cameron", "year":1982},
+        },
+        {"name": "Aliens",
+        "image_url": "https://m.media-amazon.com/images/I/91kkGWtyqTL._AC_SL1500_.jpg",
+        "other_data": {"director":"James Cameron", "year":1986},
+        },
+        {"name": "The Abyss",
+        "image_url": "https://m.media-amazon.com/images/I/81o0AjxXeyL._AC_UY436_QL65_.jpg",
+        "other_data": {"director":"James Cameron", "year":1989},
+        },
+        {"name": "Terminator 2: The Judgement Day",
+        "image_url": "https://m.media-amazon.com/images/I/81rFodFkebL._AC_UY436_QL65_.jpg",
+        "other_data": {"director":"James Cameron", "year":1991},
+        },
+        {"name": "True Lies",
+        "image_url": "https://m.media-amazon.com/images/I/81rFodFkebL._AC_UY436_QL65_.jpg",
+        "other_data": {"director":"James Cameron", "year":1994},
+        },
+        {"name": "Titanic",
+        "image_url": "https://m.media-amazon.com/images/I/81rFodFkebL._AC_UY436_QL65_.jpg",
+        "other_data": {"director":"James Cameron", "year":1997},
+        },
+    ]
 
-@pytest.fixture()
+
+# Test server setup
+@pytest.fixture(scope="session")
 def server_ip():
     return '127.0.0.1'
 
 
-@pytest.fixture()
+@pytest.fixture(scope="session")
 def server_port():
     return '5000'
 
 
-@pytest.fixture()
+@pytest.fixture(scope="session")
 def api_url_scheme(server_ip, server_port):
     return f"http://{server_ip}:{server_port}"
 
 
-@pytest.fixture()
+@pytest.fixture(scope="function")
 def server(server_ip, server_port, api_url_scheme):
     # Start the server
     server = RankorServerThread(ip=server_ip, port=server_port)
