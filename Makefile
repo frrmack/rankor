@@ -26,7 +26,7 @@ test:
 
 
 rundev:
-	FLASK_DEBUG=true FLASK_APP=rankor flask run
+	FLASK_DEBUG=true FLASK_APP=rankor python3 -m flask run
 
 
 run:
