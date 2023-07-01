@@ -28,7 +28,6 @@ def test_get_a_thing_missing_error(server, things_endpoint):
     endpoint = f"{things_endpoint}{non_existing_id}/"
     response = requests.get(endpoint)
     response_data = response.json()
-    print(response_data)
     assert response_data["http_status_code"] == 404
     assert response_data["result"] == "failure"
     assert response_data["error_type"] == "ResourceNotFoundInDatabaseError"
@@ -47,7 +46,6 @@ def test_get_a_thing_non_ObjectId_404_error(server, things_endpoint):
     endpoint = f"{things_endpoint}{non_ObjectId_id}/"
     response = requests.get(endpoint)
     response_data = response.json()
-    print(response_data)
     assert response_data["http_status_code"] == 404
     assert response_data["result"] == "failure"
     assert response_data["error_type"] == "NotFound"

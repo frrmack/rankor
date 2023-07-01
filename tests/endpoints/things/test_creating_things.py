@@ -122,3 +122,45 @@ def test_create_a_thing_missing_field_error(server,
                                         "existence of all required fields, "
                                         "valid field names, and valid data "
                                         "types for those fields' values.")
+
+
+def test_create_a_duplicate_thing_error(server, 
+                                        things_endpoint, 
+                                        movie_data):
+    # insert a single movie
+    single_movie = movie_data[0]
+    response = requests.post(things_endpoint, json=single_movie)
+    assert response.status_code == 200
+    movie_id = response.json()["thing"]["id"]
+    # now try to insert it (with the same name) a second time: it should fail
+    response = requests.post(things_endpoint, json=single_movie)
+    response_data = response.json()
+    assert response.status_code == 409
+    assert response_data["http_status_code"] == 409
+    assert response_data["result"] == "failure"
+    assert response_data["error_type"] == "SameNameResourceAlreadyExistsError"
+    assert response_data["error_category"] == "HTTP error"
+    assert response_data["error"] == ("A thing with the same name already "
+                                      "exists in the database. Either update "
+                                      "that thing instead, or delete that "
+                                      "before creating this, or give this "
+                                      "new thing a different name")
+    assert response_data["existing_resource"]["id"] == movie_id
+    # now try to insert a new Thing that's not the same but has the same name
+    new_movie_same_name = {
+            "name":single_movie["name"], 
+            "category":"Box Office Busts"
+    }
+    response = requests.post(things_endpoint, json=new_movie_same_name)
+    response_data = response.json()
+    assert response.status_code == 409
+    assert response_data["http_status_code"] == 409
+    assert response_data["result"] == "failure"
+    assert response_data["error_type"] == "SameNameResourceAlreadyExistsError"
+    assert response_data["error_category"] == "HTTP error"
+    assert response_data["error"] == ("A thing with the same name already "
+                                      "exists in the database. Either update "
+                                      "that thing instead, or delete that "
+                                      "before creating this, or give this "
+                                      "new thing a different name")
+    assert response_data["existing_resource"]["id"] == movie_id
