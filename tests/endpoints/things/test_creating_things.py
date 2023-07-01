@@ -134,33 +134,24 @@ def test_create_a_duplicate_thing_error(server,
     movie_id = response.json()["thing"]["id"]
     # now try to insert it (with the same name) a second time: it should fail
     response = requests.post(things_endpoint, json=single_movie)
-    response_data = response.json()
     assert response.status_code == 409
-    assert response_data["http_status_code"] == 409
-    assert response_data["result"] == "failure"
-    assert response_data["error_type"] == "SameNameResourceAlreadyExistsError"
-    assert response_data["error_category"] == "HTTP error"
-    assert response_data["error"] == ("A thing with the same name already "
-                                      "exists in the database. Either update "
-                                      "that thing instead, or delete that "
-                                      "before creating this, or give this "
-                                      "new thing a different name")
-    assert response_data["existing_resource"]["id"] == movie_id
+    def ensure_correct_failure_response(response_data):
+        assert response_data["http_status_code"] == 409
+        assert response_data["result"] == "failure"
+        assert response_data["error_type"] == "SameNameResourceAlreadyExistsError"
+        assert response_data["error_category"] == "HTTP error"
+        assert response_data["error"] == ("A thing with the same name already "
+                                        "exists in the database. Either update "
+                                        "that thing instead, or delete that "
+                                        "before creating this, or give this "
+                                        "new thing a different name")
+        assert response_data["existing_resource"]["id"] == movie_id
+    ensure_correct_failure_response(response.json())
     # now try to insert a new Thing that's not the same but has the same name
     new_movie_same_name = {
             "name":single_movie["name"], 
             "category":"Box Office Busts"
     }
     response = requests.post(things_endpoint, json=new_movie_same_name)
-    response_data = response.json()
     assert response.status_code == 409
-    assert response_data["http_status_code"] == 409
-    assert response_data["result"] == "failure"
-    assert response_data["error_type"] == "SameNameResourceAlreadyExistsError"
-    assert response_data["error_category"] == "HTTP error"
-    assert response_data["error"] == ("A thing with the same name already "
-                                      "exists in the database. Either update "
-                                      "that thing instead, or delete that "
-                                      "before creating this, or give this "
-                                      "new thing a different name")
-    assert response_data["existing_resource"]["id"] == movie_id
+    ensure_correct_failure_response(response.json())
