@@ -20,12 +20,12 @@ class RankorServerThread(threading.Thread):
        server.stop()
     """
 
-    def __init__(self):
+    def __init__(self, ip='127.0.0.1', port=5000):
         """Create a Werkzeug server with the rankor app"""
         threading.Thread.__init__(self)
         self.name = "RankorServerThread"
         self.app = rankor_app
-        self.server = make_server('127.0.0.1', 5000, self.app)
+        self.server = make_server(ip, port, self.app)
         self.ctx = self.app.app_context()
         self.ctx.push()
 
