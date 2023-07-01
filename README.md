@@ -19,8 +19,8 @@ When you have them, the following installs the correct python version, creates a
 
 
 ```
-pyenv install 3.10.4
-pyenv virtualenv 3.10.4 rankor
+pyenv install 3.11.4
+pyenv virtualenv 3.11.4 rankor
 pyenv activate rankor
 ```
 
