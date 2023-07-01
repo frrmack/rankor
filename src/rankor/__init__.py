@@ -86,7 +86,12 @@ app.register_error_handler(BSONError, bson_format_error_response)
 
 
 # Remove Werkzeug's strict slashes behavior to avoid "Redirecting..." 
-# responses
+# responses - a more elegant solution is to overwrite Werkzeug's MapAdapter
+# and Map classes and providing this SlashInsistingMap class to Flask
+# as the app.url_map_class attribute, but this route proved problematic
+# as Werkzeug's codebase around this changed multiple times, and supporting
+# further versions of Flask and Werkzeug is better than doing this (speaking
+# from experience)
 app.url_map.strict_slashes = False
 
 
