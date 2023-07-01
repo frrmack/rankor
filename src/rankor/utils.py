@@ -35,6 +35,19 @@ def model_name_to_casual_mention(model_name):
 
 
 
+def casual_mention_to_model_name(casual_mention):
+    """
+    Example: "ranked list" --> "RankedList"
+    """
+    return ''.join( 
+        [
+            word.capitalize() 
+            for word in casual_mention.split(" ")
+        ]
+    )
+
+
+
 def list_is_sorted(checked_list, key=lambda x: x, reverse=False):
     """
     Checks if a list is sorted or not, returns True or False
