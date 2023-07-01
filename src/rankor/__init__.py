@@ -85,9 +85,9 @@ from bson.errors import BSONError
 app.register_error_handler(BSONError, bson_format_error_response)
 
 
-# Import and register routing rules
-from rankor.routing_rules import SlashInsistingRoutingRule
-app.url_rule_class = SlashInsistingRoutingRule
+# Remove Werkzeug's strict slashes behavior to avoid "Redirecting..." 
+# responses
+app.url_map.strict_slashes = False
 
 
 # Import and register all endpoints
