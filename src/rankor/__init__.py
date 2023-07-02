@@ -58,14 +58,14 @@ import settings
 
 
 # Configure Flask & Flask-PyMongo with an application factory
-def create_app(mongo_db_uri=settings.MONGO_DATABASE_URI):
+def create_app(mongo_uri=settings.MONGO_DATABASE_URI):
     
     app = Flask(__name__)
 
 
     # Initialize the database connection
     from rankor.database import RANKOR_PYMONGO_INTERFACE
-    app.config["MONGO_URI"] = mongo_db_uri
+    app.config["MONGO_URI"] = mongo_uri
     RANKOR_PYMONGO_INTERFACE.init_app(app)
 
 

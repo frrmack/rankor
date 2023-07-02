@@ -6,7 +6,9 @@ from urllib.parse import urljoin
 # Third party imports: requests for interfacing with the api server
 import requests
 
-# Rankor imports: api server in a parallel thread for testing
+# Rankor imports: app factory to create a custom testing app, api server in a
+# parallel thread for testing 
+from rankor import create_app as create_rankor_app
 from rankor.server import RankorServerThread
 
 # Rankor configuration imports
@@ -65,8 +67,41 @@ def api_url_scheme(server_ip, server_port):
     return f"http://{server_ip}:{server_port}"
 
 
+@pytest.fixture(scope="session")
+def testing_database_name():
+    return "_rankor_testing_db"
+
+
+@pytest.fixture(scope="session")
+def mongo_testing_database_uri(testing_database_name):
+    return f'mongodb://localhost:27017/{testing_database_name}'
+
+
+
+# Endpoint fixtures
+@pytest.fixture(scope="session")
+def things_endpoint(api_url_scheme):
+    return urljoin(api_url_scheme, '/rankor/things/')
+
+@pytest.fixture(scope="session")
+def delete_all_things_endpoint(api_url_scheme):
+    return urljoin(api_url_scheme, '/rankor/things/delete-all/')
+
+
+
+# Config fixtures
 @pytest.fixture(scope="function")
-def server(server_ip, server_port, api_url_scheme):
+def things_page_size():
+    return settings.NUMBER_ITEMS_IN_EACH_PAGE["thing"]
+
+
+
+# Rankor testing server fixture
+@pytest.fixture(scope="function")
+def server(server_ip, 
+           server_port, 
+           delete_all_things_endpoint, 
+           mongo_testing_database_uri):
     """ 
     Run an api development server in a parallel thread so that tests can send
     requests to it and evaluate the responses.
@@ -76,13 +111,15 @@ def server(server_ip, server_port, api_url_scheme):
     tear it down at the end, rather than all tests sharing one server instance.
     This is cleaner and ensures statelessness.
     """
+    # Initialize testing app
+    test_app = create_rankor_app(mongo_uri=mongo_testing_database_uri)
+
     # Start the server
-    server = RankorServerThread(ip=server_ip, port=server_port)
+    server = RankorServerThread(ip=server_ip, port=server_port, app=test_app)
     server.start()  
     assert server.is_alive()
 
     # Pre-cleanup before tests to ensure a fresh database: delete all data
-    delete_all_things_endpoint = api_url_scheme + '/rankor/things/delete-all/'
     response = requests.delete(delete_all_things_endpoint)
     assert response.status_code == 200
 
@@ -98,18 +135,3 @@ def server(server_ip, server_port, api_url_scheme):
 
 
 
-# Endpoint fixtures
-@pytest.fixture()
-def things_endpoint(api_url_scheme):
-    return urljoin(api_url_scheme, '/rankor/things/')
-
-@pytest.fixture(autouse=True)
-def delete_all_things_endpoint(api_url_scheme):
-    return urljoin(api_url_scheme, '/rankor/things/delete-all/')
-
-
-
-# Config fixtures
-@pytest.fixture()
-def things_page_size():
-    return settings.NUMBER_ITEMS_IN_EACH_PAGE["thing"]
