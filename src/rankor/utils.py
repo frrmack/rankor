@@ -48,6 +48,20 @@ def casual_mention_to_model_name(casual_mention):
 
 
 
+def append_or_update_batch_number(source_string, 
+                                  batch_no,
+                                  batch_denoter=" | batch ",\
+                                  batch_no_format="{:03d}"):
+    return ''.join(
+        [
+            source_string.rsplit(batch_denoter,1)[0],
+            batch_denoter,
+            batch_no_format.format(batch_no)
+        ]
+    )
+
+
+
 def list_is_sorted(checked_list, key=lambda x: x, reverse=False):
     """
     Checks if a list is sorted or not, returns True or False

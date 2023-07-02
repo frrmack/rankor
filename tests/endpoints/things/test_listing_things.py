@@ -1,5 +1,7 @@
 import requests
 
+from rankor.utils import append_or_update_batch_number
+
 
 def test_list_all_things_response(server, things_endpoint):
     response = requests.get(things_endpoint)
@@ -53,21 +55,21 @@ def test_listing_with_pagination(server,
                                  things_endpoint, 
                                  things_page_size, 
                                  movie_data):
-    # insert all movies from the test data repeatedly (10 times each)
-    # to get a large number of Things in there
-    for i in range(10):
+    # Insert all movies from the test data repeatedly (20 times each) to get a
+    # large number of Things in there. Change the name in each batch to avoid a
+    # HTTP 409 SameNameResourceAlreadyExistsError from trying to create a Thing
+    # with a duplicate name
+    for batch_no in range(20):
         for movie_dict in movie_data:
-            # change movie name in each batch to avoid
-            # SameNameResourceAlreadyExistsError from trying to create a Thing
-            # with a duplicate name
-            movie_dict["name"] = (
-                movie_dict["name"].rsplit(" --- batch",1)[0]
-                + f" --- batch {i}"
+            movie_dict["name"] = append_or_update_batch_number(
+                movie_dict["name"],
+                batch_no
             )
             response = requests.post(things_endpoint, json=movie_dict)
             assert response.status_code == 200
-    num_movies = len(movie_data) * 10
+    num_movies = len(movie_data) * 20
     num_pages = num_movies//things_page_size+1
+    first_page_size = min(num_movies, things_page_size)
     # now list all of them, ensure we get the proper first page
     response = requests.get(things_endpoint)
     response_data = response.json()
@@ -80,7 +82,7 @@ def test_listing_with_pagination(server,
         assert response_data["_page"] == page
         assert response_data["_links"]["last_page"]["page"] == num_pages
     ensure_proper_response(response.json(), page=1)
-    assert response_data["_num_things_in_page"] == things_page_size
+    assert response_data["_num_things_in_page"] == first_page_size
     # flip through all pages, make sure everything is in order
     last_page = response_data["_links"]["last_page"]["page"]
     while response_data["_page"] != last_page:
