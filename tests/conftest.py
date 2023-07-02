@@ -1,14 +1,16 @@
-# Imports: pytest for fixtures, requests for sending test requests
+# Python standard library imports: pytest for fixtures, urljoin for building url
+# paths requests for sending test requests
 import pytest
-import requests
+from urllib.parse import urljoin
 
+# Third party imports: requests for interfacing with the api server
+import requests
 
 # Rankor imports: api server in a parallel thread for testing
 from rankor.server import RankorServerThread
 
-# Configuration imports
+# Rankor configuration imports
 import settings
-
 
 
 # Test data fixtures
@@ -99,11 +101,11 @@ def server(server_ip, server_port, api_url_scheme):
 # Endpoint fixtures
 @pytest.fixture()
 def things_endpoint(api_url_scheme):
-    return api_url_scheme + '/rankor/things/'
+    return urljoin(api_url_scheme, '/rankor/things/')
 
 @pytest.fixture(autouse=True)
 def delete_all_things_endpoint(api_url_scheme):
-    return api_url_scheme + '/rankor/things/delete-all'
+    return urljoin(api_url_scheme, '/rankor/things/delete-all')
 
 
 

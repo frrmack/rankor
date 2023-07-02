@@ -1,3 +1,5 @@
+from urllib.parse import urljoin
+
 import requests
 
 
@@ -9,7 +11,7 @@ def test_edit_a_thing(server, things_endpoint, movie_data):
     movie_id = response.json()["thing"]["id"]
     # now we want to change the name, add a category field, and overwrite
     # the other_data field with new info (but keep the image_url same)
-    endpoint = f"{things_endpoint}{movie_id}/"
+    endpoint = urljoin(things_endpoint, movie_id)
     changes = {
         "name": "Alien 3",
         "category": "Science Fiction Movies",

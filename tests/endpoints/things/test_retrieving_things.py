@@ -1,3 +1,5 @@
+from urllib.parse import urljoin
+
 import requests
 
 
@@ -9,7 +11,7 @@ def test_get_a_thing(server, things_endpoint, movie_data):
     movie_id = response.json()["thing"]["id"]
     time_created = response.json()["thing"]["time_created"]
     # not get it back
-    endpoint = f"{things_endpoint}{movie_id}/"
+    endpoint = urljoin(things_endpoint, movie_id)
     response = requests.get(endpoint)
     response_data = response.json()
     assert response_data["http_status_code"] == 200
@@ -26,7 +28,7 @@ def test_get_a_thing(server, things_endpoint, movie_data):
 def test_get_a_thing_missing_error(server, things_endpoint):
     # try to retrieve a thing that doesn't exist, it should fail
     non_existing_id = "64ab5f14c8757d1f89bb4bf0"
-    endpoint = f"{things_endpoint}{non_existing_id}/"
+    endpoint = urljoin(things_endpoint, non_existing_id)
     response = requests.get(endpoint)
     response_data = response.json()
     assert response_data["http_status_code"] == 404
@@ -44,7 +46,7 @@ def test_get_a_thing_non_ObjectId_404_error(server, things_endpoint):
     # try to retrieve a thing with an id that's not a valid ObjectId
     # this should not match existing url rules and result in a 404
     non_ObjectId_id= "42"
-    endpoint = f"{things_endpoint}{non_ObjectId_id}/"
+    endpoint = urljoin(things_endpoint, non_ObjectId_id)
     response = requests.get(endpoint)
     response_data = response.json()
     assert response_data["http_status_code"] == 404
