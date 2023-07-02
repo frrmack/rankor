@@ -52,6 +52,10 @@ def append_or_update_batch_number(source_string,
                                   batch_no,
                                   batch_denoter=" | batch ",\
                                   batch_no_format="{:03d}"):
+    """
+    Example: "The Terminator" --> "The Terminator | batch 001"
+    Example: "The Terminator | batch 005" --> "The Terminator | batch 006"
+    """
     return ''.join(
         [
             source_string.rsplit(batch_denoter,1)[0],
