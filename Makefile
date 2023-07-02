@@ -30,4 +30,4 @@ rundev:
 
 
 run:
-	gunicorn --bind 0.0.0.0:5000 rankor:app -w 4
+	gunicorn --bind 0.0.0.0:5000 rankor.wsgi:app -w 4
