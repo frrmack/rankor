@@ -28,7 +28,6 @@ def test_delete_a_thing(server,
     # make sure it's not in there anymore
     response = requests.get(endpoint)
     assert response.status_code == 404
-    print(response.json())
     assert response.json()["error_type"] == "ResourceNotFoundInDatabaseError"
 
 

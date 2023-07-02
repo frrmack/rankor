@@ -117,7 +117,6 @@ def server(server_ip,
     This is cleaner and ensures statelessness.
     """
     # Initialize testing app
-    print(mongo_testing_database_uri)
     test_app = create_rankor_app(mongo_uri=mongo_testing_database_uri)
 
     # Start the server

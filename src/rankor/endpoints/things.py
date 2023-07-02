@@ -278,7 +278,6 @@ def delete_a_thing(thing_id):
 
     # Success: Respond with the deleted Thing document that's 
     # no longer in the database 
-    print(deleted_thing_doc)
     return to_json(
         {
             "result": "success",
