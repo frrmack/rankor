@@ -328,7 +328,7 @@ def list_all_things():
 
     Since this list can get long, the results are paginated.
     Each page will list a set number of Things, this page size is determined
-    in the api settings (in the root directory).
+    in the api configuration file (src/rankor/config/rankor_config.toml).
 
     You can ask for a specific page, for example:
     curl -i -X GET 'http://localhost:5000/rankor/things/?page=3'

@@ -52,20 +52,28 @@ List Fights of a Thing | GET    /rankor/ranked-lists/<ranked_list_id>/fights/of-
 # Flask
 from flask import Flask
 
-
-# Settings for this specific server instance
-import settings
+# Retrieve rankor configuration (set in the
+# "src/rankor/config/rankor_config.toml" file)
+from rankor.config import RANKOR_CONFIG
 
 
 # Configure Flask & Flask-PyMongo with an application factory
-def create_app(mongo_uri=settings.MONGO_DATABASE_URI):
+def create_app(mongo_uri=None):
     
     app = Flask(__name__)
 
 
     # Initialize the database connection
-    from rankor.database import RANKOR_PYMONGO_INTERFACE
+    if mongo_uri is None:
+        mongo_uri = "".join(
+            [
+                RANKOR_CONFIG['database']['mongo_server_uri'],
+                RANKOR_CONFIG['database']['database_name']
+            ]
+        )
     app.config["MONGO_URI"] = mongo_uri
+
+    from rankor.database import RANKOR_PYMONGO_INTERFACE
     RANKOR_PYMONGO_INTERFACE.init_app(app)
 
 

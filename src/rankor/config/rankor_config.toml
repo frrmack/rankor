@@ -1,0 +1,137 @@
+
+[database]
+mongo_server_uri = 'mongodb://localhost:27017/'
+database_name = 'rankor'
+
+# The mongo_server_uri is the uri to connect to the mongodb database that powers
+# the api server. In a local project, you may have a local mongo database not
+# even open to the Internet with a simple uri like "mongodb://localhost:27017/".
+# If you are using an online cluster, this may look something like
+# "mongodb+srv://USERNAME:PASSW0RD@cluster0-abcde.azure.mongodb.net/"
+#
+# The database_name gets appended to the server uri, and the client connects to
+# this combination. For example, if the mongo_server_uri is
+# 'mongodb://localhost:27017/' and the database_name is 'rankor', all
+# communication with the database will be sent to
+# mongodb://localhost:27017/rankor
+
+
+
+[pagination]
+
+    [pagination.thing]
+    page_size = 20
+
+    [pagination.ranked_list]
+    page_size = 3
+
+    [pagination.ranked_thing]
+    page_size = 10
+
+    [pagination.fight]
+    page_size = 20
+
+# The endpoints that respond with lists paginate those lists (which may get
+# long), and deliver them in chunks. These values determine how many to put into
+# a single page for different models.
+
+
+
+[sorting]
+
+    [sorting.thing]
+    field = "name"
+    direction = "ascending"
+
+    [sorting.ranked_list]
+    field = "time_created"
+    direction = "descending"
+
+    [sorting.ranked_thing]
+    field = "rank"
+    direction = "ascending"
+
+    [sorting.fight]
+    field = "time_fought"
+    direction = "descending"
+
+# These settings determine which field to sort models by before dividing them
+# into pages.
+#
+# RankedThings should really be sorted by rank to make sense. If you want them
+# to be ranked by a different score metric, you should change that separately
+# for each RankedList, using their score_used_to_rank field. You can use the
+# edit_a_ranked_list endpoint for that, or just specify a different score metric
+# when you are creating the ranked list the first time.
+# 
+# Changing the sorting config for Fights to anything other than {field =
+# "time_fought", direction = "descending"} will slow down the
+# list_recorded_fights endpoint. This is because RankedLists keep fight ids
+# sorted like that (as it's the most sensible default for most use cases), which
+# means the latest fight is at the top. In this default case, pagination can be
+# done on the Fight id list and only the data for the page Fights will be read
+# from the database. If you want a different sorting field, all the Fight data
+# for all ids will need to be read first and then the whole thing needs to be
+# sorted. This defeats the purpose of pagination and loses the fast and nimble
+# response afforded by only reading data for the page items. Therefore it is not
+# recommended to change the sorting field setting for Fights unless the pros
+# outweigh a serious hit to api performance (in case of a large number of
+# fights).
+
+
+
+[score_parameters]
+initial_mu_value = 50
+initial_sigma_value = 15
+
+# These are the mean and standard deviation of the Gaussian prior for 
+# the TrueSkill strength/score estimation.
+# You can think of the 99% possible score range for a new Thing to be
+# MU  +- 3 SIGMA
+# For example, if mu is 2.5 and sigma is 0.84, we are thinking that our
+# prior, our initial Gaussian estimate for the 'underlying true score' of
+# a Thing will be quite likely somewhere between 0 and 5, a lot more likely
+# to be around the center of that range than near 0 or 5. As we gather 
+# information about this Thing with more and more fights, its mu will get 
+# closer to the 'underlying true score' as its sigma gets smaller and smaller.
+# It may end up outside that initial prior range, too, actually, if it keeps
+# losing (or winning) all its fights, but this general way of thinking around 
+# mu and sigma should give you a general idea of the score ranges you are playing in.
+# The larger you choose sigma to be relative to mu, the less initial information
+# you are using in the prior (wider range, flatter shape closer to uniform distribution)
+# The flatter and wider you make this prior, though (large sigmas compared to mu), the
+# more fights you will need before your posteriors get narrow enough to trust.
+# Basically, the less confidence you show in the beginning (initialization), the 
+# more information you'll need to gather to gain enough confidence. Another way of
+# thinking about this is: At the end, for a confident ranking, you want the sigmas
+# to be low. If you start with very high sigmas, it will take longer to get the
+# the desired low sigmas (narrow posteriors). If you start with very low sigmas
+# on the other hand, it's like starting with already strong ideas about all Thing's
+# levels, and it will be hard to differentiate them. 
+# Depending on how many Things you are ranking and how many fights you can afford
+# to complete will lead to different values to be more suitable, but really, don't
+# worry about this too much, the prior's impact on your ranking will be negligible 
+# as long as you have a good amount of fights and the posterior is determined by
+# the data. To give you a very rough idea, by the time you have about ten fights 
+# per Thing in your RankedList, these initial values likely won't matter as much
+# (depending on the circumstances), and even at smaller numbers of fights, you 
+# don't need to worry about these in a lot of cases. The best way to make sure
+# is to run a few experiments with different initial values but the same fight
+# results to see if the resulting scores are converging or not.
+
+
+
+[manual_editing]
+allow_editing_ranked_list_fights_or_scores = false
+
+# RankedList edits/updates are limited to their basic data only by default. This
+# means that you can only change their name using the edit endpoint. Fights can
+# be saved to or deleted from RankedLists via other endpoints, and this is
+# normally the only way to influence the fights list and the thing_scores list
+# in a RankedList. If you set the setting above to True, the RankedList edit
+# endpoint will allow you to directly update all fields of the RankedList model,
+# which include these lists. Doing this is NOT recommended, as it's not a good
+# way of handling the data, it's prone to introducing slient errors that will
+# come back to bite you later, and it's easy to mess up unless you know exactly
+# what you're doing. It is strictly available as a last resort for debugging or
+# cleanup.

@@ -12,7 +12,7 @@ from rankor import create_app as create_rankor_app
 from rankor.server import RankorServerThread
 
 # Rankor configuration imports
-import settings
+from rankor.config import RANKOR_CONFIG
 
 
 # Test data fixtures
@@ -74,7 +74,12 @@ def testing_database_name():
 
 @pytest.fixture(scope="session")
 def mongo_testing_database_uri(testing_database_name):
-    return f'mongodb://localhost:27017/{testing_database_name}'
+    return "".join(
+        [
+            RANKOR_CONFIG['database']['mongo_server_uri'],
+            testing_database_name
+        ]
+    )
 
 
 
@@ -92,7 +97,7 @@ def delete_all_things_endpoint(api_url_scheme):
 # Config fixtures
 @pytest.fixture(scope="function")
 def things_page_size():
-    return settings.NUMBER_ITEMS_IN_EACH_PAGE["thing"]
+    return RANKOR_CONFIG['pagination']['thing']['page_size']
 
 
 
@@ -112,6 +117,7 @@ def server(server_ip,
     This is cleaner and ensures statelessness.
     """
     # Initialize testing app
+    print(mongo_testing_database_uri)
     test_app = create_rankor_app(mongo_uri=mongo_testing_database_uri)
 
     # Start the server

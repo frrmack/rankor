@@ -27,8 +27,8 @@ from rankor.json import to_jsonable_dict, to_json
 # Utility imports (helper functions)
 from rankor.utils import model_name_to_instance_name, list_is_sorted
 
-# Api settings for page sizes and sorting keys
-import settings
+# Api configuration for page sizes and sorting keys
+from rankor.config import RANKOR_CONFIG
 
 
 class BasePaginator(object):
@@ -43,28 +43,26 @@ class BasePaginator(object):
     Since such lists can get long, the results are partitioned into a set number
     of pages. The page size (number of list items to include in each page), as
     well as what to sort the items by before partitioning into pages are
-    determined in the api settings for each endpoint (settings.py in the root).
+    determined in the api configuration for each endpoint (in
+    src/rankor/config/rankor_config.toml).
 
     This is a base template for specialized paginators to build upon. It
-    provides shared initialization code, setting validation checks, common 
-    pagination code such as creating the navigation links and packaging of 
-    the page response. From this jumping point, different Paginators specialize 
-    in handling different types of data. For example, QueryPaginator takes a 
-    database query for a list of items and paginates that, while ListPaginator 
+    provides shared initialization code, setting validation checks, common
+    pagination code such as creating the navigation links and packaging of the
+    page response. From this jumping point, different Paginators specialize in
+    handling different types of data. For example, QueryPaginator takes a
+    database query for a list of items and paginates that, while ListPaginator
     handles an already existing list in memory.
 
-    It provides a common template:
-    You can ask for a specific page, for example (in list_all_things): 
-    curl -X GET 'http://localhost:5000/rankor/things/?page=3'
+    It provides a common template: You can ask for a specific page, for example
+    (in list_all_things): curl -X GET
+    'http://localhost:5000/rankor/things/?page=3'
 
-    If you don't give a page parameter, the endpoint will return page 1. 
-    The response will also include the page number and the links to the 
-    following endpoint uris: 
-    - this_page 
-    - next_page     (if there is one) 
-    - previous_page (if there is one) 
-    - last_page 
-    These links are there to help iterate over all results.
+    If you don't give a page parameter, the endpoint will return page 1. The
+    response will also include the page number and the links to the following
+    endpoint uris: - this_page - next_page     (if there is one) - previous_page
+    (if there is one) - last_page These links are there to help iterate over all
+    results.
     """
 
     def __init__(
@@ -86,77 +84,62 @@ class BasePaginator(object):
         # self.model_str: how the model is referred to in text
         # i.e. RankedList --> ranked_list
         self.model_str = model_name_to_instance_name(model.__name__)
-        # pagination settings
+        # pagination and sorting configuration
         (
             self.page_size, 
             self.sorting_field, 
             self.sorting_direction
-        ) = self.read_and_validate_pagination_settings(model)
+        ) = self.read_and_validate_pagination_config(model)
         self.num_all_docs = None
 
 
-    def read_and_validate_pagination_settings(self, model):
+    def read_and_validate_pagination_config(self, model):
         """
-        Reads page size and sorting key settings from the api settings file,
+        Reads page size and sorting key configuration from the api config,
         throws informative exceptions if settings are not valid.    
         """
         model_str = model_name_to_instance_name(model.__name__)
-        # page size setting
+        # page size 
         try:
-            page_size = settings.NUMBER_ITEMS_IN_EACH_PAGE[model_str]
+            page_size = RANKOR_CONFIG['pagination'][model_str]['page_size']
             if not isinstance(page_size, int): 
                 raise ValueError(
-                    f"Page size for this case is '{page_size}', "
-                    f"which is not an integer."
+                    f"Page size for the model {model.__name__} "
+                    f"is '{page_size}', which is not an integer."
                 )
         except (ValueError, KeyError, IndexError, TypeError) as error:
             raise InternalServerError(
-                f"NUMBER_OF_ITEMS_IN_EACH_PAGE setting (a dict "
-                f"in settings.py) should have the following "
-                f"format: Each key needs to be the snake_case "
-                f"name of a model, and the value needs to be an "
-                f"integer denoting how many instances of that "
-                f"model to include in each page of a response "
-                f"when a list of such model instances are requested. "
-                f"The current setting violates this requirement. "
+                f"Erronous pagination configuration. The configuration "
+                f"file (rankor_config.toml) sets default page sizes for "
+                f"response pages with different models. There was an error "
+                f"in reading these configuration values. "
                 f"{type(error).__name__}: {str(error)}"
             )
-        # sorting field and sorting direction settings
+        # sorting field and sorting direction config
         try:
-            (
-                sorting_field, 
-                sorting_direction  
-            ) = settings.SORT_ITEMS_BY_FIELD[model_str]
-            if not isinstance(sorting_field, str): 
-                raise ValueError(
-                    f"The first element of the tuple, the field, "
-                    f"is {repr(sorting_field)}, which is "
-                    f"not a string."
-                )
+            sorting_field = RANKOR_CONFIG['sorting'][model_str]['field']
+            sorting_direction = RANKOR_CONFIG['sorting'][model_str]['direction']
             if sorting_field not in model.__fields__.keys():
                 raise ValueError(
-                    f"The first element of the tuple, the field, "
-                    f"is '{sorting_field}', which is not a "
-                    f"valid field of the {model.__name__} model."
+                    f"The sorting field config provided for the "
+                    f"{model.__name__} model is '{sorting_field}', "
+                    f"which is not a valid field of this model."
                 )
             # sorting direction uses pymongo.ASCENDING or pymongo.DESCENDING
             if sorting_direction not in {"ascending", "descending"}:
                 raise ValueError(
-                    f"The second element of the tuple, the sorting direction, "
-                    f"is '{sorting_direction}', which is neither 'ascending' "
-                    f"nor 'descending'."
+                    f"The sorting direction config provided for the "
+                    f"{model.__name__} model is '{sorting_direction}', "
+                    f"which is neither 'ascending' nor 'descending'. "
+                    f"It needs to be one of these two values"
                 )
             sorting_direction = getattr(pymongo, sorting_direction.upper())
         except (ValueError, KeyError, IndexError, TypeError) as error:
             raise InternalServerError(
-                f"Entries in the SORT_ITEMS_BY_FIELD setting "
-                f"(a dict) should have the following format: "
-                f"Each key needs to be the snake_case name of "
-                f"a model, and the value needs to be a tuple "
-                f"with two elements. The first is the name of "
-                f"a field of the model, and the latter is either "
-                f"'ascending' or 'descending'. The current setting "
-                f"violates this requirement. "
+                f"Erronous sorting configuration. The configuration "
+                f"file (rankor_config.toml) sets default sorting fields "
+                f"and directions for different models. There was an error "
+                f"in reading these configuration values. "
                 f"{type(error).__name__}: {str(error)}"
             )
         return page_size, sorting_field, sorting_direction
@@ -313,8 +296,8 @@ class QueryPaginator(BasePaginator):
         We will retrieve all documents and sort them based on the relevant
         sorting criterion, then divide this list into pages that only include
         page_size items. Page sizes for each related endpoint, as well as how to
-        sort the items are defined in the api settings (settings.py in rankor's
-        root directory). 
+        sort the items are defined in the api configuration
+        (src/rankor/config/rankor_config.toml). 
         
         Sorting, skipping forward to the current page, and limiting the number
         of items to page_size are all applied to the query cursor before reading
@@ -446,7 +429,8 @@ class ListPaginator(BasePaginator):
             sort_reversed = is_sorting_reversed[self.sorting_direction]
         except KeyError:
             raise ValueError("Sorting direction is not set to either ascending "
-                            f"or descending in settings for {self.model_str}.")
+                             "or descending in the rankor configuration file "
+                            f"for {self.model_str}.")
         def sorting_key(model):
             return getattr(model, self.sorting_field)
                 

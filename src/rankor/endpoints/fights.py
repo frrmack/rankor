@@ -39,8 +39,8 @@ from rankor.errors import ResourceNotFoundInDatabaseError
 from rankor.database import get_database_connection
 db = get_database_connection()
 
-# Api settings import
-import settings
+# Api configuration import
+from rankor.config import RANKOR_CONFIG
 
 
 # The blueprint with all the RankedThing endpoints
@@ -194,17 +194,17 @@ def list_recorded_fights(ranked_list_id):
     """
     GET request to list all Fights fought for a given RankedList.
 
-    This is a sorted list of Fights, paginated according to the api settings
-    (settings.py in the root). While we read the entire list of fights from a
-    RankedList and sort it in memory (if necessary), that list only contains
-    Fight ids. We still need to read the Fight data for each of those from the
-    database, so this endpoint is paginated like all other list endpoints to
-    stay nimble. (Of course, like with any other paginated endpoint, one can
-    always set the page size setting for Fights to a very large number and
-    effectively disable pagination by shoving everything into a single page).
+    This is a sorted list of Fights, paginated according to the api
+    configuration (src/rankor/config/rankor_config.toml). While we read the
+    entire list of fights from a RankedList and sort it in memory (if
+    necessary), that list only contains Fight ids. We still need to read the
+    Fight data for each of those from the database, so this endpoint is
+    paginated like all other list endpoints to stay nimble. (Of course, like
+    with any other paginated endpoint, one can always set the page size setting
+    for Fights to a very large number and effectively disable pagination by
+    shoving everything into a single page).
 
-    For example: 
-    curl -i 
+    For example: curl -i 
          -X GET
          'http://localhost:5000/rankor/ranked-lists/a4325678901234567890bcd5/fights/'
 
@@ -226,12 +226,15 @@ def list_recorded_fights(ranked_list_id):
 
     # Special case: if the sorting field of fights is not the default 'latest
     # fight at the top', we have to pull all the fight data so the paginator can
-    # sort on the non-default field determined by the settings. Doing this
-    # defeats the agility purpose of pagination, as we can no longer avoid
-    # reading ALL the data rather than just what's on one page. Therefore it is
-    # not recommended to change this setting, as described in the settings file
-    # itself.
-    if settings.SORT_ITEMS_BY_FIELD["fight"] == ("time_fought", "descending"):
+    # sort on the non-default field determined by the rankor configuration.
+    # Doing this defeats the agility purpose of pagination, as we can no longer
+    # avoid reading ALL the data rather than just what's on one page. Therefore
+    # it is not recommended to change this setting, as described in the
+    # configuration file itself.
+    if RANKOR_CONFIG['sorting']['fight'] == {
+        'direction': 'descending', 
+        'field': 'time_fought'
+    }:
         item_list = fight_ids
         final_page_list_processor = fight_ids_to_full_fight_data
     else:
@@ -262,14 +265,13 @@ def list_fights_of_a_thing(ranked_list_id, thing_id):
     RankedList.
 
     Like get_recorded_fights, this endpoint returns a sorted list of Fights,
-    paginated according to the api settings (settings.py in the root). The only
-    difference is that while get_recorded_fights provides all the fights in a
-    RankedList, this one limits its scope to the fights that a specific Thing
-    has fought (within the context of this RankedList, not all of its Fights in
-    all RankedLists).
+    paginated according to the api configuration
+    (src/rankor/config/rankor_config.toml). The only difference is that while
+    get_recorded_fights provides all the fights in a RankedList, this one limits
+    its scope to the fights that a specific Thing has fought (within the context
+    of this RankedList, not all of its Fights in all RankedLists).
 
-    For example: 
-    curl -i 
+    For example: curl -i 
          -X GET
          'http://localhost:5000/rankor/ranked-lists/a4325678901234567890bcd5/fights/of-a-thing/12345678901234567890abcd/'
 

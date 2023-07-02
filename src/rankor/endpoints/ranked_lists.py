@@ -43,8 +43,8 @@ from werkzeug.exceptions import Forbidden
 from rankor.errors import (ResourceNotFoundInDatabaseError,
                            SameNameResourceAlreadyExistsError)
 
-# Api settings import
-import settings
+# Api configuration import
+from rankor.config import RANKOR_CONFIG
 
 # Database interface import
 from rankor.database import get_database_connection
@@ -163,7 +163,7 @@ def create_a_new_ranked_list():
 
     # A RankedList has a dictionary that maps each thing to its score
     # in this RankedList, we are going to initialize the scores for all of them
-    # with the default initialization scores defined in the api settings.
+    # with the default initialization scores defined in the api configuration.
     # It also has a list of fights, which will be empty now, at the time
     # of creation. 
     things_of_ranked_list = [Thing(**doc) for doc in db.things.find()]
@@ -213,39 +213,41 @@ def edit_a_ranked_list(ranked_list_id):
     value for some reason). Fights can be saved to or deleted from RankedLists
     via other endpoints (fight_endpoints.py), and this is normally the only way
     to influence the fights list and (indirectly) the thing_scores dict of a
-    RankedList. If settings.ALLOW_MANUAL_EDITING_OF_RANKEDLIST_FIGHTS_OR_SCORES
-    is set to True instead of the default False, this endpoint will allow you to
-    directly update these fields. Doing this is NOT recommended, as it's not a
-    good way of handling the data, it's prone to introducing silent errors that
-    will come back to bite you later, and it's easy to mess up unless you know
-    exactly what you're doing.
+    RankedList. If allow_editing_ranked_list_fights_or_scores configuration
+    under the [manual_editing] header of the api configuration file
+    (src/rankor/config/rankor_config.toml) is set to true instead of the default
+    false, this endpoint will allow you to directly update these fields. Doing
+    this is NOT recommended, as it's not a good way of handling the data, it's
+    prone to introducing silent errors that will come back to bite you later,
+    and it's easy to mess up unless you know exactly what you're doing.
 
     Properties of a RankedList, such as top_3_things or last_3_fights are not
     stored, but calculated using the other fields. Therefore they are never
     editable. They will change based on the fights list and the thing_scores
     dict.
 
-    Example (name change from 'My Favorite Movies' to 'Action Movie Ranked 
-    List with Max'):
-    curl -d '{"name": "Action Movie Ranked List with Max"}'
-         -H "Content-Type: application/json" 
-         -X PUT http://localhost:5000/rankor/things/12345678901234567890ffff/       
+    Example (name change from 'My Favorite Movies' to 'Action Movie Ranked List
+    with Max'): curl -d '{"name": "Action Movie Ranked List with Max"}'
+         -H "Content-Type: application/json" -X PUT
+         http://localhost:5000/rankor/things/12345678901234567890ffff/       
     """
     # Retrieve the request data. 
     update_data = request.get_json()
     
     # Raise a 403 Forbidden Error if they are trying to edit the untouchables
-    # (unless they are explicitly allowed in the settings)
-    if not settings.ALLOW_MANUAL_EDITING_OF_RANKEDLIST_FIGHTS_OR_SCORES:
+    # (unless they are explicitly allowed in the configuration file)
+    if not RANKOR_CONFIG['manual_editing']['allow_editing_ranked_list_fights_or_scores']:
          if "fights" in update_data or "thing_scores" in update_data:
               raise Forbidden("Directly editing the thing_scores or the fights "
                               "of a ranked list using this endpoint is not allowed. "
                               "You can affect these indirectly through saving new "
                               "fights or deleting existing fights using the .../fights/"
                               " endpoints of a ranked list. If the "
-                              "ALLOW_MANUAL_EDITING_OF_RANKEDLIST_FIGHTS_OR_SCORES "
-                              "setting of the api is set to True, editing them "
-                              "directly here gets allowed, but it is not recommended.")
+                              "allow_editing_ranked_list_fights_or_scores value under "
+                              "the [manual_editing] header of the api configuration file"
+                              "(src/rankor/config/rankor_config.toml) is set to true, "
+                              "editing them directly here gets allowed, but it is not "
+                              "recommended.")
 
     # Retrieve the update target document from the database to fill the remaining
     # essential fields for full validation
@@ -361,7 +363,7 @@ def list_all_ranked_lists():
 
     Since this list can get long, the results are paginated.
     Each page will list a set number of RankedLists, this page size is determined
-    in the api settings (in the root directory).
+    in the api configuration file (src/rankor/config/rankor_config.toml).
 
     You can ask for a specific page, for example:
     curl -i -X GET 'http://localhost:5000/rankor/ranked-lists/?page=5'
