@@ -1,5 +1,5 @@
 # Python standard library imports: pytest for fixtures, urljoin for building url
-# paths requests for sending test requests
+# paths
 import pytest
 from urllib.parse import urljoin
 
