@@ -108,3 +108,6 @@ ENV/
 
 # vscode stuff
 .vscode/
+
+# playground scripts to mess around and test things haphazardly
+.playground/
