@@ -15,7 +15,7 @@ def test_delete_a_thing(server,
     movie_id = response.json()["thing"]["id"]
     time_created = response.json()["thing"]["time_created"]
     # now delete it
-    endpoint = urljoin(things_endpoint, movie_id)
+    endpoint = urljoin(things_endpoint, movie_id, '/')
     response = requests.delete(endpoint)
     assert response.status_code == 200
     response_data = response.json()

@@ -105,7 +105,7 @@ def things_endpoint(api_url_scheme):
 
 @pytest.fixture(autouse=True)
 def delete_all_things_endpoint(api_url_scheme):
-    return urljoin(api_url_scheme, '/rankor/things/delete-all')
+    return urljoin(api_url_scheme, '/rankor/things/delete-all/')
 
 
 

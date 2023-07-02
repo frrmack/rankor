@@ -1,20 +1,34 @@
-import requests
 import json
+from urllib.parse import urljoin
+
+import requests
 
 
 def test_create_a_thing(server, things_endpoint, movie_data):
     single_movie = single_movie_data_dict = movie_data[0]
     response = requests.post(things_endpoint, json=single_movie_data_dict)
-    response_data = response.json()
     assert response.status_code == 200
+    response_data = response.json()
     assert response_data["http_status_code"] == 200
     assert response_data["result"] == "success"
     assert response_data["thing"]["name"] == single_movie['name']
     assert response_data["thing"]["image_url"] == single_movie['image_url']
     assert response_data["thing"]["other_data"] == single_movie['other_data']
     thing_id = response_data["thing"]["id"]
+    time_created = response_data["thing"]["time_created"]
     assert response_data["msg"] == f"New thing created and given id {thing_id}"
-    assert "time_created" in response_data["thing"]
+    # make sure it's there
+    endpoint = urljoin(things_endpoint, thing_id, '/')
+    response = requests.get(endpoint)
+    assert response.status_code == 200
+    response_data = response.json()
+    assert response_data["http_status_code"] == 200
+    assert response_data["result"] == "success"
+    assert response_data["thing"]["name"] == single_movie['name']
+    assert response_data["thing"]["other_data"] == single_movie['other_data']
+    assert response_data["thing"]["id"] == thing_id
+    assert response_data["thing"]["time_created"] == time_created
+
 
 
 def test_create_a_thing_format_header_error(server, 
