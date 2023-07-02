@@ -2,8 +2,8 @@
 from flask_pymongo import PyMongo
 
 # Initialize the interface
-RANKOR_PYMONGO_INTERFACE = PyMongo()
+rankor_pymongo_interface = PyMongo()
 
 # Provide the database connection if asked
 def get_database_connection():
-    return RANKOR_PYMONGO_INTERFACE.db
+    return rankor_pymongo_interface.db

@@ -4,9 +4,9 @@ import pathlib
 import tomllib
 
 CONFIGURATION_FILE_NAME = "rankor_config.toml"
-RANKOR_CONFIG = {}
+rankor_config = {}
 
 config_path = pathlib.Path(__file__).parent / CONFIGURATION_FILE_NAME
 
 with config_path.open(mode="rb") as configuration_file:
-    RANKOR_CONFIG = tomllib.load(configuration_file)
+    rankor_config = tomllib.load(configuration_file)

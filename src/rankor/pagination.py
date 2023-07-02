@@ -28,7 +28,7 @@ from rankor.json import to_jsonable_dict, to_json
 from rankor.utils import model_name_to_instance_name, list_is_sorted
 
 # Api configuration for page sizes and sorting keys
-from rankor.config import RANKOR_CONFIG
+from rankor.config import rankor_config
 
 
 class BasePaginator(object):
@@ -101,7 +101,7 @@ class BasePaginator(object):
         model_str = model_name_to_instance_name(model.__name__)
         # page size 
         try:
-            page_size = RANKOR_CONFIG['pagination'][model_str]['page_size']
+            page_size = rankor_config['pagination'][model_str]['page_size']
             if not isinstance(page_size, int): 
                 raise ValueError(
                     f"Page size for the model {model.__name__} "
@@ -117,8 +117,8 @@ class BasePaginator(object):
             )
         # sorting field and sorting direction config
         try:
-            sorting_field = RANKOR_CONFIG['sorting'][model_str]['field']
-            sorting_direction = RANKOR_CONFIG['sorting'][model_str]['direction']
+            sorting_field = rankor_config['sorting'][model_str]['field']
+            sorting_direction = rankor_config['sorting'][model_str]['direction']
             if sorting_field not in model.__fields__.keys():
                 raise ValueError(
                     f"The sorting field config provided for the "

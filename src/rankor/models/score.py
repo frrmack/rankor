@@ -7,7 +7,7 @@
 from rankor.models.jsonable_model import JsonableModel
 
 # Api configuration (for scoring priors)
-from rankor.config import RANKOR_CONFIG
+from rankor.config import rankor_config
 
 class Score(JsonableModel):
     """
@@ -105,8 +105,8 @@ class Score(JsonableModel):
     their underlying 'true' score). rankor_score is only what this rankor api
     suggests as a good ranking score design.
     """
-    mu: float    = RANKOR_CONFIG['score_parameters']['initial_mu_value'] 
-    sigma: float = RANKOR_CONFIG['score_parameters']['initial_sigma_value']
+    mu: float    = rankor_config['score_parameters']['initial_mu_value'] 
+    sigma: float = rankor_config['score_parameters']['initial_sigma_value']
 
     @property
     def min_possible_score(self) -> float:

@@ -54,7 +54,7 @@ from flask import Flask
 
 # Retrieve rankor configuration (set in the
 # "src/rankor/config/rankor_config.toml" file)
-from rankor.config import RANKOR_CONFIG
+from rankor.config import rankor_config
 
 
 # Configure Flask & Flask-PyMongo with an application factory
@@ -67,14 +67,14 @@ def create_app(mongo_uri=None):
     if mongo_uri is None:
         mongo_uri = "".join(
             [
-                RANKOR_CONFIG['database']['mongo_server_uri'],
-                RANKOR_CONFIG['database']['database_name']
+                rankor_config['database']['mongo_server_uri'],
+                rankor_config['database']['database_name']
             ]
         )
     app.config["MONGO_URI"] = mongo_uri
 
-    from rankor.database import RANKOR_PYMONGO_INTERFACE
-    RANKOR_PYMONGO_INTERFACE.init_app(app)
+    from rankor.database import rankor_pymongo_interface
+    rankor_pymongo_interface.init_app(app)
 
 
     # Import and register error handlers

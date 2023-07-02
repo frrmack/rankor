@@ -12,7 +12,7 @@ from rankor import create_app as create_rankor_app
 from rankor.server import RankorServerThread
 
 # Rankor configuration imports
-from rankor.config import RANKOR_CONFIG
+from rankor.config import rankor_config
 
 
 # Test data fixtures
@@ -76,7 +76,7 @@ def testing_database_name():
 def mongo_testing_database_uri(testing_database_name):
     return "".join(
         [
-            RANKOR_CONFIG['database']['mongo_server_uri'],
+            rankor_config['database']['mongo_server_uri'],
             testing_database_name
         ]
     )
@@ -97,7 +97,7 @@ def delete_all_things_endpoint(api_url_scheme):
 # Config fixtures
 @pytest.fixture(scope="function")
 def things_page_size():
-    return RANKOR_CONFIG['pagination']['thing']['page_size']
+    return rankor_config['pagination']['thing']['page_size']
 
 
 

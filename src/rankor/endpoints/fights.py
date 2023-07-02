@@ -40,7 +40,7 @@ from rankor.database import get_database_connection
 db = get_database_connection()
 
 # Api configuration import
-from rankor.config import RANKOR_CONFIG
+from rankor.config import rankor_config
 
 
 # The blueprint with all the RankedThing endpoints
@@ -231,7 +231,7 @@ def list_recorded_fights(ranked_list_id):
     # avoid reading ALL the data rather than just what's on one page. Therefore
     # it is not recommended to change this setting, as described in the
     # configuration file itself.
-    if RANKOR_CONFIG['sorting']['fight'] == {
+    if rankor_config['sorting']['fight'] == {
         'direction': 'descending', 
         'field': 'time_fought'
     }:

@@ -44,7 +44,7 @@ from rankor.errors import (ResourceNotFoundInDatabaseError,
                            SameNameResourceAlreadyExistsError)
 
 # Api configuration import
-from rankor.config import RANKOR_CONFIG
+from rankor.config import rankor_config
 
 # Database interface import
 from rankor.database import get_database_connection
@@ -236,7 +236,7 @@ def edit_a_ranked_list(ranked_list_id):
     
     # Raise a 403 Forbidden Error if they are trying to edit the untouchables
     # (unless they are explicitly allowed in the configuration file)
-    if not RANKOR_CONFIG['manual_editing']['allow_editing_ranked_list_fights_or_scores']:
+    if not rankor_config['manual_editing']['allow_editing_ranked_list_fights_or_scores']:
          if "fights" in update_data or "thing_scores" in update_data:
               raise Forbidden("Directly editing the thing_scores or the fights "
                               "of a ranked list using this endpoint is not allowed. "
