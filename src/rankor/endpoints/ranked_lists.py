@@ -47,7 +47,9 @@ from rankor.errors import (ResourceNotFoundInDatabaseError,
 import settings
 
 # Database interface import
-from rankor import db
+from rankor.database import get_database_connection
+db = get_database_connection()
+
 
 
 # The blueprint with all the RankedList endpoints

@@ -36,8 +36,8 @@ from rankor.errors import (ResourceNotFoundInDatabaseError,
                            SameNameResourceAlreadyExistsError)
 
 # Database interface import
-from rankor import db
-
+from rankor.database import get_database_connection
+db = get_database_connection()
 
 # The blueprint with all the Thing endpoints
 # This will be registered to the Flask app
