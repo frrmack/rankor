@@ -92,6 +92,14 @@ def things_endpoint(api_url_scheme):
 def delete_all_things_endpoint(api_url_scheme):
     return urljoin(api_url_scheme, '/rankor/things/delete-all/')
 
+@pytest.fixture(scope="session")
+def ranked_lists_endpoint(api_url_scheme):
+    return urljoin(api_url_scheme, '/rankor/ranked-lists/')
+
+@pytest.fixture(scope="session")
+def delete_all_ranked_lists_endpoint(api_url_scheme):
+    return urljoin(api_url_scheme, '/rankor/ranked-lists/delete-all/')
+
 
 
 # Config fixtures
@@ -106,6 +114,7 @@ def things_page_size():
 def server(server_ip, 
            server_port, 
            delete_all_things_endpoint, 
+           delete_all_ranked_lists_endpoint,
            mongo_testing_database_uri):
     """ 
     Run an api development server in a parallel thread so that tests can send
@@ -126,6 +135,7 @@ def server(server_ip,
 
     # Pre-cleanup before tests to ensure a fresh database: delete all data
     response = requests.delete(delete_all_things_endpoint)
+    response = requests.delete(delete_all_ranked_lists_endpoint)
     assert response.status_code == 200
 
     # Yield the server for the tests to come
@@ -134,6 +144,7 @@ def server(server_ip,
     # Clean up & tear down after the tests: delete all data again and
     # stop the server
     response = requests.delete(delete_all_things_endpoint)
+    response = requests.delete(delete_all_ranked_lists_endpoint)
     assert response.status_code == 200
     server.stop()
     assert not server.is_alive()
