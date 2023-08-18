@@ -11,8 +11,8 @@ Get one RankedList         |   GET     /rankor/ranked-lists/<ranked_list_id>/
 """
 
 # Python inspection imports 
-# (to get the name of an endpoint from within)
-from sys import _getframe
+# (to get the name of an endpoint function from within)
+import inspect
 
 # Flask imports
 from flask import Blueprint, request, url_for
@@ -377,7 +377,7 @@ def list_all_ranked_lists():
     These links are there to help iterate over all results.
     """
     # Python frame inspection code to get the name of this very function
-    endpoint_name = "." + _getframe().f_code.co_name
+    endpoint_name = "." + inspect.currentframe().f_code.co_name
     # Read the page parameter
     requested_page = request.args.get("page", 1)
     # Count the total number of documents in the database for this list
